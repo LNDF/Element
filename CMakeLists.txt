@@ -4,7 +4,9 @@ project(engine-core VERSION 0.1.0)
 include(CTest)
 enable_testing()
 
-add_library(engine-core engine-core.cpp)
+file(GLOB_RECURSE SRC_FILES ./src/*.*)
+
+add_library(engine-core ${SRC_FILES})
 
 set_property(TARGET engine-core PROPERTY CXX_STANDARD 11)
 target_compile_options(engine-core PRIVATE -Wall)
