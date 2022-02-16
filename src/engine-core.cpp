@@ -1,5 +1,6 @@
 #include <iostream>
 
-void say_hello(){
+int main(){
     std::cout << "Hello, from engine-core!\n";
+    return 0;
 }
