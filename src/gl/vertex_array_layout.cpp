@@ -16,7 +16,3 @@ void VertexArrayLayout::push<float>(u32 count) {
 const std::vector<VertexArrayLayoutElement>& VertexArrayLayout::getElements() const {
     return this->elements;
 }
-
-u32 VertexArrayLayout::getStride() const {
-    return this->stride;
-}

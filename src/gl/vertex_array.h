@@ -20,7 +20,7 @@ class VertexArray {
 
         void addVertexBuffers(const VertexArrayLayout& layout, const VertexBuffer& buffer);
 
-        u32 getId() const;
+        inline u32 getId() const {return this->id;}
 };
 
 #endif

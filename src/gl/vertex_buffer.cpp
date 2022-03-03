@@ -14,14 +14,6 @@ VertexBuffer::~VertexBuffer() {
     glDeleteBuffers(1, &this->id);
 }
 
-u32 VertexBuffer::getId() const {
-    return this->id;
-}
-
-u32 VertexBuffer::getSize() const {
-    return this->size;
-}
-
 void VertexBuffer::bind() const {
     if (boundVertexBuffer != this->id) {
         boundVertexBuffer = this->id;

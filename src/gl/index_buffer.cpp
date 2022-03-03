@@ -11,14 +11,6 @@ IndexBuffer::~IndexBuffer() {
     glDeleteBuffers(1, &this->id);
 }
 
-u32 IndexBuffer::getId() const {
-    return this->id;
-}
-
-u32 IndexBuffer::getCount() const {
-    return this->count;
-}
-
 void IndexBuffer::draw() const {
     this->bind();
     glDrawElements(GL_TRIANGLES, this->count, GL_UNSIGNED_INT, nullptr);

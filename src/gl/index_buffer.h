@@ -11,8 +11,8 @@ private:
 public:
     IndexBuffer(const u32* data, const u32 count);
     ~IndexBuffer();
-    u32 getId() const;
-    u32 getCount() const;
+    inline u32 getId() const {return this->id;}
+    inline u32 getCount() const {return this->count;}
     void draw() const;
     void bind() const;
     static void unbind();

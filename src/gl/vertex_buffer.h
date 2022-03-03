@@ -11,8 +11,8 @@ private:
 public:
     VertexBuffer(const void* data, const u32 size);
     ~VertexBuffer();
-    u32 getId() const;
-    u32 getSize() const;
+    inline u32 getId() const {return this->id;}
+    inline u32 getSize() const {return this->size;}
     void bind() const;
     static void unbind();
 };

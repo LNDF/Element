@@ -23,7 +23,7 @@ class VertexArrayLayout {
         void push(u32 count);
 
         const std::vector<VertexArrayLayoutElement>& getElements() const;
-        u32 getStride() const;
+        inline u32 getStride() const {return this->stride;}
 };
 
 #endif

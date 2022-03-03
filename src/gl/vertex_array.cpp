@@ -38,7 +38,3 @@ void VertexArray::addVertexBuffers(const VertexArrayLayout& layout, const Vertex
         ptr += element.size * element.count;
     }
 }
-
-u32 VertexArray::getId() const {
-    return this->id;
-}

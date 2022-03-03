@@ -1,6 +1,16 @@
 {
     "cmake.configureOnOpen": true,
     "files.associations": {
-        "vertexbuffer.h": "c"
+        "vertexbuffer.h": "c",
+        "unordered_map": "cpp",
+        "ctime": "cpp",
+        "*.tcc": "cpp",
+        "chrono": "cpp",
+        "condition_variable": "cpp",
+        "memory_resource": "cpp",
+        "mutex": "cpp",
+        "sstream": "cpp",
+        "stop_token": "cpp",
+        "typeinfo": "cpp"
     }
 }
