@@ -1,8 +1,13 @@
 #include <iostream>
 
-#include "gl/gl_include.h"
+#include "gl/gl_backend.h"
+#include "delta_time.h"
 
 int main(){
-    std::cout << "Hello, from engine-core!\n";
+    GLBackend b("This is a test", 800, 600, 1);
+    b.setMainLoopCallback([]() {
+        std::cout << deltatime::time << std::endl;
+    });
+    b.mainLoop();
     return 0;
 }

@@ -20,7 +20,7 @@ class GLBackend : public Backend {
         u32 vpWidth;
         u32 vpHeight;
     public:
-        GLBackend(const std::string& title, u32 width, u32 height, u8 resizable);
+        GLBackend(const std::string& name, u32 width, u32 height, u8 resizable);
         ~GLBackend();
         void mainLoop();
         void close();

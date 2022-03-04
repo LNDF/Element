@@ -3,7 +3,7 @@
 #include <stdexcept>
 
 
-GLBackend::GLBackend(const std::string& title, u32 width, u32 height, u8 resizable) {
+GLBackend::GLBackend(const std::string& name, u32 width, u32 height, u8 resizable) {
     //First start
     this->name = name;
     this->width = width;
