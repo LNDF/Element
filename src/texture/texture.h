@@ -5,12 +5,12 @@
 
 class Texture {
     public:
-        virtual ~Texture();
-        virtual u32 getId() const;
-        virtual void bind();
-        virtual void bind(u32 slot);
-        virtual u32 getWidth() const;
-        virtual u32 getheight() const;
+        virtual ~Texture() = 0;
+        virtual u32 getId() const  = 0;
+        virtual void bind() = 0;
+        virtual void bind(u32 slot) = 0;
+        virtual u32 getWidth() const = 0;
+        virtual u32 getheight() const = 0;
 };
 
 #endif

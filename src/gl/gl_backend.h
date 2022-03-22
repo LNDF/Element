@@ -21,25 +21,25 @@ class GLBackend : public Backend {
         u32 vpHeight;
     public:
         GLBackend(const std::string& name, u32 width, u32 height, u8 resizable);
-        ~GLBackend();
-        void mainLoop();
-        void close();
-        void notClose();
-        void setWidth(u32 width);
-        void setHeight(u32 height);
-        void setName(const std::string& name);
-        void setMainLoopCallback(MainLoopCallback mainLoopCallback);
-        const std::string& getName() const;
-        u32 getWidth() const;
-        u32 getHeight() const;
-        MainLoopCallback getMainLoopCallback() const;
+        virtual ~GLBackend();
+        virtual void mainLoop();
+        virtual void close();
+        virtual void notClose();
+        virtual void setWidth(u32 width);
+        virtual void setHeight(u32 height);
+        virtual void setName(const std::string& name);
+        virtual void setMainLoopCallback(MainLoopCallback mainLoopCallback);
+        virtual const std::string& getName() const;
+        virtual u32 getWidth() const;
+        virtual u32 getHeight() const;
+        virtual MainLoopCallback getMainLoopCallback() const;
 
         //states
-        void setSwapInterval(int interval);
-        void setViewport(u32 width, u32 height);
+        virtual void setSwapInterval(int interval);
+        virtual void setViewport(u32 width, u32 height);
 
         //utils
-        void clear();
+        virtual void clear();
 };
 
 #endif
