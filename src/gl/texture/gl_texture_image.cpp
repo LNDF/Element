@@ -4,8 +4,7 @@
 #include <stdexcept>
 
 void GLTextureImage::init(const u8* data, u32 width, u32 height) {
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST_MIPMAP_LINEAR);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+    this->setFiltering(TextureFiltering::TRILINEAR);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
     glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA8, width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, data);
@@ -40,5 +39,21 @@ GLTextureImage::GLTextureImage(const std::string& path) {
 
 void GLTextureImage::setFiltering(TextureFiltering filtering) {
     this->bind();
-
+    GLint minFilter = GL_LINEAR_MIPMAP_LINEAR, magFilter = GL_LINEAR;
+    switch (filtering) {
+        case TextureFiltering::BILINEAR:
+            minFilter = GL_LINEAR;
+            magFilter = GL_LINEAR;
+            break;
+        case TextureFiltering::TRILINEAR:
+            minFilter = GL_LINEAR_MIPMAP_LINEAR;
+            magFilter = GL_LINEAR;
+            break;
+        case TextureFiltering::POINT:
+            minFilter = GL_NEAREST;
+            magFilter = GL_NEAREST;
+            break;
+    }
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, minFilter);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, magFilter);
 }
