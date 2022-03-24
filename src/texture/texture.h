@@ -2,6 +2,7 @@
 #define __TEXTURE_H__
 
 #include "../common.h"
+#include "../resource_handler.h"
 
 class Texture {
     public:
@@ -12,5 +13,7 @@ class Texture {
         virtual u32 getWidth() const = 0;
         virtual u32 getheight() const = 0;
 };
+
+typedef ReferenceHandle<Texture> TextureHandle;
 
 #endif
