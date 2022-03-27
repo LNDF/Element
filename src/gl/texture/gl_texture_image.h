@@ -5,7 +5,7 @@
 #include "gl_texture.h"
 #include "../../texture/texture_image.h"
 
-class GLTextureImage : public GLTexture, TextureImage {
+class GLTextureImage : public GLTexture, public TextureImage {
     private:
         void init(const u8* data, u32 width, u32 height);
     public:

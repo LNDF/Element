@@ -1,5 +1,6 @@
 #include "gl_backend.h"
 #include "../delta_time.h"
+#include "texture/gl_texture_image.h"
 #include <stdexcept>
 
 
@@ -112,4 +113,18 @@ void GLBackend::setViewport(u32 width, u32 height) {
 
 void GLBackend::clear() {
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
+}
+
+//textures
+
+TextureImage* GLBackend::createTextureImageFromFile(const std::string& path) {
+    return new GLTextureImage(path);
+}
+
+TextureImage* GLBackend::createTextureImageFromMemory(const u8* data, u32 len) {
+    return new GLTextureImage(data, len);
+}
+
+TextureImage* GLBackend::createTextureImageFromRawRGBA8Memory(const u8* data, u32 width, u32 height) {
+    return new GLTextureImage(data, width, height);
 }

@@ -40,6 +40,11 @@ class GLBackend : public Backend {
 
         //utils
         virtual void clear();
+
+        //textures
+        virtual TextureImage* createTextureImageFromFile(const std::string& path);
+        virtual TextureImage* createTextureImageFromMemory(const u8* data, u32 len);
+        virtual TextureImage* createTextureImageFromRawRGBA8Memory(const u8* data, u32 width, u32 length);
 };
 
 #endif

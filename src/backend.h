@@ -4,6 +4,8 @@
 #include "common.h"
 #include <string>
 
+#include "texture/texture_image.h"
+
 typedef void (*MainLoopCallback)();
 
 class Backend {
@@ -28,6 +30,11 @@ class Backend {
 
         //utils
         virtual void clear() = 0;
+
+        //textures
+        virtual TextureImage* createTextureImageFromFile(const std::string& path) = 0;
+        virtual TextureImage* createTextureImageFromMemory(const u8* data, u32 len) = 0;
+        virtual TextureImage* createTextureImageFromRawRGBA8Memory(const u8* data, u32 width, u32 length) = 0;
 };
 
 extern Backend* currentBackendInstance;
