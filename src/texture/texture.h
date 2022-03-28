@@ -14,6 +14,4 @@ class Texture {
         virtual u32 getheight() const = 0;
 };
 
-typedef ReferenceHandle<Texture> TextureHandle;
-
 #endif

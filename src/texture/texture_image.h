@@ -10,6 +10,4 @@ class TextureImage : public virtual Texture {
         virtual void setFiltering(TextureFiltering filtering)  = 0;
 };
 
-typedef ReferenceHandle<TextureImage> TextureImageHandle;
-
 #endif
