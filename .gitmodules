@@ -10,3 +10,6 @@
 [submodule "lib/imgui"]
 	path = lib/imgui
 	url = https://github.com/ocornut/imgui.git
+[submodule "lib/uuid_v4"]
+	path = lib/uuid_v4
+	url = https://github.com/crashoz/uuid_v4.git
