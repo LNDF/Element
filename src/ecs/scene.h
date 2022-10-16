@@ -7,6 +7,7 @@
 #include "gameobject.h"
 #include "componentpool.h"
 #include "signature.h"
+#include "view.h"
 #include "../utils/uuid.h"
 #include "../utils/packedmap.h"
 
@@ -77,6 +78,11 @@ namespace engine {
             bool has_component(game_object* object) const {
                 component_pool<T>* pool = get_component_pool<T>();
                 return pool.contains(object->id);
+            }
+
+            template<typename... T>
+            scene_view<T...> view() {
+                return scene_view<T...>(get_component_pool<T>()...);
             }
 
             inline game_object* create_game_object() {return create_child(root_object);}

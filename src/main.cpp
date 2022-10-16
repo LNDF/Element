@@ -11,12 +11,32 @@ struct test_comp {
     float c, d;
 };
 
+struct t2 {
+    bool a;
+};
+
 int main() {
     scene s;
-    game_object* g = s.create_game_object();;
+    game_object* g = s.create_game_object();
+    game_object* g2 = s.create_game_object();
+    game_object* g3 = s.create_game_object();
     std::cout << g->get_uuid().str() << std::endl;
+    std::cout << g2->get_uuid().str() << std::endl;
+    std::cout << g3->get_uuid().str() << std::endl;
     s.add_component<test_comp>(g, {1, 2, 4.5f, 23.24f});
-    //test_comp* t = s.get_component<test_comp>(g);
-    s.remove_component<test_comp>(g);
+    s.add_component<test_comp>(g2, {2, 3, 4.4f, 12.1f});
+    s.add_component<t2>(g2, {false});
+    std::cout << std::endl;
+    s.view<test_comp>().each([](game_object* obj, test_comp* c) {
+        std::cout << obj->get_uuid().str() << " " << c->a << std::endl;
+    });
+    std::cout << std::endl;
+    s.view<t2>().each([](game_object* obj, t2* c) {
+        std::cout << obj->get_uuid().str() << " " << c->a << std::endl;
+    });
+    std::cout << std::endl;
+    s.view<test_comp, t2>().each([](game_object* obj, test_comp* tc, t2* c) {
+        std::cout << obj->get_uuid().str() << " " << tc->a << " " << c->a << std::endl;
+    });
     return 0;
 }

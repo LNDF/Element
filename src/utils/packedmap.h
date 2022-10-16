@@ -87,7 +87,7 @@ namespace engine {
                 return packed[indexes[k]];
             }
 
-            inline std::vector<V>::size_type size() {return packed.size();}
+            inline std::vector<V>::size_type size() const {return packed.size();}
 
             inline auto begin() {
                 return packed.begin();
