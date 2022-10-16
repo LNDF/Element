@@ -13,10 +13,10 @@ file(GLOB_RECURSE RESOURCE_FILES ./resources/*.*)
 file(COPY ${RESOURCE_FILES} DESTINATION ${CMAKE_BINARY_DIR})
 
 # compile options
-set_property(TARGET engine PROPERTY CXX_STANDARD 11)
+set_property(TARGET engine PROPERTY CXX_STANDARD 20)
 target_compile_options(engine PRIVATE -Wall)
 
-# LIBS
+#LIBS
 # glfw
 add_subdirectory(lib/glfw EXCLUDE_FROM_ALL)
 target_link_libraries(engine PRIVATE glfw)
@@ -51,6 +51,10 @@ set(IMGUI_FILES
 add_library(imgui ${IMGUI_FILES})
 target_include_directories(imgui PUBLIC ${IMGUI_DIR})
 target_link_libraries(engine PRIVATE imgui)
+
+# openssl crypto
+add_subdirectory(lib/openssl EXCLUDE_FROM_ALL)
+target_link_libraries(engine PRIVATE crypto)
 
 #end libs
 
