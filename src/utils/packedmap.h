@@ -246,9 +246,161 @@ namespace engine {
             std::pair<iterator, bool> insert_or_assign(const key_type& k, O&& o) {
                 auto r = try_emplace(cend(), k, std::forward<O>(o));
                 if (!r.second) {
-                    
+                    //TODO: assign
                 }
                 return r;
+            }
+
+            template<typename O>
+            std::pair<iterator, bool> insert_or_assign(key_type&& k, O&& o) {
+                auto r = try_emplace(cend(), std::move(k), std::forward<O>(o));
+                if (!r.second) {
+                    //TODO: assign
+                }
+                return r;
+            }
+
+            template<typename O>
+            std::pair<iterator, bool> insert_or_assign(const_iterator hint, const key_type& k, O&& o) {
+                auto r = try_emplace(hint, k, std::forward<O>(o));
+                if (!r.second) {
+                    //TODO: assign
+                }
+                return r;
+            }
+
+            template<typename O>
+            std::pair<iterator, bool> insert_or_assign(const_iterator hint, key_type&& k, O&& o) {
+                auto r = try_emplace(hint, std::move(k), std::forward<O>(o));
+                if (!r.second) {
+                    //TODO: assign
+                }
+                return r;
+            }
+
+            iterator erase(const_iterator pos) {
+                //TODO erase
+            }
+
+            iterator erase(iterator pos) {
+                //TODO erase
+            }
+
+            size_type erase(const key_type& key) {
+                //TODO: erase
+            }
+
+            iterator erase(const_iterator first, const_iterator last) {
+                //TODO: erase
+            }
+
+            void clear() noexcept {
+                data.clear();
+                index.clear();
+                //TODO: rehash???
+            }
+
+            void swap(packed_map& other) { //TODO: noexcept
+                data.swap(other.data);
+                index.swap(other.index);
+            }
+
+            //TODO: merge
+
+            hasher hash_function() const {
+                return hashf;
+            }
+
+            key_equal key_eq() const {
+                return eqf;
+            }
+
+            iterator find(cosnt key_type& key) {
+                //TODO: find
+            }
+
+            cosnt_iterator find(cosnt key_type& key) const {
+                //TODO: find
+            }
+
+            //TODO: find...
+
+            size_type count(const key_type& key) const {
+                return contains(key) ? 1 : 0;
+            }
+
+            //TODO: count...
+
+            bool contains(const key_type& key) const {
+                return find(key) != end();
+            }
+
+            std::pair<iterator, iterator> eqal_range(const key_type& key) {
+                iterator it = find(key);
+                return std::make_pair<iterator, iterator>(it, it); //maybe it + 1???
+            }
+
+            std::pair<const_iterator, const_iterator> eqal_range(const key_type& key) const {
+                const_iterator it = find(key);
+                return std::make_pair<iterator, iterator>(it, it); //maybe it + 1???
+            }
+
+            //TODO: eqal_range...
+
+            mapped_type& operator[](const key_type& key) {
+                return at(key);
+            }
+
+            mapped_type& operator[](key_type&& key) {
+                return at(std::move(key));
+            }
+
+            mapped_type& at(const key_type& key) {
+                //TODO: at
+            }
+
+            mapped_type& at(key_type&& key) {
+                //TODO: at
+            }
+
+            size_type bucket_count() const noexcept {
+                return index.size();
+            }
+
+            size_type max_bucket_count() const noexcept {
+                return index.max_size();
+            }
+
+            size_type bucket_size() const {
+                //TODO: bucket_size
+            }
+
+            size_type bucket(const key_type& key) {
+                //TODO: bucket
+            }
+
+            local_iterator begin(size_type bucket) {
+                //TODO: local iter begin
+            }
+
+            const_local_iterator begin(size_type bucket) const {
+                //TODO: local iter begin
+            }
+
+            const_local_iterator cbegin(size_type bucket) const {
+                return begin(bucket);
+            }
+
+            local_iterator end(size_type bucket) {
+                //TODO: local iter end
+            }
+
+            const_local_iterator end(size_type bucket) const {
+                //TODO: local iter end
+            }
+
+            cosnt_local_iterator cend(size_type bucket) const {
+                return end(bucket);
             }
 
     };

@@ -66,6 +66,10 @@
         "variant": "cpp",
         "bitset": "cpp",
         "set": "cpp",
-        "*.inc": "cpp"
+        "*.inc": "cpp",
+        "hash_map": "cpp",
+        "codecvt": "cpp",
+        "optional": "cpp",
+        "source_location": "cpp"
     }
 }
