@@ -7,6 +7,7 @@
 #include <stdexcept>
 #include <initializer_list>
 #include <unordered_map>
+#include <unordered_map>
 
 namespace engine { 
     template<typename I, typename N>
@@ -27,8 +28,12 @@ namespace engine {
     };
 
     template<typename K, typename V>
-    class packed_map_node {
+    struct packed_map_node {
+        std::pair<K, V> data;
+        packed_map_node* next;
 
+        template<typename... Args>
+        packed_map_node(packed_map_node* next, Args&&... args) : data(std::forward<Args>(args)...), next(next) {}
     };
 
     template<typename K, typename V, typename H = std::hash<K>, typename E = std::equal_to<K>, typename A = std::allocator<packed_map_node<K, V>>>
@@ -58,14 +63,61 @@ namespace engine {
             using local_iterator = packed_map_local_iterator<data_container_type>;
             using const_local_iterator = const packed_map_local_iterator<data_container_type>;
             using insert_return_type = packed_map_insert_return_type<iterator, node_type>;
-            static constexpr float threshhold = 0.875f;
             static constexpr std::size_t starting_capacity = 16;
+            static constexpr size_type growth = 2;
         private:
             data_container_type data;
             index_container_type index;
             hasher hashf;
             key_equal eqf;
             allocator_type alloc;
+            float lfactor = 0.875f;
+
+            void remove_data(node_type* ptr) {
+                size_type b = bucket(ptr->data.first);
+                if (ptr == index[b]) index[b] = ptr->next;
+                if (ptr != &data.back()) {
+                    node_type** pointer = &index[bucket(data.back().data.first)];
+                    node_type* target = &data.back();
+                    while (*pointer != target) pointer = &(*pointer)->next;
+                    *pointer = ptr;
+                    *ptr = std::move(data.back());
+                }
+                data.pop_back();
+            }
+
+            void maybe_grow_and_rehash() {
+                if (size() > (max_load_factor() * bucket_count())) {
+                    rehash(bucket_count() * growth);
+                }
+            }
+
+            local_iterator bucket_find(const key_type& key, size_type bucket) {
+                local_iterator b = begin(bucket);
+                local_iterator e = end(bucket);
+                for (; b != e; b++) {
+                    if (eqf(b->first, key)) {
+                        return b;
+                    }
+                }
+                return e;
+            }
+
+            const_local_iterator bucket_find(const key_type& key, size_type bucket) const {
+                const_local_iterator b = begin(bucket);
+                const_local_iterator e = end(bucket);
+                for (; b != e; b++) {
+                    if (eqf(b->first, key)) {
+                        return b;
+                    }
+                }
+                return e;
+            }
+
+            bool bucket_contains(const key_type& key, size_type bucket) const {
+                return bucket_find(key, bucket) != end();
+            }
+
         public:
             packed_map() : data{data_container_type(starting_capacity)}, index(index_container_type(starting_capacity)) {}
 
@@ -163,135 +215,176 @@ namespace engine {
 
             template<typename... Args>
             std::pair<iterator, bool> emplace(Args&&... args) {
-                //TODO: function
+                node_type& new_node = data.emplace_back(nullptr, std::forward<Args>(args)...);
+                size_type b = bucket(new_node.data.first);
+                iterator i = iterator(bucket_find(new_node.data.first));
+                if (i != end()) {
+                    data.pop_back();
+                    return std::make_pair(i, false);
+                }
+                new_node.next = index[b];
+                index[b] = &new_node;
+                maybe_grow_and_rehash();
+                return std::make_pair(--end(), true);
             }
 
             template<typename... Args>
             iterator emplace_hint(const_iterator pos, Args&&... args) {
-                //TODO: function
+                //forward for now
+                return emplace(std::forward<Args>(args)...).first;
             }
 
             node_type extract(const_iterator pos) {
-                //TODO: assert and get
+                if (pos == end()) return node_type();
+                return *pos;
             }
 
             node_type extract(const key_type& key) {
-                //TODO: extract
+                return extract(find(key));
             }
 
             insert_return_type insert(node_type&& node) {
-                //TODO: insert
+                size_type b = bucket(node.data.first);
+                iterator i = iterator(bucket_find(node.data.first, b));
+                if (i != end()) return {i, false, std::move(node)};
+                node_type& inserted = data.push_back(std::move(node));
+                inserted.next = index[b];
+                index[b] = &inserted;
+                maybe_grow_and_rehash();
+                return {--end(), true, inserted};
             }
 
             iterator insert(const_iterator, node_type&& node) {
-                //TODO: insert
+                return insert(std::move(node));
             }
 
             template<typename... Args>
             std::pair<iterator, bool> try_emplace(const key_type& key, Args&... args) {
-                //TODO: try to emplace
+                size_type b = bucket(key);
+                iterator i = iterator(bucket_find(key, b));
+                if (i != end()) return std::make_pair(i, false);
+                data.emplace_back(index[i], std::piecewise_construct, std::forward_as_tuple(key), std::forward_as_tuple(std::forward<Args>(args)...));
+                index[i] = &data.back();
+                maybe_grow_and_rehash();
+                return std::make_pair(--end(), true);
             }
 
             template<typename... Args>
             std::pair<iterator, bool> try_emplace(key_type&& key, Args&... args) {
-                //TODO: try to emplace
+                size_type b = bucket(key);
+                iterator i = iterator(bucket_find(key, b));
+                if (i != end()) return std::make_pair(i, false);
+                data.emplace_back(index[i], std::piecewise_construct, std::forward_as_tuple(std::move(key)), std::forward_as_tuple(std::forward<Args>(args)...));
+                index[i] = &data.back();
+                maybe_grow_and_rehash();
+                return std::make_pair(--end(), true);
             }
 
             template<typename... Args>
-            std::pair<iterator, bool> try_emplace(const_iterator pos, const key_type& key, Args&... args) {
-                //TODO: try to emplace
+            iterator try_emplace(const_iterator pos, const key_type& key, Args&... args) {
+                //forward for now
+                return try_emplace(key, std::forward<Args>(args)...).first;
             }
 
             template<typename... Args>
-            std::pair<iterator, bool> try_emplace(const_iterator pos, key_type&& key, Args&... args) {
-                //TODO: try to emplace
+            iterator try_emplace(const_iterator pos, key_type&& key, Args&... args) {
+                //forward for now
+                return try_emplace(std::move(key), std::forward<Args>(args)...).first;
             }
 
             std::pair<iterator, bool> insert(const value_type& val) {
-                //TODO: insert
+                return emplace(val);
             }
 
-            std::pair<iterator, bool> insert(value_type& val) {
-                //TODO: insert
+            std::pair<iterator, bool> insert(value_type&& val) {
+                return emplace(std::move(val));
             }
 
             template<typename P>
             std::enable_if_t<std::is_constructible<value_type, P&&>::value, std::pair<iterator, bool>> insert(P&& p) {
-                //TODO: insert
+                return emplace(std::forward<P>(p));
             }
 
             iterator insert(const_iterator hint, const value_type& val) {
-                //TODO: insert
+                //forward for now
+                return insert(val);
             }
 
             iterator insert(const_iterator hint, value_type& val) {
-                //TODO: insert
+                //forward for now
+                return insert(std::move(val));
             }
 
             template<typename P>
             std::enable_if_t<std::is_constructible<value_type, P&&>::value, iterator> insert(const_iterator hint, P&& p) {
-                //TODO: insert
+                //forward for now
+                return insert(std::forward<P>(p));
             }
 
             template<typename I>
             void insert(I first, I last) {
-                //TODO: insert using iterators
+                for (; first != last; first++) insert(*first);
             }
 
             void insert(std::initializer_list<value_type> i) {
-                //TODO: insert using inti list
+                for (const value_type& v : i) insert(v);
             }
 
             template<typename O>
             std::pair<iterator, bool> insert_or_assign(const key_type& k, O&& o) {
-                auto r = try_emplace(cend(), k, std::forward<O>(o));
+                auto r = try_emplace(k, std::forward<O>(o)); //TODO: hint
                 if (!r.second) {
-                    //TODO: assign
+                    r.first->second = std::forward<O>(o);
+                    r.second = true;
                 }
                 return r;
             }
 
             template<typename O>
             std::pair<iterator, bool> insert_or_assign(key_type&& k, O&& o) {
-                auto r = try_emplace(cend(), std::move(k), std::forward<O>(o));
+                auto r = try_emplace(std::move(k), std::forward<O>(o)); //TODO: hint
                 if (!r.second) {
-                    //TODO: assign
+                    r.first->second = std::forward<O>(o);
+                    r.second = true;
                 }
                 return r;
             }
 
             template<typename O>
             std::pair<iterator, bool> insert_or_assign(const_iterator hint, const key_type& k, O&& o) {
-                auto r = try_emplace(hint, k, std::forward<O>(o));
-                if (!r.second) {
-                    //TODO: assign
-                }
-                return r;
+               //forward for now
+                insert_or_assign(k, std::forward<O>(o));
             }
 
             template<typename O>
             std::pair<iterator, bool> insert_or_assign(const_iterator hint, key_type&& k, O&& o) {
-                auto r = try_emplace(hint, std::move(k), std::forward<O>(o));
-                if (!r.second) {
-                    //TODO: assign
-                }
-                return r;
+                //forward for now
+                insert_or_assign(std::move(k), std::forward<O>(o));
             }
 
             iterator erase(const_iterator pos) {
-                //TODO erase
+                const difference_type d = pos - cbegin();
+                erase(pos->first);
+                return begin() + d;
             }
 
             iterator erase(iterator pos) {
-                //TODO erase
+                erase(pos->first);
+                return pos;
             }
 
             size_type erase(const key_type& key) {
-                //TODO: erase
+                node_type* f = index[bucket(key)];
+                while (f != nullptr && !eqf(f->data.first, key)) f = f->next;
+                if (f == nullptr) return 0;
+                remove_data(f);
+                return 1;
             }
 
             iterator erase(const_iterator first, const_iterator last) {
-                //TODO: erase
+                const difference_type d = first - cbegin();
+                for (; first != last; last--) erase(last);
+                return begin() dist;
             }
 
             void clear() noexcept {
@@ -303,6 +396,7 @@ namespace engine {
             void swap(packed_map& other) { //TODO: noexcept
                 data.swap(other.data);
                 index.swap(other.index);
+                std::swap(lfactor, other.lfactor);
             }
 
             //TODO: merge
@@ -316,11 +410,15 @@ namespace engine {
             }
 
             iterator find(cosnt key_type& key) {
-                //TODO: find
+                size_type b = bucket(key);
+                local_iterator l = bucket_find(key, bucket);
+                return iterator(l);
             }
 
             cosnt_iterator find(cosnt key_type& key) const {
-                //TODO: find
+                size_type b = bucket(key);
+                const_local_iterator l = bucket_find(key, bucket);
+                return iterator(l);
             }
 
             //TODO: find...
@@ -356,11 +454,27 @@ namespace engine {
             }
 
             mapped_type& at(const key_type& key) {
-                //TODO: at
+                iterator i = find(key);
+                if (i == end()) return mapped_type();
+                return i->second;
             }
 
             mapped_type& at(key_type&& key) {
-                //TODO: at
+                iterator i = find(std::move(key));
+                if (i == end()) return mapped_type();
+                return i->second;
+            }
+
+            const mapped_type& at(const key_type& key) const {
+                const_iterator i = find(key);
+                if (i == end()) return mapped_type();
+                return i->second;
+            }
+
+            const mapped_type& at(key_type&& key) const {
+                const_iterator i = find(std::move(key));
+                if (i == end()) return mapped_type();
+                return i->second;
             }
 
             size_type bucket_count() const noexcept {
@@ -371,12 +485,16 @@ namespace engine {
                 return index.max_size();
             }
 
-            size_type bucket_size() const {
-                //TODO: bucket_size
+            size_type bucket_size(size_type index) const {
+                const_local_iterator f = cbegin(index);
+                const_local_iterator l = cend(index);
+                size_type count = 0;
+                for (; f != l; f++) count++;
+                return count;
             }
 
             size_type bucket(const key_type& key) {
-                //TODO: bucket
+                return hashf(key) % bucket_count();
             }
 
             local_iterator begin(size_type bucket) {
@@ -401,6 +519,27 @@ namespace engine {
 
             cosnt_local_iterator cend(size_type bucket) const {
                 return end(bucket);
+            }
+
+            float load_factor() const noexcept {
+                return size() / (float) bucket_count();
+            }
+
+            float max_load_factor() const noexcept {
+                return lfactor;
+            }
+
+            void max_load_factor(float factor) {
+                lfactor = factor;
+                //TODO: rehash???
+            }
+
+            void rehash(size_type cap) {
+                //TODO: rehash
+            }
+
+            void reserve(size_type elems) {
+                //TODO: reserve
             }
 
     };
