@@ -212,11 +212,15 @@ namespace engine {
                 return bucket_find(key, bucket) != end();
             }
 
+            size_type real_bucket_count(size_type count) const {
+                return std::bit_ceil(std::max(std::max(count, min_buckets), (size_type)(std::ceil(size() / max_load_factor()))));
+            }
+
         public:
-            packed_map() : data{data_container_type(min_buckets)}, index{} {}
+            packed_map() : data{data_container_type(min_buckets)}, index(min_buckets, nullptr) {}
 
             explicit packed_map(size_type bucket_count, const H& hash = hasher(), const E& equal = key_equal(), const A& alloc = allocator_type())
-             : data(data_container_type(bucket_count)), index{}, hashf(hash), eqf(equal), alloc(alloc) {}
+             : data{}, index(real_bucket_count(bucket_count), nullptr), hashf(hash), eqf(equal), alloc(alloc) {}
             
             packed_map(size_type bucket_count, const A& alloc)
              : packed_map(bucket_count, hasher(), key_equal(), alloc) {}
@@ -646,7 +650,7 @@ namespace engine {
             }
 
             void rehash(size_type c) {
-                c = std::bit_ceil(std::max(std::max(c, min_buckets), (size_type)(std::ceil(size() / max_load_factor()))));
+                c = real_bucket_count(c);
                 if (c != bucket_count()) {
                     index.resize(c);
                     std::fill(index.begin(), index.end(), nullptr);
