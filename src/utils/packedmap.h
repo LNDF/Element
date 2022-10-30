@@ -1,12 +1,16 @@
 #pragma once
 
+#include <cmath>
+#include <bit>
 #include <vector>
 #include <functional>
 #include <utility>
+#include <algorithm>
 #include <memory>
+#include <type_traits>
+#include <iterator>
 #include <stdexcept>
 #include <initializer_list>
-#include <unordered_map>
 #include <unordered_map>
 
 namespace engine { 
@@ -17,26 +21,117 @@ namespace engine {
         N node;
     };
 
-    template<typename W>
-    class packed_map_iterator {
+    template<typename V, bool is_const>
+    class packed_map_iterator_base {
+        protected:
+            using node_type = std::conditional_t<is_const, const V, V>;
 
+            node_type* curr;
+        public:
+            using value_type = decltype(std::declval<node_type>().data);
+            using difference_type = std::ptrdiff_t;
+            using pointer = std::conditional_t<is_const, const value_type*, value_type*>;
+            using reference = std::conditional_t<is_const, const value_type&, value_type&>;
+        protected:
+            packed_map_iterator_base(node_type* curr) : curr(curr) {}
+        public:
+            reference operator*() const noexcept {
+                return curr->data;
+            }
+
+            pointer operator->() const noexcept {
+                return &curr->data;
+            }
+
+            friend bool operator==(const packed_map_iterator_base& x, const packed_map_iterator_base& y) noexcept {
+                return x.curr == y.curr;
+            }
+
+            friend bool operator!=(const packed_map_iterator_base& x, const packed_map_iterator_base& y) noexcept {
+                return x.curr != y.curr;
+            }
     };
 
-    template<typename W>
-    class packed_map_local_iterator {
-        
+    template<typename V, bool is_const>
+    class packed_map_local_iterator;
+
+    template<typename V, bool is_const>
+    class packed_map_iterator : public packed_map_iterator_base<V, is_const> {
+        private:
+            friend class packed_map_local_iterator<V, is_const>;
+
+            using base_type = packed_map_iterator_base<V, is_const>;
+            using node_type = base_type::node_type;
+        public:
+            using iterator_category = std::input_iterator_tag;
+
+            packed_map_iterator(node_type* curr) : base_type(curr) {}
+
+            explicit packed_map_iterator(packed_map_local_iterator<V, is_const> other) : base_type(other.curr) {}
+            
+            packed_map_iterator& operator++() noexcept {
+                this->curr++;
+                return *this;
+            }
+
+            packed_map_iterator operator++(int) noexcept {
+                packed_map_iterator tmp(*this);
+                this->curr++;
+                return tmp;
+            }
+
+            packed_map_iterator& operator--() noexcept {
+                this->curr--;
+                return *this;
+            }
+
+            packed_map_iterator operator--(int) noexcept {
+                packed_map_iterator tmp(*this);
+                this->curr--;
+                return tmp;
+            }
+    };
+
+    template<typename V, bool is_const>
+    class packed_map_local_iterator : public packed_map_iterator_base<V, is_const> {
+        private:
+            friend class packed_map_iterator<V, is_const>;
+
+            using base_type = packed_map_iterator_base<V, is_const>;
+            using node_type = base_type::node_type;
+        public:
+            using iterator_category = std::forward_iterator_tag;
+
+            packed_map_local_iterator(node_type* curr) : base_type(curr) {}
+
+            explicit packed_map_local_iterator(packed_map_iterator<V, is_const> other) : base_type(other.curr) {}
+            
+            packed_map_local_iterator& operator++()  noexcept {
+                this->curr = this->curr->next;
+                return *this;
+            }
+
+            packed_map_local_iterator operator++(int) noexcept {
+                packed_map_local_iterator tmp(*this);
+                this->curr = this->curr->next;
+                return tmp;
+            }
     };
 
     template<typename K, typename V>
     struct packed_map_node {
-        std::pair<K, V> data;
+        using value_type = std::pair<K, V>;
+        
+        value_type data;
         packed_map_node* next;
+
+        packed_map_node() = default;
 
         template<typename... Args>
         packed_map_node(packed_map_node* next, Args&&... args) : data(std::forward<Args>(args)...), next(next) {}
     };
 
-    template<typename K, typename V, typename H = std::hash<K>, typename E = std::equal_to<K>, typename A = std::allocator<packed_map_node<K, V>>>
+    template<typename K, typename V, typename H = std::hash<K>, typename E = std::equal_to<K>, typename A = std::allocator<std::pair<K, V>>>
     class packed_map {
         public:
             using key_type = K;
@@ -58,13 +153,12 @@ namespace engine {
         public:
             using pointer = traits::pointer;
             using const_pointer = traits::const_pointer;
-            using iterator = packed_map_iterator<data_container_type>;
-            using const_iterator = const packed_map_iterator<data_container_type>;
-            using local_iterator = packed_map_local_iterator<data_container_type>;
-            using const_local_iterator = const packed_map_local_iterator<data_container_type>;
+            using iterator = packed_map_iterator<node_type, false>;
+            using const_iterator = packed_map_iterator<node_type, true>;
+            using local_iterator = packed_map_local_iterator<node_type, false>;
+            using const_local_iterator = packed_map_local_iterator<node_type, true>;
             using insert_return_type = packed_map_insert_return_type<iterator, node_type>;
-            static constexpr std::size_t starting_capacity = 16;
-            static constexpr size_type growth = 2;
+            static constexpr std::size_t min_buckets = 16;
         private:
             data_container_type data;
             index_container_type index;
@@ -88,7 +182,7 @@ namespace engine {
 
             void maybe_grow_and_rehash() {
                 if (size() > (max_load_factor() * bucket_count())) {
-                    rehash(bucket_count() * growth);
+                    rehash(bucket_count() * 2);
                 }
             }
 
@@ -119,18 +213,18 @@ namespace engine {
             }
 
         public:
-            packed_map() : data{data_container_type(starting_capacity)}, index(index_container_type(starting_capacity)) {}
+            packed_map() : data{data_container_type(min_buckets)}, index{} {}
 
             explicit packed_map(size_type bucket_count, const H& hash = hasher(), const E& equal = key_equal(), const A& alloc = allocator_type())
-             : data(data_container_type(bucket_count)), index(index_container_type(bucket_count)), hashf(hash), eqf(equal), alloc(alloc) {}
+             : data(data_container_type(bucket_count)), index{}, hashf(hash), eqf(equal), alloc(alloc) {}
             
             packed_map(size_type bucket_count, const A& alloc)
              : packed_map(bucket_count, hasher(), key_equal(), alloc) {}
 
-            explicit packed_map(const A& alloc) : packed_map(starting_capacity, alloc) {}
+            explicit packed_map(const A& alloc) : packed_map(min_buckets, alloc) {}
 
             template<typename I>
-            packed_map(I first, I last, size_type bucket_count, const H& hash = hasher(), const E& qual = key_equal(), const A& alloc = allocator_type())
+            packed_map(I first, I last, size_type bucket_count, const H& hash = hasher(), const E& equal = key_equal(), const A& alloc = allocator_type())
              : packed_map(bucket_count, hash, equal, alloc) {
                 //TODO: import from iter
             }
@@ -140,26 +234,26 @@ namespace engine {
              : packed_map(first, last, bucket_count, hasher(), key_equal(), alloc) {}
 
             template<typename I>
-            packed_map(I first, I last, size_type bucket_count, const H& hash, const &A alloc)
+            packed_map(I first, I last, size_type bucket_count, const H& hash, const A& alloc)
              : packed_map(first, last, bucket_count, hash, key_equal(), alloc) {}
 
             packed_map(const packed_map& other) = default;
             
             packed_map(const packed_map& other, A& alloc)
-             : data(other.data), index(other.index), hashf(other.hashf), eqf(other.eqf), alloc(alloc) {}
+             : data(other.data), index(other.index), hashf(other.hashf), eqf(other.eqf), alloc(alloc), lfactor(other.lfactor) {}
 
             packed_map(packed_map&& other) = default;
             
             packed_map(packed_map&& other, A& alloc)
-             : data(std::move(other.data)), index(std::move(other.index)), hashf(std::move(other.hashf)), eqf(std::move(other.eqf)), alloc(alloc) {}
+             : data(std::move(other.data)), index(std::move(other.index)), hashf(std::move(other.hashf)), eqf(std::move(other.eqf)), alloc(alloc), lfactor(other.lfactor) {}
             
-            packed_map(std::initializer_list<value_type> init, size_type bucket_count = starting_capacity, const H& hash = hasher(), const E& equal = key_equal(), const A& alloc = allocator_type())
+            packed_map(std::initializer_list<value_type> init, size_type bucket_count = min_buckets, const H& hash = hasher(), const E& equal = key_equal(), const A& alloc = allocator_type())
              : packed_map(bucket_count, hash, equal, alloc) {
                 //TODO: initlist
              }
 
             packed_map(std::initializer_list<value_type> init, size_type bucket_count, const A& alloc)
-             : packed_map(bucket_count, hasher(), key_equal() alloc) {}
+             : packed_map(bucket_count, hasher(), key_equal(), alloc) {}
             
             packed_map(std::initializer_list<value_type> init, size_type bucket_count, const H& hash, const A& alloc)
              : packed_map(bucket_count, hash, key_equal(), alloc) {}
@@ -190,11 +284,11 @@ namespace engine {
             }
 
             iterator begin() noexcept {
-                return iterator(data.begin());
+                return iterator(data.data());
             }
 
             const_iterator begin() const noexcept {
-                return iterator(data.begin());
+                return const_iterator(data.data());
             }
 
             const_iterator cbegin() const noexcept {
@@ -202,11 +296,11 @@ namespace engine {
             }
 
             iterator end() noexcept {
-                return iterator(data.end());
+                return iterator(data.data() + size());
             }
 
             const_iterator end() const noexcept {
-                return iterator(data.end());
+                return const_iterator(data.data() + size());
             }
 
             const_iterator cend() const noexcept {
@@ -217,7 +311,7 @@ namespace engine {
             std::pair<iterator, bool> emplace(Args&&... args) {
                 node_type& new_node = data.emplace_back(nullptr, std::forward<Args>(args)...);
                 size_type b = bucket(new_node.data.first);
-                iterator i = iterator(bucket_find(new_node.data.first));
+                iterator i = iterator(bucket_find(new_node.data.first, b));
                 if (i != end()) {
                     data.pop_back();
                     return std::make_pair(i, false);
@@ -259,12 +353,12 @@ namespace engine {
             }
 
             template<typename... Args>
-            std::pair<iterator, bool> try_emplace(const key_type& key, Args&... args) {
+            std::pair<iterator, bool> try_emplace(const key_type& key, Args&&... args) {
                 size_type b = bucket(key);
                 iterator i = iterator(bucket_find(key, b));
                 if (i != end()) return std::make_pair(i, false);
-                data.emplace_back(index[i], std::piecewise_construct, std::forward_as_tuple(key), std::forward_as_tuple(std::forward<Args>(args)...));
-                index[i] = &data.back();
+                data.emplace_back(index[b], std::piecewise_construct, std::forward_as_tuple(key), std::forward_as_tuple(std::forward<Args>(args)...));
+                index[b] = &data.back();
                 maybe_grow_and_rehash();
                 return std::make_pair(--end(), true);
             }
@@ -326,6 +420,7 @@ namespace engine {
                 for (; first != last; first++) insert(*first);
             }
 
+
             void insert(std::initializer_list<value_type> i) {
                 for (const value_type& v : i) insert(v);
             }
@@ -362,7 +457,7 @@ namespace engine {
                 insert_or_assign(std::move(k), std::forward<O>(o));
             }
 
-            iterator erase(const_iterator pos) {
+            iterator erase(const_iterator pos) const {
                 const difference_type d = pos - cbegin();
                 erase(pos->first);
                 return begin() + d;
@@ -384,7 +479,7 @@ namespace engine {
             iterator erase(const_iterator first, const_iterator last) {
                 const difference_type d = first - cbegin();
                 for (; first != last; last--) erase(last);
-                return begin() dist;
+                return begin() + d;
             }
 
             void clear() noexcept {
@@ -409,16 +504,16 @@ namespace engine {
                 return eqf;
             }
 
-            iterator find(cosnt key_type& key) {
+            iterator find(const key_type& key) {
                 size_type b = bucket(key);
-                local_iterator l = bucket_find(key, bucket);
+                local_iterator l = bucket_find(key, b);
                 return iterator(l);
             }
 
-            cosnt_iterator find(cosnt key_type& key) const {
+            const_iterator find(const key_type& key) const {
                 size_type b = bucket(key);
-                const_local_iterator l = bucket_find(key, bucket);
-                return iterator(l);
+                const_local_iterator l = bucket_find(key, b);
+                return const_iterator(l);
             }
 
             //TODO: find...
@@ -446,34 +541,50 @@ namespace engine {
             //TODO: eqal_range...
 
             mapped_type& operator[](const key_type& key) {
-                return at(key);
+                iterator i = find(key);
+                if (i == end()) i = emplace(std::piecewise_construct, std::forward_as_tuple(key), std::tuple<>()).first;
+                return i->second;
             }
 
             mapped_type& operator[](key_type&& key) {
-                return at(std::move(key));
+                iterator i = find(key);
+                if (i == end()) i = emplace(std::piecewise_construct, std::forward_as_tuple(std::move(key)), std::tuple<>()).first;
+                return i->second;
+            }
+
+            const mapped_type& operator[](const key_type& key) const {
+                const_iterator i = find(key);
+                if (i == end()) i = emplace(std::piecewise_construct, std::forward_as_tuple(key), std::tuple<>()).first;
+                return i->second;
+            }
+
+            const mapped_type& operator[](key_type&& key) const {
+                const_iterator i = find(key);
+                if (i == end()) i = emplace(std::piecewise_construct, std::forward_as_tuple(key), std::tuple<>()).first;
+                return i->second;
             }
 
             mapped_type& at(const key_type& key) {
                 iterator i = find(key);
-                if (i == end()) return mapped_type();
+                if (i == end()) throw std::out_of_range("Key not found in map");
                 return i->second;
             }
 
             mapped_type& at(key_type&& key) {
                 iterator i = find(std::move(key));
-                if (i == end()) return mapped_type();
+                if (i == end()) throw std::out_of_range("Key not found in map");
                 return i->second;
             }
 
             const mapped_type& at(const key_type& key) const {
                 const_iterator i = find(key);
-                if (i == end()) return mapped_type();
+                if (i == end()) throw std::out_of_range("Key not found in map");
                 return i->second;
             }
 
             const mapped_type& at(key_type&& key) const {
                 const_iterator i = find(std::move(key));
-                if (i == end()) return mapped_type();
+                if (i == end()) throw std::out_of_range("Key not found in map");
                 return i->second;
             }
 
@@ -493,16 +604,16 @@ namespace engine {
                 return count;
             }
 
-            size_type bucket(const key_type& key) {
+            size_type bucket(const key_type& key) const {
                 return hashf(key) % bucket_count();
             }
 
             local_iterator begin(size_type bucket) {
-                //TODO: local iter begin
+                return local_iterator(index[bucket]);
             }
 
             const_local_iterator begin(size_type bucket) const {
-                //TODO: local iter begin
+                return const_local_iterator(index[bucket]);
             }
 
             const_local_iterator cbegin(size_type bucket) const {
@@ -510,14 +621,14 @@ namespace engine {
             }
 
             local_iterator end(size_type bucket) {
-                //TODO: local iter end
+                return local_iterator(nullptr);
             }
 
             const_local_iterator end(size_type bucket) const {
-                //TODO: local iter end
+                return const_local_iterator(nullptr);
             }
 
-            cosnt_local_iterator cend(size_type bucket) const {
+            const_local_iterator cend(size_type bucket) const {
                 return end(bucket);
             }
 
@@ -531,15 +642,24 @@ namespace engine {
 
             void max_load_factor(float factor) {
                 lfactor = factor;
-                //TODO: rehash???
+                rehash(0);
             }
 
-            void rehash(size_type cap) {
-                //TODO: rehash
+            void rehash(size_type c) {
+                c = std::bit_ceil(std::max(std::max(c, min_buckets), (size_type)(std::ceil(size() / max_load_factor()))));
+                if (c != bucket_count()) {
+                    index.resize(c);
+                    std::fill(index.begin(), index.end(), nullptr);
+                    for (node_type& node : data) {
+                        size_type b = bucket(node.data.first);
+                        node.next = index[b];
+                        index[b] = &node;
+                    }
+                }
             }
 
             void reserve(size_type elems) {
-                //TODO: reserve
+                rehash(std::ceil(elems / max_load_factor()));
             }
 
     };
