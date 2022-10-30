@@ -51,11 +51,10 @@ namespace engine {
             template<std::size_t C, std::size_t... I>
             void each_impl(const std::index_sequence<I...>&, const callback_type& callback) {
                 auto pool = std::get<C>(pools);
-                for (auto& i : *pool) {
+                for (auto& [id, comp] : *pool) {
                     bool call = true;
-                    uuid id = i.first->get_uuid();
                     ((call = !std::get<I>(pools)->contains(id) ? false : call ? true : false), ...);
-                    if (call) callback(i.first, &(*std::get<I>(pools))[id].second...);
+                    if (call) callback(comp.first, &(*std::get<I>(pools))[id].second...);
                 }
             }
 

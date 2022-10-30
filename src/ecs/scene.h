@@ -50,14 +50,14 @@ namespace engine {
             template<typename T>
             void add_component(game_object* object, T&& comp) {
                 component_pool<T>* pool = get_component_pool<T>();
-                pool->insert(object->id, {object, std::forward<T&&>(comp)});
+                pool->try_emplace(object->id, object, std::move(comp));
                 object->signature.set(signature_manager::get_bit_position<T>(), true);
             }
 
             template<typename T>
             void add_component(game_object* object, const T& comp) {
                 component_pool<T>* pool = get_component_pool<T>();
-                pool->insert(object->id, {object, comp});
+                pool->try_emplace(object->id, object, comp);
                 object->signature.set(signature_manager::get_bit_position<T>(), true);
             }
 

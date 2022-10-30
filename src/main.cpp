@@ -2,6 +2,7 @@
 
 #include "ecs/scene.h"
 #include "ecs/gameobject.h"
+#include "utils/packedmap.h"
 #include <string>
 
 using namespace engine;
@@ -38,5 +39,6 @@ int main() {
     s.view<test_comp, t2>().each([](game_object* obj, test_comp* tc, t2* c) {
         std::cout << obj->get_uuid().str() << " " << tc->a << " " << c->a << std::endl;
     });
+    
     return 0;
 }
