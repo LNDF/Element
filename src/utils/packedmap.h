@@ -64,6 +64,10 @@ namespace engine {
             using node_type = base_type::node_type;
         public:
             using iterator_category = std::input_iterator_tag;
+            using value_type = base_type::value_type;
+            using difference_type = base_type::difference_type;
+            using pointer = base_type::pointer;
+            using reference = base_type::reference;
 
             packed_map_iterator(node_type* curr) : base_type(curr) {}
 
@@ -90,6 +94,26 @@ namespace engine {
                 this->curr--;
                 return tmp;
             }
+
+            packed_map_iterator& operator+=(difference_type diff) noexcept {
+                this->curr += diff;
+                return *this;
+            }
+
+            packed_map_iterator operator+(difference_type diff) noexcept {
+                packed_map_iterator tmp;
+                return tmp += diff;
+            }
+
+            packed_map_iterator& operator-=(difference_type diff) noexcept {
+                this->curr -= diff;
+                return *this;
+            }
+
+            packed_map_iterator operator-(difference_type diff) noexcept {
+                packed_map_iterator tmp;
+                return tmp -= diff;
+            }
     };
 
     template<typename V, bool is_const>
@@ -101,6 +125,10 @@ namespace engine {
             using node_type = base_type::node_type;
         public:
             using iterator_category = std::forward_iterator_tag;
+            using value_type = base_type::value_type;
+            using difference_type = base_type::difference_type;
+            using pointer = base_type::pointer;
+            using reference = base_type::reference;
 
             packed_map_local_iterator(node_type* curr) : base_type(curr) {}
 
@@ -217,7 +245,7 @@ namespace engine {
             }
 
         public:
-            packed_map() : data{data_container_type(min_buckets)}, index(min_buckets, nullptr) {}
+            packed_map() : data{}, index(min_buckets, nullptr) {}
 
             explicit packed_map(size_type bucket_count, const H& hash = hasher(), const E& equal = key_equal(), const A& alloc = allocator_type())
              : data{}, index(real_bucket_count(bucket_count), nullptr), hashf(hash), eqf(equal), alloc(alloc) {}
@@ -315,10 +343,10 @@ namespace engine {
             std::pair<iterator, bool> emplace(Args&&... args) {
                 node_type& new_node = data.emplace_back(nullptr, std::forward<Args>(args)...);
                 size_type b = bucket(new_node.data.first);
-                iterator i = iterator(bucket_find(new_node.data.first, b));
-                if (i != end()) {
+                local_iterator i = bucket_find(new_node.data.first, b);
+                if (i != end(b)) {
                     data.pop_back();
-                    return std::make_pair(i, false);
+                    return std::make_pair(iterator(i), false);
                 }
                 new_node.next = index[b];
                 index[b] = &new_node;
@@ -343,8 +371,8 @@ namespace engine {
 
             insert_return_type insert(node_type&& node) {
                 size_type b = bucket(node.data.first);
-                iterator i = iterator(bucket_find(node.data.first, b));
-                if (i != end()) return {i, false, std::move(node)};
+                local_iterator i = bucket_find(node.data.first, b);
+                if (i != end(b)) return {iterator(i), false, std::move(node)};
                 node_type& inserted = data.push_back(std::move(node));
                 inserted.next = index[b];
                 index[b] = &inserted;
@@ -359,8 +387,8 @@ namespace engine {
             template<typename... Args>
             std::pair<iterator, bool> try_emplace(const key_type& key, Args&&... args) {
                 size_type b = bucket(key);
-                iterator i = iterator(bucket_find(key, b));
-                if (i != end()) return std::make_pair(i, false);
+                local_iterator i = bucket_find(key, b);
+                if (i != end(b)) return std::make_pair(iterator(i), false);
                 data.emplace_back(index[b], std::piecewise_construct, std::forward_as_tuple(key), std::forward_as_tuple(std::forward<Args>(args)...));
                 index[b] = &data.back();
                 maybe_grow_and_rehash();
@@ -370,8 +398,8 @@ namespace engine {
             template<typename... Args>
             std::pair<iterator, bool> try_emplace(key_type&& key, Args&... args) {
                 size_type b = bucket(key);
-                iterator i = iterator(bucket_find(key, b));
-                if (i != end()) return std::make_pair(i, false);
+                local_iterator i = bucket_find(key, b);
+                if (i != end(b)) return std::make_pair(iterator(i), false);
                 data.emplace_back(index[i], std::piecewise_construct, std::forward_as_tuple(std::move(key)), std::forward_as_tuple(std::forward<Args>(args)...));
                 index[i] = &data.back();
                 maybe_grow_and_rehash();
@@ -489,7 +517,7 @@ namespace engine {
             void clear() noexcept {
                 data.clear();
                 index.clear();
-                //TODO: rehash???
+                rehash(0);
             }
 
             void swap(packed_map& other) { //TODO: noexcept
@@ -534,12 +562,14 @@ namespace engine {
 
             std::pair<iterator, iterator> eqal_range(const key_type& key) {
                 iterator it = find(key);
-                return std::make_pair<iterator, iterator>(it, it); //maybe it + 1???
+                if (it == end()) return std::make_pair<iterator, iterator>(it, it);
+                return std::make_pair<iterator, iterator>(it, it + 1);
             }
 
             std::pair<const_iterator, const_iterator> eqal_range(const key_type& key) const {
                 const_iterator it = find(key);
-                return std::make_pair<iterator, iterator>(it, it); //maybe it + 1???
+                if (it == end()) return std::make_pair<const_iterator, const_iterator>(it, it);
+                return std::make_pair<const_iterator, const_iterator>(it, it + 1);
             }
 
             //TODO: eqal_range...
@@ -553,18 +583,6 @@ namespace engine {
             mapped_type& operator[](key_type&& key) {
                 iterator i = find(key);
                 if (i == end()) i = emplace(std::piecewise_construct, std::forward_as_tuple(std::move(key)), std::tuple<>()).first;
-                return i->second;
-            }
-
-            const mapped_type& operator[](const key_type& key) const {
-                const_iterator i = find(key);
-                if (i == end()) i = emplace(std::piecewise_construct, std::forward_as_tuple(key), std::tuple<>()).first;
-                return i->second;
-            }
-
-            const mapped_type& operator[](key_type&& key) const {
-                const_iterator i = find(key);
-                if (i == end()) i = emplace(std::piecewise_construct, std::forward_as_tuple(key), std::tuple<>()).first;
                 return i->second;
             }
 
