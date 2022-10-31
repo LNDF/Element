@@ -71,7 +71,7 @@ namespace engine {
 
             packed_map_iterator(node_type* curr) : base_type(curr) {}
 
-            explicit packed_map_iterator(packed_map_local_iterator<V, is_const> other) : base_type(other.curr) {}
+            explicit packed_map_iterator(packed_map_local_iterator<V, is_const> other, packed_map_iterator end) : base_type(other.curr == nullptr ? end.curr : other.curr) {}
             
             packed_map_iterator& operator++() noexcept {
                 this->curr++;
@@ -132,7 +132,7 @@ namespace engine {
 
             packed_map_local_iterator(node_type* curr) : base_type(curr) {}
 
-            explicit packed_map_local_iterator(packed_map_iterator<V, is_const> other) : base_type(other.curr) {}
+            explicit packed_map_local_iterator(packed_map_iterator<V, is_const> other, packed_map_iterator<V, is_const> end) : base_type(other.curr == end.curr ? nullptr : other.curr) {}
             
             packed_map_local_iterator& operator++()  noexcept {
                 this->curr = this->curr->next;
@@ -346,7 +346,7 @@ namespace engine {
                 local_iterator i = bucket_find(new_node.data.first, b);
                 if (i != end(b)) {
                     data.pop_back();
-                    return std::make_pair(iterator(i), false);
+                    return std::make_pair(iterator(i, end()), false);
                 }
                 new_node.next = index[b];
                 index[b] = &new_node;
@@ -372,7 +372,7 @@ namespace engine {
             insert_return_type insert(node_type&& node) {
                 size_type b = bucket(node.data.first);
                 local_iterator i = bucket_find(node.data.first, b);
-                if (i != end(b)) return {iterator(i), false, std::move(node)};
+                if (i != end(b)) return {iterator(i, end()), false, std::move(node)};
                 node_type& inserted = data.push_back(std::move(node));
                 inserted.next = index[b];
                 index[b] = &inserted;
@@ -388,7 +388,7 @@ namespace engine {
             std::pair<iterator, bool> try_emplace(const key_type& key, Args&&... args) {
                 size_type b = bucket(key);
                 local_iterator i = bucket_find(key, b);
-                if (i != end(b)) return std::make_pair(iterator(i), false);
+                if (i != end(b)) return std::make_pair(iterator(i, end()), false);
                 data.emplace_back(index[b], std::piecewise_construct, std::forward_as_tuple(key), std::forward_as_tuple(std::forward<Args>(args)...));
                 index[b] = &data.back();
                 maybe_grow_and_rehash();
@@ -399,7 +399,7 @@ namespace engine {
             std::pair<iterator, bool> try_emplace(key_type&& key, Args&... args) {
                 size_type b = bucket(key);
                 local_iterator i = bucket_find(key, b);
-                if (i != end(b)) return std::make_pair(iterator(i), false);
+                if (i != end(b)) return std::make_pair(iterator(i, end()), false);
                 data.emplace_back(index[i], std::piecewise_construct, std::forward_as_tuple(std::move(key)), std::forward_as_tuple(std::forward<Args>(args)...));
                 index[i] = &data.back();
                 maybe_grow_and_rehash();
@@ -539,13 +539,13 @@ namespace engine {
             iterator find(const key_type& key) {
                 size_type b = bucket(key);
                 local_iterator l = bucket_find(key, b);
-                return iterator(l);
+                return iterator(l, end());
             }
 
             const_iterator find(const key_type& key) const {
                 size_type b = bucket(key);
                 const_local_iterator l = bucket_find(key, b);
-                return const_iterator(l);
+                return const_iterator(l, end());
             }
 
             //TODO: find...
