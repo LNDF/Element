@@ -5,6 +5,7 @@
 #include <vector>
 #include <functional>
 #include <utility>
+#include <limits>
 #include <algorithm>
 #include <memory>
 #include <type_traits>
@@ -22,81 +23,70 @@ namespace engine {
     };
 
     template<typename V, bool is_const>
-    class packed_map_iterator_base {
-        protected:
-            using node_type = std::conditional_t<is_const, const V, V>;
+    class packed_map_local_iterator;
+
+    template<typename V, bool is_const>
+    class packed_map_iterator {
+        private:
+            friend class packed_map_local_iterator<V, is_const>;
+            
+            using container_type = std::conditional_t<is_const, const V, V>;
+            using node_type = std::conditional_t<is_const,const typename container_type::value_type, typename container_type::value_type>;
+
+            static constexpr std::size_t local_end = std::numeric_limits<std::size_t>::max();
 
             node_type* curr;
         public:
+            using iterator_category = std::input_iterator_tag;
             using value_type = decltype(std::declval<node_type>().data);
             using difference_type = std::ptrdiff_t;
             using pointer = std::conditional_t<is_const, const value_type*, value_type*>;
             using reference = std::conditional_t<is_const, const value_type&, value_type&>;
-        protected:
-            packed_map_iterator_base(node_type* curr) : curr(curr) {}
-        public:
+
+            packed_map_iterator(node_type* curr) : curr(curr) {}
+
+            explicit packed_map_iterator(packed_map_local_iterator<V, is_const> other) : curr(other.off == local_end ? (other.cont->data() + other.cont->size()) : (other.cont->data() + other.off)) {}
+
             reference operator*() const noexcept {
-                return curr->data;
+                return this->curr->data;
             }
 
             pointer operator->() const noexcept {
-                return &curr->data;
+                return &this->curr->data;
             }
 
-            friend bool operator==(const packed_map_iterator_base& x, const packed_map_iterator_base& y) noexcept {
+            friend bool operator==(const packed_map_iterator& x, const packed_map_iterator& y) noexcept {
                 return x.curr == y.curr;
             }
 
-            friend bool operator!=(const packed_map_iterator_base& x, const packed_map_iterator_base& y) noexcept {
+            friend bool operator!=(const packed_map_iterator& x, const packed_map_iterator& y) noexcept {
                 return x.curr != y.curr;
             }
-    };
 
-    template<typename V, bool is_const>
-    class packed_map_local_iterator;
-
-    template<typename V, bool is_const>
-    class packed_map_iterator : public packed_map_iterator_base<V, is_const> {
-        private:
-            friend class packed_map_local_iterator<V, is_const>;
-
-            using base_type = packed_map_iterator_base<V, is_const>;
-            using node_type = base_type::node_type;
-        public:
-            using iterator_category = std::input_iterator_tag;
-            using value_type = base_type::value_type;
-            using difference_type = base_type::difference_type;
-            using pointer = base_type::pointer;
-            using reference = base_type::reference;
-
-            packed_map_iterator(node_type* curr) : base_type(curr) {}
-
-            explicit packed_map_iterator(packed_map_local_iterator<V, is_const> other, packed_map_iterator end) : base_type(other.curr == nullptr ? end.curr : other.curr) {}
-            
             packed_map_iterator& operator++() noexcept {
-                this->curr++;
+                curr++;
                 return *this;
             }
 
             packed_map_iterator operator++(int) noexcept {
                 packed_map_iterator tmp(*this);
-                this->curr++;
+                curr++;
                 return tmp;
             }
 
             packed_map_iterator& operator--() noexcept {
-                this->curr--;
+                curr--;
                 return *this;
             }
 
             packed_map_iterator operator--(int) noexcept {
                 packed_map_iterator tmp(*this);
-                this->curr--;
+                curr--;
                 return tmp;
             }
 
             packed_map_iterator& operator+=(difference_type diff) noexcept {
-                this->curr += diff;
+                curr += diff;
                 return *this;
             }
 
@@ -106,7 +96,7 @@ namespace engine {
             }
 
             packed_map_iterator& operator-=(difference_type diff) noexcept {
-                this->curr -= diff;
+                curr -= diff;
                 return *this;
             }
 
@@ -117,31 +107,52 @@ namespace engine {
     };
 
     template<typename V, bool is_const>
-    class packed_map_local_iterator : public packed_map_iterator_base<V, is_const> {
+    class packed_map_local_iterator {
         private:
             friend class packed_map_iterator<V, is_const>;
 
-            using base_type = packed_map_iterator_base<V, is_const>;
-            using node_type = base_type::node_type;
+            using container_type = std::conditional_t<is_const, const V, V>;
+            using node_type = std::conditional_t<is_const, const typename container_type::value_type, typename container_type::value_type>;
+
+            static constexpr std::size_t local_end = std::numeric_limits<std::size_t>::max();
+
+            std::size_t off;
+            container_type* cont;
         public:
             using iterator_category = std::forward_iterator_tag;
-            using value_type = base_type::value_type;
-            using difference_type = base_type::difference_type;
-            using pointer = base_type::pointer;
-            using reference = base_type::reference;
+            using value_type = decltype(std::declval<node_type>().data);
+            using difference_type = std::ptrdiff_t;
+            using pointer = std::conditional_t<is_const, const value_type*, value_type*>;
+            using reference = std::conditional_t<is_const, const value_type&, value_type&>;
 
-            packed_map_local_iterator(node_type* curr) : base_type(curr) {}
+            packed_map_local_iterator(std::size_t off, container_type* cont) : off(off), cont(cont) {}
 
-            explicit packed_map_local_iterator(packed_map_iterator<V, is_const> other, packed_map_iterator<V, is_const> end) : base_type(other.curr == end.curr ? nullptr : other.curr) {}
+            explicit packed_map_local_iterator(packed_map_iterator<V, is_const> other, container_type* cont) : off(other.curr == (cont->data() + cont->size()) ? local_end : (other.curr - cont->data())), cont(cont) {}
             
+            reference operator*() const noexcept {
+                return (cont->data() + off)->data;
+            }
+
+            pointer operator->() const noexcept {
+                return &(cont->data() + off)->data;
+            }
+
+            friend bool operator==(const packed_map_local_iterator& x, const packed_map_local_iterator& y) noexcept {
+                return x.off == y.off;
+            }
+
+            friend bool operator!=(const packed_map_local_iterator& x, const packed_map_local_iterator& y) noexcept {
+                return x.off != y.off;
+            }
+
             packed_map_local_iterator& operator++()  noexcept {
-                this->curr = this->curr->next;
+                off = (*cont)[off].next;
                 return *this;
             }
 
             packed_map_local_iterator operator++(int) noexcept {
                 packed_map_local_iterator tmp(*this);
-                this->curr = this->curr->next;
+                off = (*cont)[off].next;
                 return tmp;
             }
     };
@@ -151,12 +162,12 @@ namespace engine {
         using value_type = std::pair<K, V>;
         
         value_type data;
-        packed_map_node* next;
+        std::size_t next;
 
         packed_map_node() = default;
 
         template<typename... Args>
-        packed_map_node(packed_map_node* next, Args&&... args) : data(std::forward<Args>(args)...), next(next) {}
+        packed_map_node(std::size_t next, Args&&... args) : data(std::forward<Args>(args)...), next(next) {}
     };
 
     template<typename K, typename V, typename H = std::hash<K>, typename E = std::equal_to<K>, typename A = std::allocator<std::pair<K, V>>>
@@ -176,18 +187,19 @@ namespace engine {
         private:
             using traits = std::allocator_traits<allocator_type>;
             using data_pointer = traits::template rebind_traits<node_type>::pointer;
-            using index_container_type = std::vector<data_pointer, typename traits::template rebind_alloc<data_pointer>>;
+            using index_container_type = std::vector<size_type, typename traits::template rebind_alloc<size_type>>;
             using data_container_type = std::vector<node_type, typename traits::template rebind_alloc<node_type>>;
         public:
             using pointer = traits::pointer;
             using const_pointer = traits::const_pointer;
-            using iterator = packed_map_iterator<node_type, false>;
-            using const_iterator = packed_map_iterator<node_type, true>;
-            using local_iterator = packed_map_local_iterator<node_type, false>;
-            using const_local_iterator = packed_map_local_iterator<node_type, true>;
+            using iterator = packed_map_iterator<data_container_type, false>;
+            using const_iterator = packed_map_iterator<data_container_type, true>;
+            using local_iterator = packed_map_local_iterator<data_container_type, false>;
+            using const_local_iterator = packed_map_local_iterator<data_container_type, true>;
             using insert_return_type = packed_map_insert_return_type<iterator, node_type>;
-            static constexpr std::size_t min_buckets = 16;
         private:
+            static constexpr std::size_t min_buckets = 16;
+            static constexpr std::size_t local_end = std::numeric_limits<size_type>::max();
             data_container_type data;
             index_container_type index;
             hasher hashf;
@@ -195,15 +207,15 @@ namespace engine {
             allocator_type alloc;
             float lfactor = 0.875f;
 
-            void remove_data(node_type* ptr) {
-                size_type b = bucket(ptr->data.first);
-                if (ptr == index[b]) index[b] = ptr->next;
-                if (ptr != &data.back()) {
-                    node_type** pointer = &index[bucket(data.back().data.first)];
-                    node_type* target = &data.back();
-                    while (*pointer != target) pointer = &(*pointer)->next;
-                    *pointer = ptr;
-                    *ptr = std::move(data.back());
+            void remove_data(size_type pos) {
+                size_type b = bucket(data[pos].data.first);
+                if (pos == index[b]) index[b] = data[pos].next;
+                if (pos != data.size() - 1) {
+                    size_type* pointer = &index[bucket(data.back().data.first)];
+                    size_type target = data.size() - 1;
+                    while (*pointer != target) pointer = &data[*pointer].next;
+                    *pointer = pos;
+                    data[pos] = std::move(data.back());
                 }
                 data.pop_back();
             }
@@ -245,10 +257,10 @@ namespace engine {
             }
 
         public:
-            packed_map() : data{}, index(min_buckets, nullptr) {}
+            packed_map() : data{}, index(min_buckets, local_end) {}
 
             explicit packed_map(size_type bucket_count, const H& hash = hasher(), const E& equal = key_equal(), const A& alloc = allocator_type())
-             : data{}, index(real_bucket_count(bucket_count), nullptr), hashf(hash), eqf(equal), alloc(alloc) {}
+             : data{}, index(real_bucket_count(bucket_count), local_end), hashf(hash), eqf(equal), alloc(alloc) {}
             
             packed_map(size_type bucket_count, const A& alloc)
              : packed_map(bucket_count, hasher(), key_equal(), alloc) {}
@@ -341,15 +353,15 @@ namespace engine {
 
             template<typename... Args>
             std::pair<iterator, bool> emplace(Args&&... args) {
-                node_type& new_node = data.emplace_back(nullptr, std::forward<Args>(args)...);
+                node_type& new_node = data.emplace_back(local_end, std::forward<Args>(args)...);
                 size_type b = bucket(new_node.data.first);
                 local_iterator i = bucket_find(new_node.data.first, b);
                 if (i != end(b)) {
                     data.pop_back();
-                    return std::make_pair(iterator(i, end()), false);
+                    return std::make_pair(iterator(i), false);
                 }
                 new_node.next = index[b];
-                index[b] = &new_node;
+                index[b] = data.size() - 1;
                 maybe_grow_and_rehash();
                 return std::make_pair(--end(), true);
             }
@@ -372,10 +384,10 @@ namespace engine {
             insert_return_type insert(node_type&& node) {
                 size_type b = bucket(node.data.first);
                 local_iterator i = bucket_find(node.data.first, b);
-                if (i != end(b)) return {iterator(i, end()), false, std::move(node)};
+                if (i != end(b)) return {iterator(i), false, std::move(node)};
                 node_type& inserted = data.push_back(std::move(node));
                 inserted.next = index[b];
-                index[b] = &inserted;
+                index[b] = data.size() - 1;
                 maybe_grow_and_rehash();
                 return {--end(), true, inserted};
             }
@@ -388,9 +400,9 @@ namespace engine {
             std::pair<iterator, bool> try_emplace(const key_type& key, Args&&... args) {
                 size_type b = bucket(key);
                 local_iterator i = bucket_find(key, b);
-                if (i != end(b)) return std::make_pair(iterator(i, end()), false);
+                if (i != end(b)) return std::make_pair(iterator(i), false);
                 data.emplace_back(index[b], std::piecewise_construct, std::forward_as_tuple(key), std::forward_as_tuple(std::forward<Args>(args)...));
-                index[b] = &data.back();
+                index[b] = data.size() - 1;
                 maybe_grow_and_rehash();
                 return std::make_pair(--end(), true);
             }
@@ -399,9 +411,9 @@ namespace engine {
             std::pair<iterator, bool> try_emplace(key_type&& key, Args&... args) {
                 size_type b = bucket(key);
                 local_iterator i = bucket_find(key, b);
-                if (i != end(b)) return std::make_pair(iterator(i, end()), false);
+                if (i != end(b)) return std::make_pair(iterator(i), false);
                 data.emplace_back(index[i], std::piecewise_construct, std::forward_as_tuple(std::move(key)), std::forward_as_tuple(std::forward<Args>(args)...));
-                index[i] = &data.back();
+                index[i] = data.size() - 1;
                 maybe_grow_and_rehash();
                 return std::make_pair(--end(), true);
             }
@@ -501,9 +513,9 @@ namespace engine {
             }
 
             size_type erase(const key_type& key) {
-                node_type* f = index[bucket(key)];
-                while (f != nullptr && !eqf(f->data.first, key)) f = f->next;
-                if (f == nullptr) return 0;
+                size_type f = index[bucket(key)];
+                while (f != local_end && !eqf(data[f].data.first, key)) f = data[f].next;
+                if (f == local_end) return 0;
                 remove_data(f);
                 return 1;
             }
@@ -539,13 +551,13 @@ namespace engine {
             iterator find(const key_type& key) {
                 size_type b = bucket(key);
                 local_iterator l = bucket_find(key, b);
-                return iterator(l, end());
+                return iterator(l);
             }
 
             const_iterator find(const key_type& key) const {
                 size_type b = bucket(key);
                 const_local_iterator l = bucket_find(key, b);
-                return const_iterator(l, end());
+                return const_iterator(l);
             }
 
             //TODO: find...
@@ -631,11 +643,11 @@ namespace engine {
             }
 
             local_iterator begin(size_type bucket) {
-                return local_iterator(index[bucket]);
+                return local_iterator(index[bucket], &data);
             }
 
             const_local_iterator begin(size_type bucket) const {
-                return const_local_iterator(index[bucket]);
+                return const_local_iterator(index[bucket], &data);
             }
 
             const_local_iterator cbegin(size_type bucket) const {
@@ -643,11 +655,11 @@ namespace engine {
             }
 
             local_iterator end(size_type bucket) {
-                return local_iterator(nullptr);
+                return local_iterator(local_end, &data);
             }
 
             const_local_iterator end(size_type bucket) const {
-                return const_local_iterator(nullptr);
+                return const_local_iterator(local_end, &data);
             }
 
             const_local_iterator cend(size_type bucket) const {
@@ -671,11 +683,11 @@ namespace engine {
                 c = real_bucket_count(c);
                 if (c != bucket_count()) {
                     index.resize(c);
-                    std::fill(index.begin(), index.end(), nullptr);
+                    std::fill(index.begin(), index.end(), local_end);
                     for (node_type& node : data) {
                         size_type b = bucket(node.data.first);
                         node.next = index[b];
-                        index[b] = &node;
+                        index[b] = &node - data.data();
                     }
                 }
             }
