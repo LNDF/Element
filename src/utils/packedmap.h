@@ -270,7 +270,7 @@ namespace engine {
             template<typename I>
             packed_map(I first, I last, size_type bucket_count, const H& hash = hasher(), const E& equal = key_equal(), const A& alloc = allocator_type())
              : packed_map(bucket_count, hash, equal, alloc) {
-                //TODO: import from iter
+                insert(first, last);
             }
 
             template<typename I>
@@ -283,17 +283,17 @@ namespace engine {
 
             packed_map(const packed_map& other) = default;
             
-            packed_map(const packed_map& other, A& alloc)
+            packed_map(const packed_map& other, A& alloc) noexcept (std::is_nothrow_copy_constructible<H>() && std::is_nothrow_copy_constructible<E>())
              : data(other.data), index(other.index), hashf(other.hashf), eqf(other.eqf), alloc(alloc), lfactor(other.lfactor) {}
 
             packed_map(packed_map&& other) = default;
             
-            packed_map(packed_map&& other, A& alloc)
+            packed_map(packed_map&& other, A& alloc) noexcept (std::is_nothrow_move_constructible<H>() && std::is_nothrow_move_constructible<E>())
              : data(std::move(other.data)), index(std::move(other.index)), hashf(std::move(other.hashf)), eqf(std::move(other.eqf)), alloc(alloc), lfactor(other.lfactor) {}
             
             packed_map(std::initializer_list<value_type> init, size_type bucket_count = min_buckets, const H& hash = hasher(), const E& equal = key_equal(), const A& alloc = allocator_type())
              : packed_map(bucket_count, hash, equal, alloc) {
-                //TODO: initlist
+                insert(init);
              }
 
             packed_map(std::initializer_list<value_type> init, size_type bucket_count, const A& alloc)
@@ -307,7 +307,8 @@ namespace engine {
             packed_map& operator=(packed_map&& other) = default;
 
             packed_map& operator=(std::initializer_list<value_type> i) {
-                //TODO: do init list
+                clear();
+                insert(i);
                 return *this;
             }
 
@@ -532,7 +533,7 @@ namespace engine {
                 rehash(0);
             }
 
-            void swap(packed_map& other) { //TODO: noexcept
+            void swap(packed_map& other) noexcept(std::is_nothrow_swappable<H>() && std::is_nothrow_swappable<A>()) {
                 data.swap(other.data);
                 index.swap(other.index);
                 std::swap(lfactor, other.lfactor);
