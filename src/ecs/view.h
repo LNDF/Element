@@ -64,20 +64,20 @@ namespace engine {
             }
 
             template<std::size_t... I>
-            void update_impl(const std::index_sequence<I...>&) {
+            void sync_impl(const std::index_sequence<I...>&) {
                 std::size_t s = std::numeric_limits<std::size_t>::max();
                 ((small = std::get<I>(pools)->size() >= s ? small : std::get<I>(pools)), ...);
             }
         public:
             scene_view(component_pool<T>*... pools)
                 : pools{pools...} {
-                    update();
+                    sync();
                 }
 
             inline void each(const callback_type& callback) {
                 each_small(std::index_sequence_for<T...>{}, callback);
             }
 
-            inline void update() {update_impl(std::index_sequence_for<T...>{});}
+            inline void sync() {sync_impl(std::index_sequence_for<T...>{});}
     };
 }
