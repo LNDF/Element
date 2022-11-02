@@ -4,12 +4,12 @@
 #include <unordered_map>
 #include <utility>
 
-#include "gameobject.h"
-#include "componentpool.h"
+#include "game_object.h"
+#include "component_pool.h"
 #include "signature.h"
 #include "view.h"
 #include "../utils/uuid.h"
-#include "../utils/packedmap.h"
+#include "../utils/packed_map.h"
 
 
 

@@ -1,8 +1,8 @@
 #pragma once
 
-#include "../utils/packedmap.h"
+#include "../utils/packed_map.h"
 #include "../utils/uuid.h"
-#include "gameobject.h"
+#include "game_object.h"
 
 #include <utility>
 

@@ -6,8 +6,8 @@
 #include <limits>
 #include <functional>
 
-#include "componentpool.h"
-#include "gameobject.h"
+#include "component_pool.h"
+#include "game_object.h"
 #include "../utils/uuid.h"
 
 namespace engine {
