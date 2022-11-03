@@ -12,7 +12,6 @@
 #include <iterator>
 #include <stdexcept>
 #include <initializer_list>
-#include <unordered_map>
 
 namespace engine { 
     template<typename I, typename N>
