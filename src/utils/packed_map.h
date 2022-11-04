@@ -13,6 +13,8 @@
 #include <stdexcept>
 #include <initializer_list>
 
+#include "padded_array_view.h"
+
 namespace engine { 
     template<typename I, typename N>
     struct packed_map_insert_return_type {
@@ -196,6 +198,7 @@ namespace engine {
             using local_iterator = packed_map_local_iterator<data_container_type, false>;
             using const_local_iterator = packed_map_local_iterator<data_container_type, true>;
             using insert_return_type = packed_map_insert_return_type<iterator, node_type>;
+            using key_view_type = padded_array_view<key_type>;
         private:
             static constexpr std::size_t min_buckets = 16;
             static constexpr std::size_t local_end = std::numeric_limits<size_type>::max();
@@ -325,6 +328,10 @@ namespace engine {
 
             size_type max_size() const noexcept {
                 return data.max_size();
+            }
+
+            key_view_type key_view() {
+                return key_view_type((void*)data.data() + offsetof(node_type, data) + offsetof(mapped_type, first), sizeof(node_type), data.size());
             }
 
             iterator begin() noexcept {

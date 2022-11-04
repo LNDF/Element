@@ -7,21 +7,17 @@
 template<typename T, bool is_const>
 class padded_array_view_iterator {
     public:
-        using value_type = T:
+        using value_type = T;
         using difference_type = std::ptrdiff_t;
         using size_type = std::size_t;
         using pointer = std::conditional_t<is_const, const value_type*, value_type*>;
         using reference = std::conditional_t<is_const, const value_type&, value_type&>;
+        using void_pointer = std::conditional_t<is_const, const void*, void*>;
     private:
-        void* ptr;
+        void_pointer ptr;
         difference_type pad;
-
-        padded_array_view_iterator(pointer ptr, difference_type pad) : ptr((void*)ptr), pad(pad) {}
-
-        reference operator[](size_type pos) const noexcept {
-            assert(pos < sz);
-            return *((pointer)(ptr + (pad * pos)));
-        }
+    public:
+        padded_array_view_iterator(void_pointer ptr, difference_type pad) : ptr((void*)ptr), pad(pad) {}
 
         reference operator*() const noexcept {
             return *(pointer)ptr;
@@ -45,7 +41,7 @@ class padded_array_view_iterator {
         }
 
         padded_array_view_iterator operator++(int) noexcept {
-            padded_array_view tmp(ptr, pad, sz);
+            padded_array_view_iterator tmp(ptr, pad);
             ptr += pad;
             return tmp;
         }
@@ -56,7 +52,7 @@ class padded_array_view_iterator {
         }
 
         padded_array_view_iterator operator--(int) noexcept {
-            padded_array_view tmp(ptr, pad, sz);
+            padded_array_view_iterator tmp(ptr, pad);
             ptr -= pad;
             return tmp;
         }
@@ -67,17 +63,17 @@ class padded_array_view_iterator {
         }
 
         padded_array_view_iterator operator+(difference_type diff) noexcept {
-            padded_array_view tmp;
+            padded_array_view_iterator tmp(ptr, pad);
             return tmp += diff;
         }
 
         padded_array_view_iterator& operator-=(difference_type diff) noexcept {
-            curr -= (diff * pad);
+            ptr -= (diff * pad);
             return *this;
         }
 
         padded_array_view_iterator operator-(difference_type diff) noexcept {
-            padded_array_view tmp;
+            padded_array_view_iterator tmp(ptr, pad);
             return tmp -= diff;
         }
 };
@@ -91,13 +87,14 @@ class padded_array_view {
         using pointer = value_type*;
         using reference = value_type&;
         using iterator = padded_array_view_iterator<T, false>;
-        using const_iterator = padded_array_view<T, true>;
+        using const_iterator = padded_array_view_iterator<T, true>;
+        using void_pointer = void*;
     private:
-        void* ptr;
+        void_pointer ptr;
         difference_type pad;
         size_type sz;
-
-        padded_array_view(pointer ptr, difference_type pad, size_type sz) : ptr((void*)ptr), pad(pad), sz(sz) {}
+    public:
+        padded_array_view(void_pointer ptr, difference_type pad, size_type sz) : ptr((void*)ptr), pad(pad), sz(sz) {}
 
         reference operator[](size_type pos) noexcept {
             assert(pos < sz);
@@ -133,7 +130,7 @@ class padded_array_view {
             return x.ptr != y.ptr || x.pad != y.pad || x.sz != y.sz;
         }
 
-        void* void_pointer() {
+        void_pointer raw_pointer() {
             return ptr;
         }
 
