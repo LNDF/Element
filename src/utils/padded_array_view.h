@@ -8,6 +8,7 @@ namespace engine {
     template<typename T, bool is_const>
     class padded_array_view_iterator {
         public:
+            using iterator_category = std::input_iterator_tag;
             using value_type = T;
             using difference_type = std::ptrdiff_t;
             using size_type = std::size_t;
@@ -96,6 +97,7 @@ namespace engine {
             size_type sz;
         public:
             padded_array_view(void_pointer ptr, difference_type pad, size_type sz) : ptr((void*)ptr), pad(pad), sz(sz) {}
+            padded_array_view() = default;
 
             reference operator[](size_type pos) noexcept {
                 assert(pos < sz);
@@ -133,6 +135,26 @@ namespace engine {
 
             void_pointer raw_pointer() {
                 return ptr;
+            }
+
+            const void_pointer raw_pointer() const {
+                return ptr;
+            }
+
+            difference_type padding() const {
+                return pad;
+            }
+
+            void padding(difference_type pad) {
+                this->pad = pad;
+            }
+
+            size_type size() const {
+                return sz;
+            }
+
+            void size(size_type sz) {
+                this->sz = sz;
             }
 
             iterator begin() {

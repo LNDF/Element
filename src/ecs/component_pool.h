@@ -2,6 +2,7 @@
 
 #include "../utils/packed_map.h"
 #include "../utils/uuid.h"
+#include "../utils/padded_array_view.h"
 #include "game_object.h"
 
 #include <utility>
