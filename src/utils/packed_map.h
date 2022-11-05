@@ -331,7 +331,7 @@ namespace engine {
             }
 
             key_view_type key_view() {
-                return key_view_type((void*)data.data() + offsetof(node_type, data) + offsetof(mapped_type, first), sizeof(node_type), data.size());
+                return key_view_type((std::uint8_t*)data.data() + offsetof(node_type, data) + offsetof(mapped_type, first), sizeof(node_type), data.size());
             }
 
             iterator begin() noexcept {

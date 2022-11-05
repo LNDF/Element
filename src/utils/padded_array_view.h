@@ -14,12 +14,12 @@ namespace engine {
             using size_type = std::size_t;
             using pointer = std::conditional_t<is_const, const value_type*, value_type*>;
             using reference = std::conditional_t<is_const, const value_type&, value_type&>;
-            using void_pointer = std::conditional_t<is_const, const void*, void*>;
+            using base_pointer = std::conditional_t<is_const, const std::uint8_t*, std::uint8_t*>;
         private:
-            void_pointer ptr;
+            base_pointer ptr;
             difference_type pad;
         public:
-            padded_array_view_iterator(void_pointer ptr, difference_type pad) : ptr((void*)ptr), pad(pad) {}
+            padded_array_view_iterator(base_pointer ptr, difference_type pad) : ptr((base_pointer)ptr), pad(pad) {}
 
             reference operator*() const noexcept {
                 return *(pointer)ptr;
@@ -90,13 +90,13 @@ namespace engine {
             using reference = value_type&;
             using iterator = padded_array_view_iterator<T, false>;
             using const_iterator = padded_array_view_iterator<T, true>;
-            using void_pointer = void*;
+            using base_pointer = std::uint8_t*;
         private:
-            void_pointer ptr;
+            base_pointer ptr;
             difference_type pad;
             size_type sz;
         public:
-            padded_array_view(void_pointer ptr, difference_type pad, size_type sz) : ptr((void*)ptr), pad(pad), sz(sz) {}
+            padded_array_view(base_pointer ptr, difference_type pad, size_type sz) : ptr((base_pointer)ptr), pad(pad), sz(sz) {}
             padded_array_view() = default;
 
             reference operator[](size_type pos) noexcept {
@@ -133,11 +133,11 @@ namespace engine {
                 return x.ptr != y.ptr || x.pad != y.pad || x.sz != y.sz;
             }
 
-            void_pointer raw_pointer() {
+            base_pointer raw_pointer() {
                 return ptr;
             }
 
-            const void_pointer raw_pointer() const {
+            const base_pointer raw_pointer() const {
                 return ptr;
             }
 
