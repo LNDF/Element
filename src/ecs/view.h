@@ -11,6 +11,7 @@
 #include "game_object.h"
 #include "../utils/uuid.h"
 #include "../utils/padded_array_view.h"
+#include "../utils/pointer_like_wrapper.h"
 
 namespace engine {
 
@@ -20,8 +21,8 @@ namespace engine {
             using iterator_category = std::bidirectional_iterator_tag;
             using value_type = std::tuple<game_object*, T*...>;
             using difference_type = std::ptrdiff_t;
-            using pointer = std::conditional_t<is_const, const value_type*, value_type*>;
-            using reference = std::conditional_t<is_const, const value_type&, value_type>;
+            using pointer = std::conditional_t<is_const, pointer_like_wrapper<const value_type>, pointer_like_wrapper<value_type>>;
+            using reference = std::conditional_t<is_const, const value_type, value_type>;
         private:
             using tuples_type = std::conditional_t<is_const, const std::tuple<component_pool<T>*...>, std::tuple<component_pool<T>*...>>;
             using id_iter_type = std::conditional_t<is_const, padded_array_view<uuid>::const_iterator, padded_array_view<uuid>::iterator>;
@@ -33,19 +34,26 @@ namespace engine {
                 if ((std::get<I>(*pools)->contains(*it) && ...) && (!std::get<I>(*pools)->contains(*it) && ...)) return true;
                 return false;
             }
+
+            template<std::size_t... I>
+            reference get_tuple(std::index_sequence<I...>) const {
+                return std::make_tuple(std::get<0>(*pools)[*it].first, &std::get<I>(*pools)[*it].second...);
+            }
         public:
-            scene_view_iterator(tuples_type* pools, id_iter_type it) : pools(pools), it(it) {}
+            scene_view_iterator(tuples_type* pools, id_iter_type it) : pools(pools), it(it) {
+                while (!is_valid_or_outside(std::index_sequence_for<T...>{})) ++it;
+            }
 
             reference operator*() const noexcept {
-                //TODO return tuple
+                return get_tuple(std::index_sequence_for<T...>{});
             }
 
             pointer operator->() const noexcept {
-                //TODO return tuple
+                return pointer(get_tuple(std::index_sequence_for<T...>{}));
             }
 
             scene_view_iterator& operator++() noexcept {
-                do ++it; while (!is_valid_or_outside());
+                do ++it; while (!is_valid_or_outside(std::index_sequence_for<T...>{}));
                 return *this;
             }
 
@@ -56,7 +64,7 @@ namespace engine {
             }
 
             scene_view_iterator& operator--() noexcept {
-                do --it; while (!is_valid_or_outside());
+                do --it; while (!is_valid_or_outside(std::index_sequence_for<T...>{}));
                 return *this;
             }
 
