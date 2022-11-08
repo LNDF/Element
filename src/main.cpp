@@ -35,12 +35,18 @@ int main() {
     //     std::cout << obj->get_uuid().str() << " " << c->a << std::endl;
     // });
     std::cout << std::endl;
-    s.view<t2>().each([](game_object* obj, t2* c) {
+    for (auto [obj, c] : s.view<t2>()) {
         std::cout << obj->get_uuid().str() << " " << c->a << std::endl;
-    });
+    }
+    // s.view<t2>().each([](game_object* obj, t2* c) {
+    //     std::cout << obj->get_uuid().str() << " " << c->a << std::endl;
+    // });
     std::cout << std::endl;
-    s.view<test_comp, t2>().each([](game_object* obj, test_comp* tc, t2* c) {
+    for (auto [obj, tc, c] : s.view<test_comp, t2>()) {
         std::cout << obj->get_uuid().str() << " " << tc->a << " " << c->a << std::endl;
-    });
+    }
+    // s.view<test_comp, t2>().each([](game_object* obj, test_comp* tc, t2* c) {
+    //     std::cout << obj->get_uuid().str() << " " << tc->a << " " << c->a << std::endl;
+    // });
     return 0;
 }

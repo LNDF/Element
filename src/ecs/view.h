@@ -31,7 +31,7 @@ namespace engine {
 
             template<std::size_t... I>
             bool is_valid_or_outside(const std::index_sequence<I...>&) const {
-                if ((std::get<I>(*pools)->contains(*it) && ...) && (!std::get<I>(*pools)->contains(*it) && ...)) return true;
+                if ((std::get<I>(*pools)->contains(*it) && ...) || !(std::get<I>(*pools)->contains(*it) || ...)) return true;
                 return false;
             }
 
