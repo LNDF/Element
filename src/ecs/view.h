@@ -30,14 +30,14 @@ namespace engine {
             id_iter_type it;
 
             template<std::size_t... I>
-            bool is_valid_or_outside(std::index_sequence<I...>&) const {
+            bool is_valid_or_outside(const std::index_sequence<I...>&) const {
                 if ((std::get<I>(*pools)->contains(*it) && ...) && (!std::get<I>(*pools)->contains(*it) && ...)) return true;
                 return false;
             }
 
             template<std::size_t... I>
-            reference get_tuple(std::index_sequence<I...>) const {
-                return std::make_tuple(std::get<0>(*pools)[*it].first, &std::get<I>(*pools)[*it].second...);
+            reference get_tuple(const std::index_sequence<I...>) const {
+                return std::make_tuple((*std::get<0>(*pools))[*it].first, &(*std::get<I>(*pools))[*it].second...);
             }
         public:
             scene_view_iterator(tuples_type* pools, id_iter_type it) : pools(pools), it(it) {
@@ -87,8 +87,8 @@ namespace engine {
     class scene_view {
         public:
             using callback_type = std::function<void(game_object*, T*...)>;
-            using iterator_type = scene_view_iterator<false, T...>;
-            using const_iterator_type = scene_view_iterator<true, T...>;
+            using iterator = scene_view_iterator<false, T...>;
+            using const_iterator = scene_view_iterator<true, T...>;
         private:
             std::tuple<component_pool<T>*...> pools;
             padded_array_view<uuid> ids;
@@ -117,6 +117,32 @@ namespace engine {
                 each_impl(std::index_sequence_for<T...>{}, callback);
             }
 
+            iterator begin() {
+                return iterator(&pools, ids.begin());
+            }
+
+            const_iterator begin() const {
+                return iterator(&pools, ids.begin());
+            }
+
+            const_iterator cbegin() const {
+                return begin();
+            }
+
+            iterator end() {
+                return iterator(&pools, ids.end());
+            }
+
+            const_iterator end() const {
+                return iterator(&pools, ids.end());
+            }
+
+            const_iterator cend() const {
+                return end();
+            }
+
             inline void sync() {sync_impl(std::index_sequence_for<T...>{});}
+
+            
     };
 }
