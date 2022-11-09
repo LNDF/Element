@@ -6,7 +6,6 @@
 
 #include "game_object.h"
 #include "component_pool.h"
-#include "signature.h"
 #include "view.h"
 #include "../utils/uuid.h"
 #include "../utils/packed_map.h"
@@ -24,41 +23,42 @@ namespace engine {
 
             template<typename T>
             component_pool<T>* get_component_pool() {
-                std::uint32_t i = signature_manager::get_bit_position<T>();
-                if (!component_pools[i]) {
-                    component_pools[i] = new component_pool<T>();
+                std::size_t hash = typeid(T).hash_code();
+                if (!component_pools.contains(hash)) {
+                    component_pool<T>* c = new component_pool<T>();
+                    component_pools.try_emplace(hash, c);
+                    return c;
                 }
-                return reinterpret_cast<component_pool<T>*>(component_pools[i]);
+                return reinterpret_cast<component_pool<T>*>(component_pools.at(hash));
             }
 
             template<typename T>
             const component_pool<T>* get_component_pool() const {
-                std::uint32_t i = signature_manager::get_bit_position<T>();
-                if (!component_pools[i]) {
-                    component_pools[i] = new component_pool<T>();
+                std::size_t hash = typeid(T).hash_code();
+                if (!component_pools.contains(hash)) {
+                    component_pool<T>* c = new component_pool<T>();
+                    component_pools.try_emplace(hash, c);
+                    return c;
                 }
-                return reinterpret_cast<const component_pool<T>*>(component_pools[i]);
+                return reinterpret_cast<const component_pool<T>*>(component_pools.at(hash));
             }
 
             template<typename T>
             void remove_component(game_object* object) {
                 component_pool<T>* pool = get_component_pool<T>();
                 pool->erase(object->id);
-                object->signature.set(signature_manager::get_bit_position<T>(), false);
             }
 
             template<typename T>
             void add_component(game_object* object, T&& comp) {
                 component_pool<T>* pool = get_component_pool<T>();
                 pool->try_emplace(object->id, object, std::move(comp));
-                object->signature.set(signature_manager::get_bit_position<T>(), true);
             }
 
             template<typename T>
             void add_component(game_object* object, const T& comp) {
                 component_pool<T>* pool = get_component_pool<T>();
                 pool->try_emplace(object->id, object, comp);
-                object->signature.set(signature_manager::get_bit_position<T>(), true);
             }
 
             template<typename T>
@@ -98,7 +98,7 @@ namespace engine {
 
             uuid id;
             std::unordered_map<uuid, game_object> objects;
-            std::array<component_pool_base*, MAX_COMPONENT_COUNT> component_pools {};
+            packed_map<std::size_t, component_pool_base*> component_pools;
             game_object* root_object;
 
     };

@@ -8,7 +8,7 @@ scene::scene() {
 }
 
 scene::~scene() {
-    for (component_pool_base* p : component_pools) {
+    for (auto [s, p] : component_pools) {
         if (p) delete p;
     }
 }
@@ -24,7 +24,7 @@ bool scene::has_game_object(const uuid& id) {
 
 void scene::remove_game_object(game_object* object) {
     for (game_object* c : object->children) remove_game_object(c);
-    for (component_pool_base* p : component_pools) {
+    for (auto [s, p] : component_pools) {
         if (p) p->game_object_destroyed(object->id);
     }
     objects.erase(object->id);

@@ -70,6 +70,9 @@
         "hash_map": "cpp",
         "codecvt": "cpp",
         "optional": "cpp",
-        "source_location": "cpp"
+        "source_location": "cpp",
+        "forward_list": "cpp",
+        "cfenv": "cpp",
+        "typeindex": "cpp"
     }
 }

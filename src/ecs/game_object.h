@@ -3,7 +3,6 @@
 #include <cstdint>
 #include <vector>
 
-#include "signature.h"
 #include "../utils/uuid.h"
 
 namespace engine {
@@ -20,7 +19,6 @@ namespace engine {
             inline const std::vector<game_object*>& get_children() {return children;}
             inline const game_object* get_parent() const {return parent;}
             inline const scene* get_scene() const {return current_scene;}
-            inline signature_manager::signature get_signature() const {return signature;}
             
             game_object(const uuid& id, game_object* parent, std::uint32_t level, scene* current_scene);
             game_object(const game_object& obj) = delete;
@@ -33,7 +31,6 @@ namespace engine {
             std::vector<game_object*> children;
             game_object* parent;
             scene* current_scene;
-            signature_manager::signature signature;
     };
 
 } // namespace engine
