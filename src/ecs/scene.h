@@ -4,11 +4,11 @@
 #include <unordered_map>
 #include <utility>
 
-#include "game_object.h"
-#include "component_pool.h"
-#include "view.h"
-#include "../utils/uuid.h"
-#include "../utils/packed_map.h"
+#include <ecs/game_object.h>
+#include <ecs/component_pool.h>
+#include <ecs/view.h>
+#include <utils/uuid.h>
+#include <utils/packed_map.h>
 
 
 

@@ -7,11 +7,11 @@
 #include <functional>
 #include <type_traits>
 
-#include "component_pool.h"
-#include "game_object.h"
-#include "../utils/uuid.h"
-#include "../utils/padded_array_view.h"
-#include "../utils/pointer_like_wrapper.h"
+#include <ecs/component_pool.h>
+#include <ecs/game_object.h>
+#include <utils/uuid.h>
+#include <utils/padded_array_view.h>
+#include <utils/pointer_like_wrapper.h>
 
 namespace engine {
 

@@ -7,6 +7,7 @@ project(engine VERSION 0.1.0)
 # source files
 file(GLOB_RECURSE SRC_FILES ./src/*.*)
 add_executable(engine ${SRC_FILES})
+target_include_directories(engine PUBLIC ./src/)
 
 # asset files
 file(GLOB_RECURSE RESOURCE_FILES ./resources/*.*)

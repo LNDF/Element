@@ -13,7 +13,7 @@
 #include <stdexcept>
 #include <initializer_list>
 
-#include "padded_array_view.h"
+#include <utils/padded_array_view.h>
 
 namespace engine { 
     template<typename I, typename N>
