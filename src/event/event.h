@@ -1,8 +1,9 @@
 #pragma once
 
-#include <utils/packed_map.h>
 #include <functional>
 #include <utility>
+
+#include <utils/packed_map.h>
 
 namespace engine {
     
@@ -18,48 +19,49 @@ namespace engine {
 
     class event_dispatcher_base {
         public:
+            virtual ~event_dispatcher_base() = default;
             virtual void dispatch_all_events() = 0;
             virtual void finish_and_clear_all_events() = 0;
     };
 
+    class event_manager;
+
     template<typename T>
     class event_dispatcher : public event_dispatcher_base {
-        public:
             using callback_type = std::function<bool(T&)>;
             using info_type = event_info<T>;
-        private:
+
+            friend class event_manager;
+
             callback_type default_listener;
             callback_type first_listener;
             std::vector<callback_type> listeners;
             std::vector<event_info<T>> events;
 
+            inline bool maybe_call_and_cancel(callback_type cb, info_type& info) {
+                if (info.cancelled) return true;
+                if (!cb(info.event)) {
+                    //TODO: check cancel
+                    info.cancelled = true;
+                    return true;
+                }
+                return false;
+            }
+
             virtual void dispatch_all_events() {
                 if (first_listener) {
                     for (info_type& info : events) {
-                        if (!first_listener(info.event)) {
-                            //TODO: check cancel
-                            info.cancelled = true;
-                        }
+                        maybe_call_and_cancel(first_listener, info);
                     }
                 }
                 for (info_type& info : events) {
-                    if (info.cancelled) continue;;
                     for (callback_type listener : listeners) {
-                        if (!listener(info.event)) {
-                            //TODO: cancel check
-                            info.cancelled = true;
-                            break;
-                        }
+                        if (maybe_call_and_cancel(listener, info)) break;
                     }
                 }
                 if (default_listener) {
                     for (info_type& info : events) {
-                        if (!info.cancelled) {
-                            if (!default_listener(info.event)) {
-                                //TODO: check cancel
-                                info.cancelled = true;
-                            }
-                        }
+                        maybe_call_and_cancel(default_listener, info);
                     }
                 }
             }
@@ -77,25 +79,19 @@ namespace engine {
 
             void dispatch(info_type& info) {
                 if (first_listener) {
-                    if (!first_listener(info.event)) {
-                        //TODO: check cancel
-                        info.cancelled = true;
+                    if (maybe_call_and_cancel(first_listener, info)) {
                         if (info.cancelled_callback) info.cancelled_callback(info.event);
                         return;
                     }
                 }
                 for (callback_type listener : listeners) {
-                    if (!listener(info.event)) {
-                        //TODO: check cancel
-                        info.cancelled = true;
+                    if (maybe_call_and_cancel(listener, info)) {
                         if (info.cancelled_callback) info.cancelled_callback(info.event);
                         return;
                     }
                 }
                 if (default_listener) {
-                    if (!default_listener(info.event)) {
-                        //TODO: check cancel
-                        info.cancelled = true;
+                    if (maybe_call_and_cancel(default_listener, info)) {
                         if (info.cancelled_callback) info.cancelled_callback(info.event);
                         return;
                     }
@@ -103,29 +99,8 @@ namespace engine {
                 if (info.succes_callback) info.succes_callback(info.event);
             }
 
-            void dispatch(info_type&& info) {
-                if (first_listener) {
-                    if (!first_listener(info.event)) {
-                        //TODO: check cancel
-                        if (info.cancelled_callback) info.cancelled_callback(info.event);
-                        return;
-                    }
-                }
-                for (callback_type listener : listeners) {
-                    if (!listener(info.event)) {
-                        //TODO: check cancel
-                        if (info.cancelled_callback) info.cancelled_callback(info.event);
-                        return;
-                    }
-                }
-                if (default_listener) {
-                    if (!default_listener(info.event)) {
-                        //TODO: check cancel
-                        if (info.cancelled_callback) info.cancelled_callback(info.event);
-                        return;
-                    }
-                }
-                if (info.succes_callback) info.succes_callback(info.event);
+            virtual ~event_dispatcher() {
+                
             }
 
             void dispatch(const T& event, info_type::callback_type success = nullptr, info_type::callback_type cancel = nullptr) {
@@ -159,9 +134,44 @@ namespace engine {
 
     class event_manager {
         private:
+            packed_map<std::size_t, event_dispatcher_base*> dispatchers;
 
+            template<typename T>
+            event_dispatcher<T>* get_event_dispatcher() {
+                std::size_t hash = typeid(T).hash_code();
+                if (!dispatchers.contains(hash)) {
+                    event_dispatcher<T>* dispatcher = new event_dispatcher<T>();
+                    dispatchers.try_emplace(hash, dispatcher);
+                    return dispatcher;
+                }
+                return reinterpret_cast<event_dispatcher<T>*>(dispatchers.at(hash));
+            }
         public:
+            ~event_manager();
 
+            template<typename T>
+            void register_listener(event_dispatcher<T>::callback_type listener) {
+                get_event_dispatcher<T>()->register_listener(listener);
+            }
+
+            template<typename T>
+            void register_first_listener(event_dispatcher<T>::callback_type listener) {
+                get_event_dispatcher<T>()->register_first_listener(listener);
+            }
+
+            template<typename T>
+            void register_default_listener(event_dispatcher<T>::callback_type listener) {
+                get_event_dispatcher<T>()->register_default_listener(listener);
+            }
+
+            template<typename T>
+            void post_event(const T& event, event_dispatcher<T>::info_type::callback_type success = nullptr, event_dispatcher<T>::info_type::callback_type cancel = nullptr) {
+                get_event_dispatcher<T>()->add_event_to_dispatch(event, success, cancel);
+            }
+
+            template<typename T>
+            void post_event(T&& event, event_dispatcher<T>::info_type::callback_type success = nullptr, event_dispatcher<T>::info_type::callback_type cancel = nullptr) {
+                get_event_dispatcher<T>()->add_event_to_dispatch(std::move(event), success, cancel);
+            }
     };
 }
-
