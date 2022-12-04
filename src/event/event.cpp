@@ -7,3 +7,12 @@ event_manager::~event_manager()  {
         delete disp;
     }
 }
+
+void event_manager::dispatch_queued_events() {
+    for (auto& [h, disp] : dispatchers) {
+        disp->dispatch_all_events();
+    }
+    for (auto& [h, disp] : dispatchers) {
+        disp->finish_and_clear_all_events();
+    }
+}

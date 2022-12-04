@@ -168,5 +168,7 @@ namespace engine {
             inline bool send_event(const T& event) {
                 return get_event_dispatcher<T>()->dispatch(event);
             }
+
+            void dispatch_queued_events();
     };
 }
