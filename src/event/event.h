@@ -10,7 +10,7 @@ namespace engine {
     
     template<typename T>
     struct event_info {
-        using callback_type = std::function<bool(const T&)>;
+        using callback_type = std::function<void(const T&)>;
         T event;
         bool cancelled = false;
         callback_type succes_callback;
