@@ -3,6 +3,7 @@
 #include <array>
 #include <unordered_map>
 #include <utility>
+#include <typeindex>
 
 #include <ecs/game_object.h>
 #include <ecs/component_pool.h>
@@ -22,25 +23,14 @@ namespace engine {
             void destroy_game_object();
 
             template<typename T>
-            component_pool<T>* get_component_pool() {
-                std::size_t hash = typeid(T).hash_code();
-                if (!component_pools.contains(hash)) {
+            const component_pool<T>* get_component_pool() {
+                std::type_index t(typeid(T));
+                if (!component_pools.contains(t)) {
                     component_pool<T>* c = new component_pool<T>();
-                    component_pools.try_emplace(hash, c);
+                    component_pools.try_emplace(t, c);
                     return c;
                 }
-                return reinterpret_cast<component_pool<T>*>(component_pools.at(hash));
-            }
-
-            template<typename T>
-            const component_pool<T>* get_component_pool() const {
-                std::size_t hash = typeid(T).hash_code();
-                if (!component_pools.contains(hash)) {
-                    component_pool<T>* c = new component_pool<T>();
-                    component_pools.try_emplace(hash, c);
-                    return c;
-                }
-                return reinterpret_cast<const component_pool<T>*>(component_pools.at(hash));
+                return reinterpret_cast<const component_pool<T>*>(component_pools.at(t));
             }
 
             template<typename T>
@@ -69,13 +59,13 @@ namespace engine {
             }
 
             template<typename T>
-            const T* get_component(const game_object* object) const {
+            const T* get_component(const game_object* object) {
                 component_pool<T>* pool = get_component_pool<T>();
                 return &pool[object->id].second;
             }
 
             template<typename T>
-            bool has_component(game_object* object) const {
+            bool has_component(game_object* object) {
                 component_pool<T>* pool = get_component_pool<T>();
                 return pool.contains(object->id);
             }
@@ -98,7 +88,7 @@ namespace engine {
 
             uuid id;
             std::unordered_map<uuid, game_object> objects;
-            packed_map<std::size_t, component_pool_base*> component_pools;
+            packed_map<std::type_index, component_pool_base*> component_pools;
             game_object* root_object;
 
     };
