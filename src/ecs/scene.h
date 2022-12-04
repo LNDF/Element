@@ -23,14 +23,14 @@ namespace engine {
             void destroy_game_object();
 
             template<typename T>
-            const component_pool<T>* get_component_pool() {
+            component_pool<T>* get_component_pool() {
                 std::type_index t(typeid(T));
                 if (!component_pools.contains(t)) {
                     component_pool<T>* c = new component_pool<T>();
                     component_pools.try_emplace(t, c);
                     return c;
                 }
-                return reinterpret_cast<const component_pool<T>*>(component_pools.at(t));
+                return reinterpret_cast<component_pool<T>*>(component_pools.at(t));
             }
 
             template<typename T>
@@ -56,12 +56,6 @@ namespace engine {
                 component_pool<T>* pool = get_component_pool<T>();
                 if (!pool->contains(object->id)) return nullptr;
                 return &(*pool)[object->id].second;
-            }
-
-            template<typename T>
-            const T* get_component(const game_object* object) {
-                component_pool<T>* pool = get_component_pool<T>();
-                return &pool[object->id].second;
             }
 
             template<typename T>
