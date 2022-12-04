@@ -32,5 +32,8 @@ namespace engine {
 
 template<>
 struct std::hash<engine::uuid> {
+    using result_type = std::size_t;
+    using argument_type = engine::uuid;
+
     std::size_t operator()(const engine::uuid& k) const;
 };
