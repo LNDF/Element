@@ -3,7 +3,7 @@
 #include <stdexcept>
 #include <memory.h>
 
-using namespace engine;
+using namespace element;
 
 uuid::uuid() {
     if (RAND_bytes(this->bytes, 16) != 1) {

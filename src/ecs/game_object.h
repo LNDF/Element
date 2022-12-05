@@ -5,7 +5,7 @@
 
 #include <utils/uuid.h>
 
-namespace engine {
+namespace element {
 
     class scene;
 
@@ -33,4 +33,4 @@ namespace engine {
             scene* current_scene;
     };
 
-} // namespace engine
+} // namespace element

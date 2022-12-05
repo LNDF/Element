@@ -7,7 +7,7 @@
 
 #include <utility>
 
-namespace engine {
+namespace element {
 
     class component_pool_base {
         public:
@@ -27,4 +27,4 @@ namespace engine {
             }
     };
 
-} // namespace engine
+} // namespace element

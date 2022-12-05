@@ -1,35 +1,35 @@
 cmake_minimum_required(VERSION 3.0.0)
-project(engine VERSION 0.1.0)
+project(element VERSION 0.1.0)
 
 #include(CTest)
 #enable_testing()
 
 # source files
 file(GLOB_RECURSE SRC_FILES ./src/*.*)
-add_executable(engine ${SRC_FILES})
-target_include_directories(engine PUBLIC ./src/)
+add_executable(element ${SRC_FILES})
+target_include_directories(element PUBLIC ./src/)
 
 # asset files
 file(GLOB_RECURSE RESOURCE_FILES ./resources/*.*)
 file(COPY ${RESOURCE_FILES} DESTINATION ${CMAKE_BINARY_DIR})
 
 # compile options
-set_property(TARGET engine PROPERTY CXX_STANDARD 20)
-target_compile_options(engine PRIVATE -Wall)
+set_property(TARGET element PROPERTY CXX_STANDARD 20)
+target_compile_options(element PRIVATE -Wall)
 
 #LIBS
 # glfw
 add_subdirectory(lib/glfw EXCLUDE_FROM_ALL)
-target_link_libraries(engine PRIVATE glfw)
+target_link_libraries(element PRIVATE glfw)
 
 # glew
 add_definitions(-DGLEW_STATIC)
 add_subdirectory(lib/glew EXCLUDE_FROM_ALL)
-target_link_libraries(engine PRIVATE libglew_static)
+target_link_libraries(element PRIVATE libglew_static)
 
 # glm
 add_subdirectory(lib/glm EXCLUDE_FROM_ALL)
-target_link_libraries(engine PRIVATE glm)
+target_link_libraries(element PRIVATE glm)
 
 # imgui
 set(IMGUI_DIR lib/imgui)
@@ -51,11 +51,11 @@ set(IMGUI_FILES
 )
 add_library(imgui ${IMGUI_FILES})
 target_include_directories(imgui PUBLIC ${IMGUI_DIR})
-target_link_libraries(engine PRIVATE imgui)
+target_link_libraries(element PRIVATE imgui)
 
 # openssl crypto
 add_subdirectory(lib/openssl EXCLUDE_FROM_ALL)
-target_link_libraries(engine PRIVATE crypto)
+target_link_libraries(element PRIVATE crypto)
 
 #end libs
 

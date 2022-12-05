@@ -4,7 +4,7 @@
 #include <cassert>
 #include <type_traits>
 
-namespace engine {
+namespace element {
     template<typename T, bool is_const>
     class padded_array_view_iterator {
         public:

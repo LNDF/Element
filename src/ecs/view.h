@@ -13,7 +13,7 @@
 #include <utils/padded_array_view.h>
 #include <utils/pointer_like_wrapper.h>
 
-namespace engine {
+namespace element {
 
     template<bool is_const, typename... T>
     class scene_view_iterator {

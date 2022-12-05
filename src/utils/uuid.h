@@ -4,7 +4,7 @@
 #include <string>
 #include <cstdint>
 
-namespace engine {
+namespace element {
     
     class uuid {
         public:
@@ -28,12 +28,12 @@ namespace engine {
             bool operator==(const uuid& other) const;
     };
 
-} // namespace engine
+} // namespace element
 
 template<>
-struct std::hash<engine::uuid> {
+struct std::hash<element::uuid> {
     using result_type = std::size_t;
-    using argument_type = engine::uuid;
+    using argument_type = element::uuid;
 
-    std::size_t operator()(const engine::uuid& k) const;
+    std::size_t operator()(const element::uuid& k) const;
 };
