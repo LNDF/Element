@@ -13,3 +13,6 @@
 [submodule "lib/openssl"]
 	path = lib/openssl
 	url = https://github.com/janbar/openssl-cmake.git
+[submodule "lib/spdlog"]
+	path = lib/spdlog
+	url = https://github.com/gabime/spdlog

@@ -57,6 +57,10 @@ target_link_libraries(element PRIVATE imgui)
 add_subdirectory(lib/openssl EXCLUDE_FROM_ALL)
 target_link_libraries(element PRIVATE crypto)
 
+# spdlog
+add_subdirectory(lib/spdlog EXCLUDE_FROM_ALL)
+target_link_libraries(element PRIVATE spdlog::spdlog)
+
 #end libs
 
 # CMake options
