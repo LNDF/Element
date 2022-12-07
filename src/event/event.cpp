@@ -2,10 +2,13 @@
 
 using namespace element;
 
-event_manager::~event_manager()  {
+packed_map<std::type_index, event_dispatcher_base*> event_manager::dispatchers;
+
+void event_manager::cleanup()  {
     for (const auto& [h, disp] : dispatchers) {
         delete disp;
     }
+    dispatchers.clear();
 }
 
 void event_manager::dispatch_queued_events() {

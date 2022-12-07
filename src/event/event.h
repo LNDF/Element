@@ -124,10 +124,10 @@ namespace element {
 
     class event_manager {
         private:
-            packed_map<std::type_index, event_dispatcher_base*> dispatchers;
+            static packed_map<std::type_index, event_dispatcher_base*> dispatchers;
 
             template<typename T>
-            event_dispatcher<T>* get_event_dispatcher() {
+            static event_dispatcher<T>* get_event_dispatcher() {
                 std::type_index t(typeid(T));
                 if (!dispatchers.contains(t)) {
                     event_dispatcher<T>* dispatcher = new event_dispatcher<T>();
@@ -137,38 +137,38 @@ namespace element {
                 return reinterpret_cast<event_dispatcher<T>*>(dispatchers.at(t));
             }
         public:
-            ~event_manager();
+            static void cleanup();
 
             template<typename T>
-            inline void register_listener(event_dispatcher<T>::callback_type listener) {
+            static inline void register_listener(event_dispatcher<T>::callback_type listener) {
                 get_event_dispatcher<T>()->register_listener(listener);
             }
 
             template<typename T>
-            inline void register_first_listener(event_dispatcher<T>::callback_type listener) {
+            static inline void register_first_listener(event_dispatcher<T>::callback_type listener) {
                 get_event_dispatcher<T>()->register_first_listener(listener);
             }
 
             template<typename T>
-            inline void register_default_listener(event_dispatcher<T>::callback_type listener) {
+            static inline void register_default_listener(event_dispatcher<T>::callback_type listener) {
                 get_event_dispatcher<T>()->register_default_listener(listener);
             }
 
             template<typename T>
-            inline void post_event(const T& event, event_dispatcher<T>::info_type::callback_type success = nullptr, event_dispatcher<T>::info_type::callback_type cancel = nullptr) {
+            static inline void post_event(const T& event, event_dispatcher<T>::info_type::callback_type success = nullptr, event_dispatcher<T>::info_type::callback_type cancel = nullptr) {
                 get_event_dispatcher<T>()->add_event_to_dispatch(event, success, cancel);
             }
 
             template<typename T>
-            inline void post_event(T&& event, event_dispatcher<T>::info_type::callback_type success = nullptr, event_dispatcher<T>::info_type::callback_type cancel = nullptr) {
+            static inline void post_event(T&& event, event_dispatcher<T>::info_type::callback_type success = nullptr, event_dispatcher<T>::info_type::callback_type cancel = nullptr) {
                 get_event_dispatcher<T>()->add_event_to_dispatch(std::move(event), success, cancel);
             }
 
             template<typename T>
-            inline bool send_event(const T& event) {
+            static inline bool send_event(const T& event) {
                 return get_event_dispatcher<T>()->dispatch(event);
             }
 
-            void dispatch_queued_events();
+            static void dispatch_queued_events();
     };
 }
