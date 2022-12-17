@@ -1,6 +1,9 @@
 #pragma once
 
 #ifdef ELM_ENABLE_LOGGING
+
+#define SPDLOG_ACTIVE_LEVEL SPDLOG_LEVEL_TRACE
+
 #include <spdlog/spdlog.h>
 #include <spdlog/sinks/stdout_color_sinks.h>
 #include <memory>

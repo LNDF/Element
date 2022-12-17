@@ -78,6 +78,7 @@
         "spdlog.h": "c",
         "common.h": "c",
         "charconv": "cpp",
-        "span": "cpp"
+        "span": "cpp",
+        "spdlog-inl.h": "c"
     }
 }
