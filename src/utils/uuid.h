@@ -37,3 +37,5 @@ struct std::hash<element::uuid> {
 
     std::size_t operator()(const element::uuid& k) const;
 };
+
+std::ostream& operator<<(std::ostream& os, const element::uuid& data);

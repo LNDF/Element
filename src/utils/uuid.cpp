@@ -78,3 +78,8 @@ std::size_t std::hash<uuid>::operator()(uuid const& k) const {
     }
     return hash;
 }
+
+ std::ostream& operator<<(std::ostream& os, const uuid& data) {
+    os << data.str();
+    return os;
+}
