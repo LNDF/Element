@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.0.0)
-project(element VERSION 0.1.0)
+project(element VERSION 0.0.1)
 
 #include(CTest)
 #enable_testing()
@@ -13,9 +13,19 @@ target_include_directories(element PUBLIC ./src/)
 file(GLOB_RECURSE RESOURCE_FILES ./resources/*.*)
 file(COPY ${RESOURCE_FILES} DESTINATION ${CMAKE_BINARY_DIR})
 
+# user options
+option(ELEMENT_ENABLE_LOG "Enable logging in Element engine" ON) 
+
 # compile options
 set_property(TARGET element PROPERTY CXX_STANDARD 20)
 target_compile_options(element PRIVATE -Wall)
+
+# define options
+target_compile_definitions(element PRIVATE ELM_VERSION="${PROJECT_VERSION}")
+if(ELEMENT_ENABLE_LOG)
+    target_compile_definitions(element PRIVATE ELM_ENABLE_LOGGING=1)    
+endif(ELEMENT_ENABLE_LOG)
+
 
 #LIBS
 # glfw
@@ -58,8 +68,10 @@ add_subdirectory(lib/openssl EXCLUDE_FROM_ALL)
 target_link_libraries(element PRIVATE crypto)
 
 # spdlog
-add_subdirectory(lib/spdlog EXCLUDE_FROM_ALL)
-target_link_libraries(element PRIVATE spdlog::spdlog)
+if(ELEMENT_ENABLE_LOG)
+    add_subdirectory(lib/spdlog EXCLUDE_FROM_ALL)
+    target_link_libraries(element PRIVATE spdlog::spdlog)
+endif(ELEMENT_ENABLE_LOG)
 
 #end libs
 
