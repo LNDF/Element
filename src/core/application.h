@@ -9,7 +9,7 @@ namespace element {
     struct application_settings {
         std::string app_name;
         std::string app_version;
-        int window_x, window_y, window_width, widnow_height;
+        int window_x, window_y, window_width, window_height;
     };
 
     class application {
