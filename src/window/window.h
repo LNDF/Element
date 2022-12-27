@@ -1,5 +1,7 @@
 #pragma once
 
+#include <string>
+
 namespace element {
     namespace window {
         
@@ -7,6 +9,8 @@ namespace element {
         extern void cleanup_backend();
         extern void create_window(int width, int height, int x, int y);
         extern void close_window();
+        extern void set_title(const std::string& title);
+        extern const std::string& get_title();
         extern int get_width();
         extern int get_height();
         extern int get_x_position();
