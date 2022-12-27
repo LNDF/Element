@@ -2,6 +2,8 @@
 
 #include <string>
 
+#define ELM_WINDOW_CENTER -1
+
 namespace element {
     namespace window {
         
