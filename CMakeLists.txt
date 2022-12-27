@@ -6,7 +6,7 @@ project(element VERSION 0.0.1)
 
 # source files
 file(GLOB_RECURSE SRC_FILES ./src/*.*)
-add_executable(element ${SRC_FILES})
+add_library(element ${SRC_FILES})
 target_include_directories(element PUBLIC ./src/)
 
 # asset files
