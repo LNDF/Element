@@ -21,25 +21,25 @@ set_property(TARGET element PROPERTY CXX_STANDARD 20)
 target_compile_options(element PRIVATE -Wall)
 
 # define options
-target_compile_definitions(element PRIVATE ELM_VERSION="${PROJECT_VERSION}")
+target_compile_definitions(element PUBLIC ELM_VERSION="${PROJECT_VERSION}")
 if(ELEMENT_ENABLE_LOG)
-    target_compile_definitions(element PRIVATE ELM_ENABLE_LOGGING=1)    
+    target_compile_definitions(element PUBLIC ELM_ENABLE_LOGGING=1)    
 endif(ELEMENT_ENABLE_LOG)
 
 
 #LIBS
 # glfw
 add_subdirectory(lib/glfw EXCLUDE_FROM_ALL)
-target_link_libraries(element PRIVATE glfw)
+target_link_libraries(element PUBLIC glfw)
 
 # glew
 add_definitions(-DGLEW_STATIC)
 add_subdirectory(lib/glew EXCLUDE_FROM_ALL)
-target_link_libraries(element PRIVATE libglew_static)
+target_link_libraries(element PUBLIC libglew_static)
 
 # glm
 add_subdirectory(lib/glm EXCLUDE_FROM_ALL)
-target_link_libraries(element PRIVATE glm)
+target_link_libraries(element PUBLIC glm)
 
 # imgui
 set(IMGUI_DIR lib/imgui)
@@ -61,16 +61,16 @@ set(IMGUI_FILES
 )
 add_library(imgui ${IMGUI_FILES})
 target_include_directories(imgui PUBLIC ${IMGUI_DIR})
-target_link_libraries(element PRIVATE imgui)
+target_link_libraries(element PUBLIC imgui)
 
 # openssl crypto
 add_subdirectory(lib/openssl EXCLUDE_FROM_ALL)
-target_link_libraries(element PRIVATE crypto)
+target_link_libraries(element PUBLIC crypto)
 
 # spdlog
 if(ELEMENT_ENABLE_LOG)
     add_subdirectory(lib/spdlog EXCLUDE_FROM_ALL)
-    target_link_libraries(element PRIVATE spdlog::spdlog)
+    target_link_libraries(element PUBLIC spdlog::spdlog)
 endif(ELEMENT_ENABLE_LOG)
 
 #end libs
