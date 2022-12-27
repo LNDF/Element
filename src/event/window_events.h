@@ -15,9 +15,14 @@ namespace element {
             int keycode;
         };
 
-        struct window_geometry_changed {
-            int width, height, x, y;
+        struct window_move {
+            int x, y;
         };
+
+        struct window_resize {
+            int width, height;
+        };
+        
         
 
     } // namespace events
