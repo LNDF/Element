@@ -4,13 +4,20 @@ using namespace element;
 
 bool application::closed = false;
 
-void application::configure() {
-    event_manager::register_default_listener<events::close>(close_event_listener);
-}
-
 bool application::close_event_listener(const events::close&) {
     closed = true;
     return true;
+}
+
+void application::setup_engine(const startup_settings& settings) {
+    #ifdef ELM_ENABLE_LOGGING
+    log::init_log();
+    #endif
+    event_manager::register_default_listener<events::close>(close_event_listener);
+}
+
+void application::cleanup_engine() {
+    event_manager::cleanup();
 }
 
 void application::start() {
