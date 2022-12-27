@@ -40,7 +40,7 @@ void application::cleanup_engine() {
 
 void application::start() {
     ELM_DEBUG("Application entering main loop now");
-    window::create_window(settings.window_width, settings.widnow_height, settings.window_x, settings.window_y);
+    window::create_window(settings.app_name, settings.window_width, settings.widnow_height, settings.window_x, settings.window_y);
     while (!closed) {
         event_manager::send_event<events::update>({0}); //TODO: correct delta time
         event_manager::dispatch_queued_events();

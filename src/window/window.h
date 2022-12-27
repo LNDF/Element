@@ -9,7 +9,7 @@ namespace element {
         
         extern void init_backend();
         extern void cleanup_backend();
-        extern void create_window(int width, int height, int x, int y);
+        extern void create_window(const std::string& title, int width, int height, int x, int y);
         extern void close_window();
         extern void set_title(const std::string& title);
         extern const std::string& get_title();
