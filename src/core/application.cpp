@@ -1,5 +1,9 @@
 #include "application.h"
 
+#include <core/log.h>
+#include <event/event.h>
+#include <ui/ui.h>
+
 using namespace element;
 
 bool application::closed = false;
@@ -19,7 +23,7 @@ void application::init() {
     ELM_INFO("Application {0} version {1}", settings.app_name, settings.app_version);
     ELM_DEBUG("Configuring application...");
     event_manager::register_default_listener<events::close>(close_event_listener);
-    window::init_backend();
+    ui::init_backend();
     ELM_DEBUG("Configuration done");
 }
 
@@ -35,16 +39,16 @@ void application::setup_engine(application_settings&& settings) {
 
 void application::cleanup_engine() {
     ELM_DEBUG("Application will close soon. Cleanning up...");
-    window::cleanup_backend();
+    ui::cleanup_backend();
     event_manager::cleanup();
 }
 
 void application::start() {
     ELM_DEBUG("Application entering main loop now");
-    window::create_window(settings.app_name, settings.window_width, settings.window_height, settings.window_x, settings.window_y);
+    ui::start_ui();
     while (!closed) {
         event_manager::send_event<events::update>({0}); //TODO: correct delta time
         event_manager::dispatch_queued_events();
     }
-    window::close_window();
+    ui::stop_ui();
 }

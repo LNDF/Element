@@ -15,11 +15,7 @@ namespace element {
             int keycode;
         };
 
-        struct window_move {
-            int x, y;
-        };
-
-        struct window_resize {
+        struct surface_resize {
             int width, height;
         };
         

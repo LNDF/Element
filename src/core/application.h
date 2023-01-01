@@ -1,15 +1,12 @@
 #pragma once
 
-#include <core/log.h>
-#include <event/event.h>
 #include <event/core_events.h>
-#include <window/window.h>
+#include <string>
 
 namespace element {
     struct application_settings {
         std::string app_name;
         std::string app_version;
-        int window_x, window_y, window_width, window_height;
     };
 
     class application {
