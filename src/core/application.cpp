@@ -21,10 +21,10 @@ void application::init() {
     #endif
     ELM_INFO("Element engine version {0} starting...", ELM_VERSION);
     ELM_INFO("Application {0} version {1}", settings.app_name, settings.app_version);
-    ELM_DEBUG("Configuring application...");
+    ELM_INFO("Configuring application...");
     event_manager::register_default_listener<events::close>(close_event_listener);
     ui::init_backend();
-    ELM_DEBUG("Configuration done");
+    ELM_INFO("Configuration done");
 }
 
 void application::setup_engine(const application_settings& settings) {
@@ -38,13 +38,13 @@ void application::setup_engine(application_settings&& settings) {
 }
 
 void application::cleanup_engine() {
-    ELM_DEBUG("Application will close soon. Cleanning up...");
+    ELM_INFO("Application will close soon. Cleanning up...");
     ui::cleanup_backend();
     event_manager::cleanup();
 }
 
 void application::start() {
-    ELM_DEBUG("Application entering main loop now");
+    ELM_INFO("Application entering main loop now");
     ui::start_ui();
     while (!closed) {
         event_manager::send_event<events::update>({0}); //TODO: correct delta time
