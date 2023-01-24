@@ -29,6 +29,7 @@ namespace element {
 
     template<typename T>
     class event_dispatcher : public event_dispatcher_base {
+        private:
             using callback_type = std::function<bool(const T&)>;
             using info_type = event_info<T>;
 
@@ -49,7 +50,7 @@ namespace element {
                 return false;
             }
 
-            virtual void dispatch_all_events() {
+            void dispatch_all_events() final override {
                 if (first_listener) {
                     for (info_type& info : events) {
                         maybe_call_and_cancel(first_listener, info);
@@ -67,7 +68,7 @@ namespace element {
                 }
             }
 
-            virtual void finish_and_clear_all_events() {
+            void finish_and_clear_all_events() final override {
                 for (info_type& info : events) {
                     if (info.cancelled) {
                         if (info.cancelled_callback) info.cancelled_callback(info.event);
@@ -78,7 +79,7 @@ namespace element {
                 events.clear();
             }
 
-            virtual ~event_dispatcher() {
+            ~event_dispatcher() final override {
                 
             }
 

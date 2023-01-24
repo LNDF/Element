@@ -18,11 +18,11 @@ namespace element {
     template<typename T>
     class component_pool : public component_pool_base, public packed_map<uuid, std::pair<game_object*, T>> {
         public:
-            virtual ~component_pool() {
+            ~component_pool() final override {
 
             }
 
-            virtual void game_object_destroyed(const uuid& o) {
+            void game_object_destroyed(const uuid& o) final override {
                 this->erase(o);
             }
     };

@@ -16,6 +16,13 @@
 namespace element {
 
     class scene {
+         private:
+            friend class game_object;
+
+            uuid id;
+            std::unordered_map<uuid, game_object> objects;
+            packed_map<std::type_index, component_pool_base*> component_pools;
+            game_object* root_object;
         public:
             scene();
             ~scene();
@@ -75,15 +82,6 @@ namespace element {
             bool has_game_object(const uuid& uuid);
             void remove_game_object(game_object* object);
             game_object* create_child(game_object* obj);
-
-
-        private:
-            friend class game_object;
-
-            uuid id;
-            std::unordered_map<uuid, game_object> objects;
-            packed_map<std::type_index, component_pool_base*> component_pools;
-            game_object* root_object;
 
     };
     

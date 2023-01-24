@@ -10,6 +10,14 @@ namespace element {
     class scene;
 
     class game_object {
+        private:
+            friend class scene;
+
+            uuid id;
+            std::uint32_t level;
+            std::vector<game_object*> children;
+            game_object* parent;
+            scene* current_scene;
 
         public:
             game_object();
@@ -23,14 +31,6 @@ namespace element {
             game_object(const uuid& id, game_object* parent, std::uint32_t level, scene* current_scene);
             game_object(const game_object& obj) = delete;
             game_object(game_object&& obj);
-        private:
-            friend class scene;
-
-            uuid id;
-            std::uint32_t level;
-            std::vector<game_object*> children;
-            game_object* parent;
-            scene* current_scene;
     };
 
 } // namespace element
