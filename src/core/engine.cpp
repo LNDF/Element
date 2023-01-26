@@ -2,6 +2,7 @@
 
 #include <core/log.h>
 #include <event/event.h>
+#include <render/display.h>
 
 using namespace element;
 
@@ -37,6 +38,7 @@ void engine::setup_engine(engine_settings&& settings) {
 
 void engine::cleanup_engine() {
     ELM_INFO("Application will close soon. Cleanning up...");
+    cleanup_displays();
     event_manager::cleanup();
 }
 

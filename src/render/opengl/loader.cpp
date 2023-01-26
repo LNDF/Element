@@ -7,6 +7,7 @@ static bool is_opengl_loaded = false;
 
 void element::opengl_load() {
     if (is_opengl_loaded) return;
+    is_opengl_loaded = true;
     glewExperimental = GL_TRUE;
     ELM_INFO("Setting up OpenGl...");
     GLenum ret = glewInit();
