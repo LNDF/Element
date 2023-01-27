@@ -41,32 +41,6 @@ target_link_libraries(element PUBLIC libglew_static)
 add_subdirectory(lib/glm EXCLUDE_FROM_ALL)
 target_link_libraries(element PUBLIC glm)
 
-# imgui
-set(IMGUI_DIR lib/imgui)
-file(GLOB IMGUI_FONTS ${IMGUI_DIR}/misc/fonts/*.ttf)
-set(IMGUI_FILES
-    ${IMGUI_DIR}/imgui.h
-    ${IMGUI_DIR}/imconfig.h
-    ${IMGUI_DIR}/imgui_internal.h
-    ${IMGUI_DIR}/imstb_rectpack.h
-    ${IMGUI_DIR}/imstb_textedit.h
-    ${IMGUI_DIR}/imstb_truetype.h
-    ${IMGUI_DIR}/imgui.cpp
-    ${IMGUI_DIR}/imgui_draw.cpp
-    ${IMGUI_DIR}/imgui_widgets.cpp
-    ${IMGUI_DIR}/imgui_demo.cpp
-    ${IMGUI_DIR}/backends/imgui_impl_opengl3.cpp
-    ${IMGUI_DIR}/backends/imgui_impl_opengl3.h
-    ${IMGUI_FONTS}
-)
-add_library(imgui ${IMGUI_FILES})
-target_include_directories(imgui PUBLIC ${IMGUI_DIR})
-target_link_libraries(element PUBLIC imgui)
-
-# openssl crypto
-add_subdirectory(lib/openssl EXCLUDE_FROM_ALL)
-target_link_libraries(element PUBLIC crypto)
-
 # spdlog
 if(ELEMENT_ENABLE_LOG)
     add_subdirectory(lib/spdlog EXCLUDE_FROM_ALL)
