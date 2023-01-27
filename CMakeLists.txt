@@ -32,10 +32,9 @@ endif(ELEMENT_ENABLE_LOG)
 add_subdirectory(lib/glfw EXCLUDE_FROM_ALL)
 target_link_libraries(element PUBLIC glfw)
 
-# glew
-add_definitions(-DGLEW_STATIC)
-add_subdirectory(lib/glew EXCLUDE_FROM_ALL)
-target_link_libraries(element PUBLIC libglew_static)
+# glad
+add_subdirectory(lib/glad EXCLUDE_FROM_ALL)
+target_link_libraries(element PUBLIC glad)
 
 # glm
 add_subdirectory(lib/glm EXCLUDE_FROM_ALL)
