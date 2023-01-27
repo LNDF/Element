@@ -1,14 +1,16 @@
 #include "uuid.h"
-#include <openssl/rand.h>
-#include <stdexcept>
+
+#include <algorithm>
+#include <random>
+#include <climits>
 #include <memory.h>
+
+static std::independent_bits_engine<std::default_random_engine, CHAR_BIT, unsigned char> rand_engine;
 
 using namespace element;
 
 uuid::uuid() {
-    if (RAND_bytes(this->bytes, 16) != 1) {
-        throw std::runtime_error("Error generating new UUID");
-    }
+    std::generate(bytes, bytes + 16, std::ref(rand_engine));
     this->clk_seq_hi_res = (std::uint8_t) ((this->clk_seq_hi_res & 0x3F) | 0x80);
     this->time_hi_and_version = (std::uint16_t) ((this->time_hi_and_version & 0x0FFF) | 0x4000);
 }
