@@ -2,7 +2,6 @@
 
 #include <core/log.h>
 #include <glad/glad.h>
-#include <GLFW/glfw3.h>
 
 static bool is_opengl_loaded = false;
 

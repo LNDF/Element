@@ -28,10 +28,6 @@ endif(ELEMENT_ENABLE_LOG)
 
 
 #LIBS
-# glfw
-add_subdirectory(lib/glfw EXCLUDE_FROM_ALL)
-target_link_libraries(element PUBLIC glfw)
-
 # glad
 add_subdirectory(lib/glad EXCLUDE_FROM_ALL)
 target_link_libraries(element PUBLIC glad)
