@@ -5,7 +5,7 @@
 
 namespace element {
     enum rendering_api {
-        OPENGL
+        opengl
     };
     
     struct engine_settings {
