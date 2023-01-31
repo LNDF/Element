@@ -1,5 +1,6 @@
 #include "vertex_buffer.h"
 
+#include <utility>
 #include <core/engine.h>
 #include <core/log.h>
 
@@ -8,16 +9,6 @@
 using namespace element;
 
 vertex_buffer::~vertex_buffer() {}
-
-vertex_buffer* vertex_buffer::create(void* data, uint32_t size) {
-    switch (engine::settings.renderer) {
-        case opengl:
-            return new opengl_vertex_buffer(data, size);
-        default:
-            ELM_ERROR("Unsupported rendering API detected while trying to create vertex buffer.");
-            return nullptr;
-    }
-}
 
 uint32_t vertex_buffer_layout_element::size() const {
     switch (this->type) {
@@ -52,6 +43,12 @@ uint32_t vertex_buffer_layout_element::count() const { //TODO: matrix
             return 3;
         case int4: case float4:
             return 4;
+        case mat2:
+            return 2 * 2;
+        case mat3:
+            return 3 * 3;
+        case mat4:
+            return 4 * 4;
         default:
             return 0;
     }
@@ -66,5 +63,27 @@ vertex_buffer_layout::vertex_buffer_layout(std::initializer_list<vertex_buffer_l
     for (vertex_buffer_layout_element& element : this->elements) {
         element.offset = stride;
         stride += element.size();
+    }
+}
+
+void vertex_buffer::set_layout(const vertex_buffer_layout& layout) {
+    this->layout = layout;
+}
+
+void vertex_buffer::set_layout(vertex_buffer_layout&& layout) {
+    this->layout = std::move(layout);
+}
+
+const vertex_buffer_layout& vertex_buffer::get_layout() const {
+    return this->layout;
+}
+
+vertex_buffer* vertex_buffer::create(void* data, uint32_t size) {
+    switch (engine::settings.renderer) {
+        case opengl:
+            return new opengl_vertex_buffer(data, size);
+        default:
+            ELM_ERROR("Unsupported rendering API detected while trying to create vertex buffer.");
+            return nullptr;
     }
 }
