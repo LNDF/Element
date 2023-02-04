@@ -2,6 +2,7 @@
 
 #include <cstdint>
 #include <vector>
+#include <unordered_map>
 
 #include <utils/uuid.h>
 
@@ -19,8 +20,11 @@ namespace element {
             game_object* parent;
             scene* current_scene;
 
+            static std::unordered_map<uuid, game_object*> all_objects;
+
         public:
             game_object();
+            ~game_object();
 
             inline const uuid& get_uuid() const {return id;}
             inline std::uint32_t get_level() const {return level;}
@@ -31,6 +35,8 @@ namespace element {
             game_object(const uuid& id, game_object* parent, std::uint32_t level, scene* current_scene);
             game_object(const game_object& obj) = delete;
             game_object(game_object&& obj);
+
+            static game_object* get_from_uuid(const uuid& id);
     };
 
 } // namespace element

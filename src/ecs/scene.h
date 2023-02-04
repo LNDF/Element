@@ -23,6 +23,8 @@ namespace element {
             std::unordered_map<uuid, game_object> objects;
             packed_map<std::type_index, component_pool_base*> component_pools;
             game_object* root_object;
+
+            static std::unordered_map<uuid, scene*> all_scenes;
         public:
             scene();
             ~scene();
@@ -32,12 +34,13 @@ namespace element {
             template<typename T>
             component_pool<T>* get_component_pool() {
                 std::type_index t(typeid(T));
-                if (!component_pools.contains(t)) {
+                try {
+                    return reinterpret_cast<component_pool<T>*>(component_pools.at(t));
+                } catch (std::out_of_range e) {
                     component_pool<T>* c = new component_pool<T>();
                     component_pools.try_emplace(t, c);
                     return c;
                 }
-                return reinterpret_cast<component_pool<T>*>(component_pools.at(t));
             }
 
             template<typename T>
@@ -82,6 +85,8 @@ namespace element {
             bool has_game_object(const uuid& uuid);
             void remove_game_object(game_object* object);
             game_object* create_child(game_object* obj);
+
+            static scene* get_from_uuid(const uuid& id);
 
     };
     
