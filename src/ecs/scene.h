@@ -36,7 +36,7 @@ namespace element {
                 std::type_index t(typeid(T));
                 try {
                     return reinterpret_cast<component_pool<T>*>(component_pools.at(t));
-                } catch (std::out_of_range e) {
+                } catch (const std::out_of_range&) {
                     component_pool<T>* c = new component_pool<T>();
                     component_pools.try_emplace(t, c);
                     return c;
@@ -87,6 +87,7 @@ namespace element {
             game_object* create_child(game_object* obj);
 
             static scene* get_from_uuid(const uuid& id);
+            static uuid get_new_uuid();
 
     };
     

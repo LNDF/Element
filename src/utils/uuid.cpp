@@ -10,15 +10,14 @@ static std::independent_bits_engine<std::default_random_engine, CHAR_BIT, unsign
 using namespace element;
 
 uuid::uuid() {
-    std::generate(bytes, bytes + 16, std::ref(rand_engine));
-    this->clk_seq_hi_res = (std::uint8_t) ((this->clk_seq_hi_res & 0x3F) | 0x80);
-    this->time_hi_and_version = (std::uint16_t) ((this->time_hi_and_version & 0x0FFF) | 0x4000);
+    this->regenerate();
 }
 
 uuid::uuid(const uuid& uuid) {
     memcpy(this->bytes, uuid.bytes, 16);
 }
 
+//TODO: rewrite
 uuid::uuid(const std::string& uuid) {
     const char* cstr = uuid.c_str();
     const char* cstrp = cstr;
@@ -71,6 +70,12 @@ bool uuid::operator==(const uuid& other) const {
     return memcmp(this->bytes, other.bytes, 16) == 0;
 }
 
+void uuid::regenerate() {
+    std::generate(bytes, bytes + 16, std::ref(rand_engine));
+    this->clk_seq_hi_res = (std::uint8_t) ((this->clk_seq_hi_res & 0x3F) | 0x80);
+    this->time_hi_and_version = (std::uint16_t) ((this->time_hi_and_version & 0x0FFF) | 0x4000);
+}
+
 std::size_t std::hash<uuid>::operator()(uuid const& k) const {
     std::size_t hash = 0x5f12e3bd;
     std::size_t l = 16;
@@ -81,7 +86,7 @@ std::size_t std::hash<uuid>::operator()(uuid const& k) const {
     return hash;
 }
 
- std::ostream& operator<<(std::ostream& os, const uuid& data) {
+std::ostream& operator<<(std::ostream& os, const uuid& data) {
     os << data.str();
     return os;
 }

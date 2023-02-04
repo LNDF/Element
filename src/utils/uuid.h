@@ -26,6 +26,7 @@ namespace element {
 
             std::string str() const;
             bool operator==(const uuid& other) const;
+            void regenerate();
     };
 
 } // namespace element
