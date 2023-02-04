@@ -4,6 +4,10 @@ project(element VERSION 0.0.1)
 #include(CTest)
 #enable_testing()
 
+macro(OVERRIDE_OPTION option value)
+  set(${option} ${value} CACHE "" INTERNAL FORCE)
+endmacro()
+
 # source files
 file(GLOB_RECURSE SRC_FILES ./src/*.*)
 add_library(element ${SRC_FILES})
