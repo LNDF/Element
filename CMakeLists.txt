@@ -4,8 +4,8 @@ project(element VERSION 0.0.1)
 #include(CTest)
 #enable_testing()
 
-macro(OVERRIDE_OPTION option value)
-  set(${option} ${value} CACHE "" INTERNAL FORCE)
+macro(OVERRIDE_OPTION option type value)
+  set(${option} ${value} CACHE ${type} "" FORCE)
 endmacro()
 
 # source files
@@ -39,6 +39,14 @@ target_link_libraries(element PUBLIC glad)
 # glm
 add_subdirectory(lib/glm EXCLUDE_FROM_ALL)
 target_link_libraries(element PUBLIC glm)
+
+# cereal
+OVERRIDE_OPTION(BUILD_DOC BOOL OFF)
+OVERRIDE_OPTION(BUILD_SANDBOX BOOL OFF)
+OVERRIDE_OPTION(SKIP_PERFORMANCE_COMPARISON BOOL ON)
+OVERRIDE_OPTION(BUILD_TESTS BOOL OFF)
+add_subdirectory(lib/cereal EXCLUDE_FROM_ALL)
+target_link_libraries(element PUBLIC cereal)
 
 # spdlog
 if(ELEMENT_ENABLE_LOG)
