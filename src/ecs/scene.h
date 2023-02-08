@@ -11,8 +11,6 @@
 #include <utils/uuid.h>
 #include <utils/packed_map.h>
 
-
-
 namespace element {
 
     class scene {
@@ -20,6 +18,7 @@ namespace element {
             friend class game_object;
 
             uuid id;
+            bool initialized = false;
             std::unordered_map<uuid, game_object> objects;
             packed_map<std::type_index, component_pool_base*> component_pools;
             game_object* root_object;
@@ -52,13 +51,22 @@ namespace element {
             template<typename T>
             void add_component(game_object* object, T&& comp) {
                 component_pool<T>* pool = get_component_pool<T>();
-                pool->try_emplace(object->id, object, std::move(comp));
+                if (this->initialized) {
+                    (*pool->try_emplace(object->id, std::move(comp)).first).second.init(this, object->id);
+                } else {
+                    pool->try_emplace(object->id, std::move(comp));
+                }
+                
             }
 
             template<typename T>
             void add_component(game_object* object, const T& comp) {
                 component_pool<T>* pool = get_component_pool<T>();
-                pool->try_emplace(object->id, object, comp);
+                if (this->initialized) {
+                    (*pool->try_emplace(object->id, comp).first).second.init(this, object->id);
+                } else {
+                    pool->try_emplace(object->id, comp);
+                }
             }
 
             template<typename T>
@@ -76,7 +84,7 @@ namespace element {
 
             template<typename... T>
             scene_view<T...> view() {
-                return scene_view<T...>(get_component_pool<T>()...);
+                return scene_view<T...>(&this->objects, get_component_pool<T>()...);
             }
 
             inline game_object* create_game_object() {return create_child(root_object);}
@@ -85,6 +93,7 @@ namespace element {
             bool has_game_object(const uuid& uuid);
             void remove_game_object(game_object* object);
             game_object* create_child(game_object* obj);
+            void init();
 
             static scene* get_from_uuid(const uuid& id);
             static uuid get_new_uuid();

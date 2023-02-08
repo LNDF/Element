@@ -33,11 +33,11 @@ endif(ELEMENT_ENABLE_LOG)
 
 #LIBS
 # glad
-add_subdirectory(lib/glad EXCLUDE_FROM_ALL)
+add_subdirectory(lib/glad)
 target_link_libraries(element PUBLIC glad)
 
 # glm
-add_subdirectory(lib/glm EXCLUDE_FROM_ALL)
+add_subdirectory(lib/glm)
 target_link_libraries(element PUBLIC glm)
 
 # cereal
@@ -45,12 +45,12 @@ OVERRIDE_OPTION(BUILD_DOC BOOL OFF)
 OVERRIDE_OPTION(BUILD_SANDBOX BOOL OFF)
 OVERRIDE_OPTION(SKIP_PERFORMANCE_COMPARISON BOOL ON)
 OVERRIDE_OPTION(BUILD_TESTS BOOL OFF)
-add_subdirectory(lib/cereal EXCLUDE_FROM_ALL)
+add_subdirectory(lib/cereal)
 target_link_libraries(element PUBLIC cereal)
 
 # spdlog
 if(ELEMENT_ENABLE_LOG)
-    add_subdirectory(lib/spdlog EXCLUDE_FROM_ALL)
+    add_subdirectory(lib/spdlog)
     target_link_libraries(element PUBLIC spdlog::spdlog)
 endif(ELEMENT_ENABLE_LOG)
 

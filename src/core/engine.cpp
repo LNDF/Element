@@ -3,6 +3,7 @@
 #include <core/log.h>
 #include <event/event.h>
 #include <render/display.h>
+#include <utils/uuid.h>
 
 using namespace element;
 
@@ -22,6 +23,7 @@ void engine::init() {
     ELM_INFO("Element engine version {0} starting...", ELM_VERSION);
     ELM_INFO("Application {0} version {1}", settings.app_name, settings.app_version);
     ELM_INFO("Configuring application...");
+    uuid::reseed_generator();
     event_manager::register_default_listener<events::close>(close_event_listener);
     ELM_INFO("Configuration done");
 }

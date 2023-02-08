@@ -6,6 +6,7 @@
 #include <limits>
 #include <functional>
 #include <type_traits>
+#include <unordered_map>
 
 #include <ecs/component_pool.h>
 #include <ecs/game_object.h>
@@ -26,6 +27,7 @@ namespace element {
         private:
             using tuples_type = std::conditional_t<is_const, const std::tuple<component_pool<T>*...>, std::tuple<component_pool<T>*...>>;
             using id_iter_type = std::conditional_t<is_const, padded_array_view<uuid>::const_iterator, padded_array_view<uuid>::iterator>;
+            std::unordered_map<uuid, game_object>* objects;
             tuples_type* pools;
             id_iter_type it;
 
@@ -37,10 +39,10 @@ namespace element {
 
             template<std::size_t... I>
             reference get_tuple(const std::index_sequence<I...>) const {
-                return std::make_tuple((*std::get<0>(*pools))[*it].first, &(*std::get<I>(*pools))[*it].second...);
+                return std::make_tuple(&objects->at(*it), &std::get<I>(*pools)->at(*it)...);
             }
         public:
-            scene_view_iterator(tuples_type* pools, id_iter_type it) : pools(pools), it(it) {
+            scene_view_iterator(std::unordered_map<uuid, game_object>* objects, tuples_type* pools, id_iter_type it) : objects(objects), pools(pools), it(it) {
                 while (!is_valid_or_outside(std::index_sequence_for<T...>{})) ++it;
             }
 
@@ -90,6 +92,7 @@ namespace element {
             using iterator = scene_view_iterator<false, T...>;
             using const_iterator = scene_view_iterator<true, T...>;
         private:
+            std::unordered_map<uuid, game_object>* objects;
             std::tuple<component_pool<T>*...> pools;
             padded_array_view<uuid> ids;
 
@@ -98,7 +101,9 @@ namespace element {
                 for (const uuid& id : ids) {
                     bool call = true;
                     ((call = !std::get<I>(pools)->contains(id) ? false : call ? true : false), ...);
-                    if (call) callback((*std::get<0>(pools))[id].first, &(*std::get<I>(pools))[id].second...);
+                    if (!call) continue;
+                    game_object* o = &objects->at(id);
+                    callback(o, &std::get<I>(pools)->at(id)...);
                 }
             }
 
@@ -108,8 +113,8 @@ namespace element {
                 ((ids = std::get<I>(pools)->size() >= ids.size() ? ids : std::get<I>(pools)->key_view()), ...);
             }
         public:
-            scene_view(component_pool<T>*... pools)
-                : pools{pools...} {
+            scene_view(std::unordered_map<uuid, game_object>* objects, component_pool<T>*... pools)
+                : objects(objects), pools{pools...} {
                     sync();
                 }
 
@@ -118,7 +123,7 @@ namespace element {
             }
 
             iterator begin() {
-                return iterator(&pools, ids.begin());
+                return iterator(objects, &pools, ids.begin());
             }
 
             const_iterator begin() const {
@@ -130,7 +135,7 @@ namespace element {
             }
 
             iterator end() {
-                return iterator(&pools, ids.end());
+                return iterator(objects, &pools, ids.end());
             }
 
             const_iterator end() const {

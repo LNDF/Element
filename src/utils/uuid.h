@@ -21,12 +21,15 @@ namespace element {
             };
             uuid();
             uuid(const uuid& uuid);
-            uuid(const std::string& uuid);
+            explicit uuid(const std::string& uuid); //CEREAL: (https://github.com/USCiLab/cereal/issues/415)
             
 
             std::string str() const;
             bool operator==(const uuid& other) const;
             void regenerate();
+            void set_from_str(const std::string& uuid);
+
+            static void reseed_generator();
     };
 
 } // namespace element
