@@ -4,6 +4,7 @@
 #include <unordered_map>
 #include <utility>
 #include <typeindex>
+#include <memory>
 
 #include <ecs/game_object.h>
 #include <ecs/component_pool.h>
@@ -20,13 +21,14 @@ namespace element {
             uuid id;
             bool initialized = false;
             std::unordered_map<uuid, game_object> objects;
-            packed_map<std::type_index, component_pool_base*> component_pools;
+            packed_map<std::type_index, std::unique_ptr<component_pool_base>> component_pools;
             game_object* root_object;
 
             static std::unordered_map<uuid, scene*> all_scenes;
         public:
             scene();
             ~scene();
+            scene(uuid root_uuid, std::unordered_map<uuid, game_object>&& objects, packed_map<std::type_index, std::unique_ptr<component_pool_base>>&& components);
             game_object* new_game_object();
             void destroy_game_object();
 
@@ -34,7 +36,7 @@ namespace element {
             component_pool<T>* get_component_pool() {
                 std::type_index t(typeid(T));
                 try {
-                    return reinterpret_cast<component_pool<T>*>(component_pools.at(t));
+                    return reinterpret_cast<component_pool<T>*>(component_pools.at(t).get());
                 } catch (const std::out_of_range&) {
                     component_pool<T>* c = new component_pool<T>();
                     component_pools.try_emplace(t, c);
