@@ -15,7 +15,7 @@ namespace element {
 
             uuid id;
             std::uint32_t level;
-            std::vector<game_object*> children;
+            std::vector<uuid> children;
             uuid parent;
             scene* current_scene = nullptr;
 
@@ -31,7 +31,7 @@ namespace element {
 
             inline const uuid& get_uuid() const {return id;}
             inline std::uint32_t get_level() const {return level;}
-            inline const std::vector<game_object*>& get_children() {return children;}
+            inline const std::vector<uuid>& get_children() {return children;}
             inline const uuid& get_parent() const {return parent;}
             inline const scene* get_scene() const {return current_scene;}
     };

@@ -24,6 +24,8 @@ namespace element {
             packed_map<std::type_index, std::unique_ptr<component_pool_base>> component_pools;
             game_object* root_object;
 
+            void remove_game_object(game_object* object, bool top_level);
+
             static std::unordered_map<uuid, scene*> all_scenes;
         public:
             scene();
@@ -90,10 +92,10 @@ namespace element {
             }
 
             inline game_object* create_game_object() {return create_child(root_object);}
+            void remove_game_object( game_object* object) {remove_game_object(object, true);}
 
             game_object* get_game_object(const uuid& uuid);
             bool has_game_object(const uuid& uuid);
-            void remove_game_object(game_object* object);
             game_object* create_child(game_object* obj);
             void init();
 
