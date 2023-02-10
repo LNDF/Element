@@ -299,10 +299,10 @@ namespace element {
              }
 
             packed_map(std::initializer_list<value_type> init, size_type bucket_count, const A& alloc)
-             : packed_map(bucket_count, hasher(), key_equal(), alloc) {}
+             : packed_map(init, bucket_count, hasher(), key_equal(), alloc) {}
             
             packed_map(std::initializer_list<value_type> init, size_type bucket_count, const H& hash, const A& alloc)
-             : packed_map(bucket_count, hash, key_equal(), alloc) {}
+             : packed_map(init, bucket_count, hash, key_equal(), alloc) {}
 
             packed_map& operator=(const packed_map& other) = default;
 
