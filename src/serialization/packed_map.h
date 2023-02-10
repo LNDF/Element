@@ -19,6 +19,7 @@ namespace cereal {
         size_type size;
         ar(make_size_tag(size));
         map.clear();
+        map.reserve(static_cast<std::size_t>(size));
         for (size_t i = 0; i < size; ++i) {
             typename element::packed_map<K, V, H, E, A>::key_type key;
             typename element::packed_map<K, V, H, E, A>::mapped_type value;
