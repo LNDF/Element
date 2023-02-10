@@ -12,14 +12,21 @@ namespace cereal {
 
         template<class Archive>
         static void load_and_construct(Archive& ar, construct<element::game_object>& construct) {
-            //TODO: load code
+            element::uuid id, parent;
+            std::uint32_t level;
+            element::packed_set<element::uuid> children;
+            ar(id, level, children, parent);
+            construct(std::move(id), std::move(level), std::move(children), std::move(parent));
         }
 
     };
 
     template<class Archive>
     inline void save(Archive& ar, const element::game_object& object) {
-        //TODO: save code
+        ar(cereal::make_nvp("uuid",     object.get_uuid()),
+           cereal::make_nvp("level",    object.get_level()),
+           cereal::make_nvp("children", object.get_children()),
+           cereal::make_nvp("parent",   object.get_parent()));
     }
 
     template<class Archive>

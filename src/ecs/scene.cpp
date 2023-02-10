@@ -37,19 +37,19 @@ void scene::remove_game_object(game_object* object, bool top_level) {
     if (object == this->root_object) return;
     for (const uuid& c : object->children) remove_game_object(this->get_game_object(c));
     for (auto& [s, p] : component_pools) {
-        if (p) p->game_object_destroyed(object->id);
+        if (p) p->game_object_destroyed(object->get_uuid());
     }
     if (top_level) {
-        //TODO: erase children from parent object!!!
+        this->get_game_object(object->get_uuid())->children.erase(object->get_uuid());
     }
-    objects.erase(object->id);
+    objects.erase(object->get_uuid());
 }
 
 game_object* scene::create_child(game_object* obj) {
     uuid c;
     while (this->objects.contains(c)) c.regenerate();
     game_object* o = &(*objects.try_emplace(c, c, obj->get_uuid(), obj->level + 1).first).second;
-    obj->children.push_back(o->get_uuid());
+    obj->children.insert(o->get_uuid());
     if (this->initialized) o->current_scene = this;
     return o;
 }

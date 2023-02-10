@@ -7,8 +7,11 @@ using namespace element;
 
 game_object::game_object() : level(0) {}
 
-game_object::game_object(const uuid& id, uuid parent, std::uint32_t level)
+game_object::game_object(const uuid& id, const uuid& parent, std::uint32_t level)
         : id(id), level(level), parent(parent) {}
+
+game_object::game_object(uuid&& id, uuid&& parent, packed_set<uuid>&& children, std::uint32_t&& level)
+        : id(std::move(id)), parent(std::move(parent)), children(std::move(children)), level(std::move(level)) {}
 
 game_object::game_object(game_object&& obj) 
         : id(obj.id), level(obj.level), children(std::move(obj.children)), parent(obj.parent), current_scene(obj.current_scene) {}
