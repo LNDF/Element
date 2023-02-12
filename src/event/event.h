@@ -130,12 +130,13 @@ namespace element {
             template<typename T>
             static event_dispatcher<T>* get_event_dispatcher() {
                 std::type_index t(typeid(T));
-                if (!dispatchers.contains(t)) {
+                try {
+                    return reinterpret_cast<event_dispatcher<T>*>(dispatchers.at(t));
+                } catch (const std::out_of_range&) {
                     event_dispatcher<T>* dispatcher = new event_dispatcher<T>();
                     dispatchers.try_emplace(t, dispatcher);
                     return dispatcher;
                 }
-                return reinterpret_cast<event_dispatcher<T>*>(dispatchers.at(t));
             }
         public:
             static void cleanup();
