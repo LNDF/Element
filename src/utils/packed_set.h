@@ -46,6 +46,9 @@ namespace element {
 
             packed_set_iterator(node_type* curr) : curr(curr) {}
 
+            template<bool C = is_const>
+            packed_set_iterator(const std::enable_if_t<C && C == is_const, packed_set_iterator<V, false>>& other) : curr(other.curr) {}
+
             explicit packed_set_iterator(packed_set_local_iterator<V, is_const> other) : curr(other.off == local_end ? (other.cont->data() + other.cont->size()) : (other.cont->data() + other.off)) {}
 
             reference operator*() const noexcept {
@@ -127,6 +130,9 @@ namespace element {
             using reference = std::conditional_t<is_const, const value_type&, value_type&>;
 
             packed_set_local_iterator(std::size_t off, container_type* cont) : off(off), cont(cont) {}
+
+            template<bool C = is_const>
+            packed_set_local_iterator(const std::enable_if_t<C && C == is_const, packed_set_local_iterator<V, false>>& other) : off(other.off), cont(other.cont) {}
 
             explicit packed_set_local_iterator(packed_set_iterator<V, is_const> other, container_type* cont) : off(other.curr == (cont->data() + cont->size()) ? local_end : (other.curr - cont->data())), cont(cont) {}
             

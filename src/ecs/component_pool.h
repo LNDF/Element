@@ -7,6 +7,7 @@
 #include <ecs/scene.h>
 
 #include <utility>
+#include <typeindex>
 
 namespace element {
 
@@ -16,6 +17,7 @@ namespace element {
         public:
             virtual ~component_pool_base() = default;
             virtual void game_object_destroyed(const uuid& o) = 0;
+            virtual std::type_index get_type_index() const = 0;
             virtual void init(scene* current_scene) = 0;
     };
 
@@ -28,6 +30,10 @@ namespace element {
 
             void game_object_destroyed(const uuid& o) final override {
                 this->erase(o);
+            }
+
+            std::type_index get_type_index() const final override {
+                return std::type_index(typeid(T));
             }
 
             void init(scene* current_scene) final override {

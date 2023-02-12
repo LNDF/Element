@@ -33,7 +33,7 @@ namespace element {
 
             inline const uuid& get_uuid() const {return id;}
             inline std::uint32_t get_level() const {return level;}
-            inline const packed_set<uuid>& get_children() {return children;}
+            inline const packed_set<uuid>& get_children() const {return children;}
             inline const uuid& get_parent() const {return parent;}
             inline const scene* get_scene() const {return current_scene;}
     };

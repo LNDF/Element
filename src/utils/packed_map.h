@@ -36,6 +36,8 @@ namespace element {
 
             static constexpr std::size_t local_end = std::numeric_limits<std::size_t>::max();
 
+            friend class packed_map_iterator<V, !is_const>;
+
             node_type* curr;
         public:
             using iterator_category = std::input_iterator_tag;
@@ -45,6 +47,9 @@ namespace element {
             using reference = std::conditional_t<is_const, const value_type&, value_type&>;
 
             packed_map_iterator(node_type* curr) : curr(curr) {}
+            
+            template<bool C = is_const>
+            packed_map_iterator(const std::enable_if_t<C && C == is_const, packed_map_iterator<V, false>>& other) : curr(other.curr) {}
 
             explicit packed_map_iterator(packed_map_local_iterator<V, is_const> other) : curr(other.off == local_end ? (other.cont->data() + other.cont->size()) : (other.cont->data() + other.off)) {}
 
@@ -117,6 +122,8 @@ namespace element {
 
             static constexpr std::size_t local_end = std::numeric_limits<std::size_t>::max();
 
+            friend class packed_map_local_iterator<V, !is_const>;
+
             std::size_t off;
             container_type* cont;
         public:
@@ -127,6 +134,9 @@ namespace element {
             using reference = std::conditional_t<is_const, const value_type&, value_type&>;
 
             packed_map_local_iterator(std::size_t off, container_type* cont) : off(off), cont(cont) {}
+            
+            template<bool C = is_const>
+            packed_map_local_iterator(const std::enable_if_t<C && C == is_const, packed_map_local_iterator<V, false>>& other) : off(other.off), cont(other.cont) {}
 
             explicit packed_map_local_iterator(packed_map_iterator<V, is_const> other, container_type* cont) : off(other.curr == (cont->data() + cont->size()) ? local_end : (other.curr - cont->data())), cont(cont) {}
             

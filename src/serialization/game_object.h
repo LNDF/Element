@@ -15,7 +15,10 @@ namespace cereal {
             element::uuid id, parent;
             std::uint32_t level;
             element::packed_set<element::uuid> children;
-            ar(id, level, children, parent);
+            ar(cereal::make_nvp("uuid", id),
+               cereal::make_nvp("level",    level),
+               cereal::make_nvp("children", children),
+               cereal::make_nvp("parent",   parent));
             construct(std::move(id), std::move(level), std::move(children), std::move(parent));
         }
 

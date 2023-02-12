@@ -91,9 +91,9 @@ namespace element {
                 return scene_view<T...>(&this->objects, get_component_pool<T>()...);
             }
             
-            inline const uuid& get_uuid() {return id;}
-            inline const std::unordered_map<uuid, game_object>& get_game_objects() {return objects;}
-            inline const packed_map<std::type_index, std::unique_ptr<component_pool_base>>& get_component_pools() {return component_pools;}
+            inline const uuid& get_uuid() const {return id;}
+            inline const std::unordered_map<uuid, game_object>& get_game_objects() const {return objects;}
+            inline const packed_map<std::type_index, std::unique_ptr<component_pool_base>> &get_component_pools() const { return component_pools; }
 
             inline game_object* create_game_object() {return create_child(root_object);}
             inline void remove_game_object(game_object* object) {remove_game_object(object, true);}
