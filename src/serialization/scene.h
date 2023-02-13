@@ -33,30 +33,40 @@ namespace cereal {
         }
     }
 
-    template<>
-    struct LoadAndConstruct<element::scene> {
+    // template<>
+    // struct LoadAndConstruct<element::scene> {
 
-        template<class Archive>
-        static void load_and_construct(Archive& ar, construct<element::scene>& construct) {
-            element::uuid id;
-            std::unordered_map<element::uuid, element::game_object> objects;
-            element::packed_map<std::type_index, std::unique_ptr<element::component_pool_base>> pools;
-            ar(cereal::make_nvp("uuid",         id),
-               cereal::make_nvp("game_objects", objects),
-               cereal::make_nvp("components",   pools));
-            construct(std::move(id), std::move(objects), std::move(pools));
-        }
+    //     template<class Archive>
+    //     static void load_and_construct(Archive& ar, construct<element::scene>& construct) {
+    //         element::uuid id;
+    //         std::unordered_map<element::uuid, element::game_object> objects;
+    //         element::packed_map<std::type_index, std::unique_ptr<element::component_pool_base>> pools;
+    //         ar(cereal::make_nvp("uuid",         id),
+    //            cereal::make_nvp("game_objects", objects),
+    //            cereal::make_nvp("components",   pools));
+    //         construct(std::move(id), std::move(objects), std::move(pools));
+    //     }
 
-    };
+    // };
 
     template<class Archive>
     inline void save(Archive& ar, const element::scene& scene) {
         ar(cereal::make_nvp("uuid",         scene.get_uuid()),
+           cereal::make_nvp("root_object",  scene.get_root_object()->get_uuid()),
            cereal::make_nvp("game_objects", scene.get_game_objects()),
            cereal::make_nvp("components",   scene.get_component_pools()));
     }
 
     template<class Archive>
-    inline void load(Archive& ar, element::scene& scene) {}
+    inline void load(Archive& ar, element::scene& scene) {
+        element::uuid id, root_object;
+        std::unordered_map<element::uuid, element::game_object> objects;
+        element::packed_map<std::type_index, std::unique_ptr<element::component_pool_base>> pools;
+        ar(cereal::make_nvp("uuid",         id),
+           cereal::make_nvp("root_object",  root_object),
+           cereal::make_nvp("game_objects", objects),
+           cereal::make_nvp("components",   pools));
+        scene.load(std::move(id), std::move(root_object), std::move(objects), std::move(pools));
+    }
     
 } // namespace cereal

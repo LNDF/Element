@@ -30,9 +30,8 @@ namespace element {
         public:
             scene();
             ~scene();
-            scene(uuid root_uuid, std::unordered_map<uuid, game_object>&& objects, packed_map<std::type_index, std::unique_ptr<component_pool_base>>&& components);
-            game_object* new_game_object();
-            void destroy_game_object();
+
+            void load(uuid&& id, uuid&& root_uuid, std::unordered_map<uuid, game_object>&& objects, packed_map<std::type_index, std::unique_ptr<component_pool_base>>&& components);
 
             template<typename T>
             component_pool<T>* get_component_pool() {
@@ -92,6 +91,7 @@ namespace element {
             }
             
             inline const uuid& get_uuid() const {return id;}
+            inline const game_object* get_root_object() const {return root_object;}
             inline const std::unordered_map<uuid, game_object>& get_game_objects() const {return objects;}
             inline const packed_map<std::type_index, std::unique_ptr<component_pool_base>> &get_component_pools() const { return component_pools; }
 

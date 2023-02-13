@@ -24,9 +24,10 @@ namespace element {
             game_object();
 
             game_object(const uuid& id, const uuid& parent, std::uint32_t level);
-            game_object(uuid&& id, uuid&& parent, packed_set<uuid>&& children, std::uint32_t&& level);
             game_object(const game_object& obj) = delete;
             game_object(game_object&& obj);
+
+            void load(uuid&& id, uuid&& parent, packed_set<uuid>&& children, std::uint32_t&& level);
 
             game_object& operator=(const game_object& other) = delete;
             game_object& operator=(game_object&& other);

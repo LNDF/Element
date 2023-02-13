@@ -16,10 +16,14 @@ scene::~scene() {
     all_scenes.erase(id);
 }
 
-scene::scene(uuid root_uuid, std::unordered_map<uuid, game_object>&& objects, packed_map<std::type_index, std::unique_ptr<component_pool_base>>&& components)
-        : objects(std::move(objects)), component_pools(std::move(components)) {
-        root_object = this->get_game_object(root_uuid);
-    }
+void scene::load(uuid&& id, uuid&& root_uuid, std::unordered_map<uuid, game_object>&& objects, packed_map<std::type_index, std::unique_ptr<component_pool_base>>&& components) {
+    this->id = std::move(id);
+    this->objects = std::move(objects);
+    this->component_pools = std::move(components);
+    root_object = get_game_object(root_uuid);
+    initialized = false;
+}
+
 
 game_object* scene::get_game_object(const uuid& id) {
     try {
