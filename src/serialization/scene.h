@@ -32,22 +32,7 @@ namespace cereal {
             map.emplace(std::move(value->get_type_index()), std::move(value));
         }
     }
-
-    // template<>
-    // struct LoadAndConstruct<element::scene> {
-
-    //     template<class Archive>
-    //     static void load_and_construct(Archive& ar, construct<element::scene>& construct) {
-    //         element::uuid id;
-    //         std::unordered_map<element::uuid, element::game_object> objects;
-    //         element::packed_map<std::type_index, std::unique_ptr<element::component_pool_base>> pools;
-    //         ar(cereal::make_nvp("uuid",         id),
-    //            cereal::make_nvp("game_objects", objects),
-    //            cereal::make_nvp("components",   pools));
-    //         construct(std::move(id), std::move(objects), std::move(pools));
-    //     }
-
-    // };
+    
 
     template<class Archive>
     inline void save(Archive& ar, const element::scene& scene) {
