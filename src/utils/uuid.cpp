@@ -12,6 +12,8 @@ static std::independent_bits_engine<std::mt19937, CHAR_BIT, unsigned char> rand_
 
 using namespace element;
 
+uuid uuid::null_uuid("00000000-0000-0000-0000-000000000000");
+
 uuid::uuid() {
     this->regenerate();
 }
@@ -81,6 +83,10 @@ void uuid::set_from_str(const std::string& uuid) {
         tmp[1] = *cstrp++;
         this->node[i] = strtoul(tmp, NULL, 16);
     }
+}
+
+bool uuid::is_null() const {
+    return memcmp(this->bytes, null_uuid.bytes, 16) == 0;
 }
 
 std::size_t std::hash<uuid>::operator()(uuid const& k) const {

@@ -7,8 +7,11 @@
 namespace element {
     
     class uuid {
+        private:
+            static uuid null_uuid;
         public:
             union {
+                std::uint8_t bytes[16];
                 struct {
                     std::uint32_t time_low;
                     std::uint16_t time_mid;
@@ -17,7 +20,6 @@ namespace element {
                     std::uint8_t  clk_seq_low;
                     std::uint8_t  node[6];
                 };
-                std::uint8_t bytes[16];
             };
             uuid();
             uuid(const uuid& uuid);
@@ -28,6 +30,9 @@ namespace element {
             bool operator==(const uuid& other) const;
             void regenerate();
             void set_from_str(const std::string& uuid);
+            bool is_null() const;
+
+            static inline const uuid& null() {return null_uuid;}
 
             static void reseed_generator();
     };
