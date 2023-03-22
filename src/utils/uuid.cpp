@@ -15,7 +15,7 @@ using namespace element;
 uuid uuid::null_uuid("00000000-0000-0000-0000-000000000000");
 
 uuid::uuid() {
-    this->regenerate();
+    do this->regenerate(); while (this->is_null());
 }
 
 uuid::uuid(const uuid& uuid) {
