@@ -3,6 +3,7 @@
 #include <cstddef>
 #include <cassert>
 #include <type_traits>
+#include <cstdint>
 
 namespace element {
     template<typename T, bool is_const>

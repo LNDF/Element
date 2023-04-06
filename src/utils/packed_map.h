@@ -12,6 +12,7 @@
 #include <iterator>
 #include <stdexcept>
 #include <initializer_list>
+#include <cstdint>
 
 #include <utils/padded_array_view.h>
 
