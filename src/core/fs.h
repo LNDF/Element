@@ -7,13 +7,9 @@
 
 namespace element {
 
-    enum fs_resource_type {
-        dummy
-    };
-
     struct fs_resource_info {
         std::string path;
-        fs_resource_type type;
+        std::string type;
     };
 
     extern std::unique_ptr<std::istream> fs_get_resource(const uuid& id);
