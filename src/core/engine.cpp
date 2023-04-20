@@ -21,7 +21,7 @@ void engine::init() {
     ELM_INFO("Application {0} version {1}", settings.app_name, settings.app_version);
     ELM_INFO("Configuring application...");
     uuid::reseed_generator();
-    fs_load_resources();
+    fs::load_resources();
     event_manager::register_default_listener<events::close>(close_event_listener);
     ELM_INFO("Configuration done");
 }
