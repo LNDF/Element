@@ -4,14 +4,10 @@
 #include <string>
 
 namespace element {
-    enum rendering_api {
-        opengl
-    };
     
     struct engine_settings {
         std::string app_name;
         std::string app_version;
-        rendering_api renderer;
     };
 
     class engine {

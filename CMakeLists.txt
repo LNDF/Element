@@ -32,9 +32,6 @@ endif(ELEMENT_ENABLE_LOG)
 
 
 #LIBS
-# glad
-add_subdirectory(lib/glad)
-target_link_libraries(element PUBLIC glad)
 
 # glm
 add_subdirectory(lib/glm)
