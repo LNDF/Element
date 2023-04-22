@@ -33,6 +33,11 @@ endif(ELEMENT_ENABLE_LOG)
 
 #LIBS
 
+# vulkan
+find_package(Vulkan REQUIRED)
+target_include_directories(element PUBLIC ${VULKAN_INCLUDE_DIRS})
+target_link_libraries(element ${VULKAN_LIB_LIST})
+
 # glm
 add_subdirectory(lib/glm)
 target_link_libraries(element PUBLIC glm)
