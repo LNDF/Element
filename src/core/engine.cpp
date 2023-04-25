@@ -3,6 +3,7 @@
 #include <core/log.h>
 #include <core/fs.h>
 #include <event/event.h>
+#include <render/vulkan.h>
 #include <utils/uuid.h>
 
 using namespace element;
@@ -15,29 +16,21 @@ bool engine::close_event_listener(const events::close&) {
     return true;
 }
 
-void engine::init() {
+void engine::setup_engine() {
     ELM_INFO("Element engine version {0} starting...", ELM_VERSION);
     ELM_INFO("Application {0} version {1}", settings.app_name, settings.app_version);
     ELM_INFO("Configuring application...");
     uuid::reseed_generator();
+    vulkan::init();
     fs::load_resources();
     event_manager::register_default_listener<events::close>(close_event_listener);
     ELM_INFO("Configuration done");
 }
 
-void engine::setup_engine(const engine_settings& settings) {
-    engine::settings = settings;
-    init();
-}
-
-void engine::setup_engine(engine_settings&& settings) {
-    engine::settings = std::move(settings);
-    init();
-}
-
 void engine::cleanup_engine() {
     ELM_INFO("Application will close soon. Cleanning up...");
     event_manager::cleanup();
+    vulkan::cleanup();
 }
 
 void engine::start() {
@@ -50,7 +43,7 @@ void engine::tick() {
 }
 
 void engine::stop() {
-    ELM_INFO("Stopping application...");
+    
 }
 
 void engine::execute() {

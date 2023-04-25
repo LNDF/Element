@@ -19,8 +19,7 @@ namespace element {
             static bool close_event_listener(const events::close&);
         public:
             static engine_settings settings;
-            static void setup_engine(const engine_settings& settings);
-            static void setup_engine(engine_settings&& settings);
+            static void setup_engine();
             static void start();
             static void tick();
             static void stop();

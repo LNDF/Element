@@ -14,4 +14,19 @@ void log::init_log() {
     error_log->set_pattern("%^[%Y-%m-%d %H:%M:%S.%e %!@%s:%# %l]: %v%$");
 }
 
+std::shared_ptr<spdlog::logger> log::get_logger(log_level level) {
+    switch (level) {
+        case ELM_LOG_LEVEL_ERROR:
+        case ELM_LOG_LEVEL_CRITICAL:
+        case ELM_LOG_LEVEL_DISABLE:
+            return error_log;
+        case ELM_LOG_LEVEL_TRACE:
+        case ELM_LOG_LEVEL_INFO:
+        case ELM_LOG_LEVEL_DEBUG:
+        case ELM_LOG_LEVEL_WARN:
+        default:
+            return console_log;
+    }
+}
+
 #endif

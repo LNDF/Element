@@ -26,6 +26,7 @@ target_compile_options(element PRIVATE -Wall)
 
 # define options
 target_compile_definitions(element PUBLIC ELM_VERSION="${PROJECT_VERSION}")
+target_compile_definitions(element PUBLIC ELM_VERSION_ID=0)
 if(ELEMENT_ENABLE_LOG)
     target_compile_definitions(element PUBLIC ELM_ENABLE_LOGGING=1)    
 endif(ELEMENT_ENABLE_LOG)
@@ -34,9 +35,9 @@ endif(ELEMENT_ENABLE_LOG)
 #LIBS
 
 # vulkan
-find_package(Vulkan REQUIRED)
-target_include_directories(element PUBLIC ${VULKAN_INCLUDE_DIRS})
-target_link_libraries(element ${VULKAN_LIB_LIST})
+find_package(Vulkan COMPONENTS shaderc_combined REQUIRED)
+target_link_libraries(element PUBLIC Vulkan::Vulkan)
+target_link_libraries(element PUBLIC Vulkan::shaderc_combined)
 
 # glm
 add_subdirectory(lib/glm)
@@ -52,6 +53,7 @@ target_link_libraries(element PUBLIC cereal)
 
 # spdlog
 if(ELEMENT_ENABLE_LOG)
+    #OVERRIDE_OPTION(SPDLOG_USE_STD_FORMAT BOOL ON)
     add_subdirectory(lib/spdlog)
     target_link_libraries(element PUBLIC spdlog::spdlog)
 endif(ELEMENT_ENABLE_LOG)
