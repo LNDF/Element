@@ -1,5 +1,7 @@
 #include "vulkan.h"
 
+#include <stdexcept>
+
 #include <core/engine.h>
 #include <core/log.h>
 
@@ -8,14 +10,16 @@ using namespace element;
 std::uint32_t vulkan::version = 0;
 std::unordered_set<std::string> vulkan::supported_instance_extensions;
 std::unordered_set<std::string> vulkan::supported_instance_layers;
+std::unordered_set<std::string> vulkan::supported_device_extensions;
 vk::Instance vulkan::instance;
 vk::DispatchLoaderDynamic vulkan::dld;
+vk::PhysicalDevice vulkan::physical_device;
+vk::Device vulkan::device;
 #ifdef ELM_ENABLE_LOGGING
 vk::DebugUtilsMessengerEXT vulkan::debug_messenger;
 #endif
 
 static VKAPI_ATTR VkBool32 VKAPI_CALL vulkan_logger(VkDebugUtilsMessageSeverityFlagBitsEXT severity, VkDebugUtilsMessageTypeFlagsEXT type, const VkDebugUtilsMessengerCallbackDataEXT* data, void* user_data) {
-    ELM_DEBUG("vk: {}", data->pMessage);
     log::log_level level;
     const char* type_str = "Vulkan";
     if (severity & VkDebugUtilsMessageSeverityFlagBitsEXT::VK_DEBUG_UTILS_MESSAGE_SEVERITY_ERROR_BIT_EXT) {
@@ -41,6 +45,8 @@ static VKAPI_ATTR VkBool32 VKAPI_CALL vulkan_logger(VkDebugUtilsMessageSeverityF
     ELM_LOG(level, "[{0}]: {1}", type_str, data->pMessage);
     return VK_FALSE;
 }
+
+
 
 void vulkan::init() {
     ELM_INFO("Starting Vulkan..");
@@ -103,11 +109,105 @@ void vulkan::init() {
         ELM_DEBUG("Vulkan debug messages will be logged.");
     }
 #endif
+    bool physical_device_foud = false;
+    std::vector<const char*> required_device_extensions;
+    required_device_extensions.push_back(VK_KHR_SWAPCHAIN_EXTENSION_NAME);
+    std::vector<vk::PhysicalDevice> physical_devices = instance.enumeratePhysicalDevices();
+    vk::PhysicalDeviceProperties dev_properties;
+    ELM_DEBUG("Found {0} physical devices", physical_devices.size());
+    ELM_DEBUG("Using {0} device extensions", required_device_extensions.size());
+    for (const char* extension : required_device_extensions) {
+        ELM_DEBUG("    {}", extension);
+    }
+    for (vk::PhysicalDevice& dev : physical_devices) {
+        supported_device_extensions.clear();
+        for (vk::ExtensionProperties& properties : dev.enumerateDeviceExtensionProperties()) {
+            supported_device_extensions.insert(properties.extensionName);
+        }
+        for (const char* extension : required_device_extensions) {
+            if (supported_device_extensions.contains(extension)) {
+                vk::PhysicalDeviceProperties current_dev_properties = dev.getProperties();
+                if (dev_properties.deviceType == vk::PhysicalDeviceType::eOther || !physical_device_foud ||
+                    (current_dev_properties.deviceType == vk::PhysicalDeviceType::eCpu &&
+                        dev_properties.deviceType == vk::PhysicalDeviceType::eOther) ||
+                    (current_dev_properties.deviceType == vk::PhysicalDeviceType::eVirtualGpu &&
+                        (dev_properties.deviceType == vk::PhysicalDeviceType::eOther ||
+                         dev_properties.deviceType == vk::PhysicalDeviceType::eCpu)) ||
+                    (current_dev_properties.deviceType == vk::PhysicalDeviceType::eIntegratedGpu &&
+                        (dev_properties.deviceType == vk::PhysicalDeviceType::eOther ||
+                         dev_properties.deviceType == vk::PhysicalDeviceType::eCpu ||
+                         dev_properties.deviceType == vk::PhysicalDeviceType::eVirtualGpu)) ||
+                    (current_dev_properties.deviceType == vk::PhysicalDeviceType::eDiscreteGpu &&
+                        (dev_properties.deviceType == vk::PhysicalDeviceType::eOther ||
+                         dev_properties.deviceType == vk::PhysicalDeviceType::eCpu ||
+                         dev_properties.deviceType == vk::PhysicalDeviceType::eVirtualGpu ||
+                         dev_properties.deviceType == vk::PhysicalDeviceType::eIntegratedGpu))) {
+                    physical_device_foud = true;
+                    dev_properties = current_dev_properties;
+                    physical_device = dev;
+                }
+            }
+        }
+    }
+    if (!physical_device_foud) {
+        throw std::runtime_error("Couldn't find valid Vulkan physical device");
+    }
+    const char* dev_type = "Unknown";
+    switch (dev_properties.deviceType) {
+        case vk::PhysicalDeviceType::eCpu:
+            dev_type = "CPU";
+            break;
+        case vk::PhysicalDeviceType::eDiscreteGpu:
+            dev_type = "Discrete GPU";
+            break;
+        case vk::PhysicalDeviceType::eIntegratedGpu:
+            dev_type = "Integrated GPU";
+            break;
+        case vk::PhysicalDeviceType::eVirtualGpu:
+            dev_type = "Virtual GPU";
+            break;
+        case vk::PhysicalDeviceType::eOther:
+            dev_type = "Other";
+            break;
+        default:
+            break;
+    }
+    ELM_INFO("Selected device properties:");
+    ELM_INFO("  Device name: {}", dev_properties.deviceName);
+    ELM_INFO("  Device type: {}", dev_type);
+    std::vector<vk::QueueFamilyProperties> queue_family_properties = physical_device.getQueueFamilyProperties();
+    bool graphics_queue_found = false;
+    std::uint32_t graphics_queue_index = 0;
+    for (vk::QueueFamilyProperties& properties : queue_family_properties) {
+        if (properties.queueFlags & vk::QueueFlagBits::eGraphics) {
+            graphics_queue_found = true;
+            break;
+        }
+        graphics_queue_index++;
+    }
+    if (!graphics_queue_found) {
+        throw std::runtime_error("Couldn't find graphics queue family,");
+    }
+    ELM_DEBUG("Graphics queue family index is {}", graphics_queue_index);
+    float queue_priority = 1.0f;
+    vk::DeviceQueueCreateInfo queue_create_info(vk::DeviceQueueCreateFlags(), graphics_queue_index, 1, &queue_priority);
+    vk::PhysicalDeviceFeatures physical_device_feautres;
+    std::vector<const char*> device_layers;
+#ifndef NDEBUG
+    if (supported_instance_layers.contains("VK_LAYER_KHRONOS_validation")) {
+        device_layers.push_back("VK_LAYER_KHRONOS_validation");
+    }
+#endif
+    vk::DeviceCreateInfo device_create_info{vk::DeviceCreateFlags(), 1, &queue_create_info, static_cast<std::uint32_t>(device_layers.size()), device_layers.data(), 0, nullptr, &physical_device_feautres};
+    device = physical_device.createDevice(device_create_info);
+    ELM_INFO("Vulkan started");
 }
 
 void vulkan::cleanup() {
     ELM_INFO("Cleanning up Vulkan...");
 #ifdef ELM_ENABLE_LOGGING
+    device.destroy();
+    physical_device = nullptr;
     instance.destroyDebugUtilsMessengerEXT(debug_messenger, nullptr, dld);
 #endif
     instance.destroy();

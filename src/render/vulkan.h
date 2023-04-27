@@ -15,10 +15,13 @@ namespace element {
         private:
             static std::unordered_set<std::string> supported_instance_extensions;
             static std::unordered_set<std::string> supported_instance_layers;
+            static std::unordered_set<std::string> supported_device_extensions;
             static std::uint32_t version;
 
             static vk::Instance instance;
             static vk::DispatchLoaderDynamic dld;
+            static vk::PhysicalDevice physical_device;
+            static vk::Device device;
 #ifdef ELM_ENABLE_LOGGING
             static vk::DebugUtilsMessengerEXT debug_messenger;
 #endif
@@ -32,8 +35,11 @@ namespace element {
 
             static inline std::uint32_t get_version() {return version;}
             static inline vk::Instance get_instance() {return instance;}
+            static inline vk::PhysicalDevice get_physical_device() {return physical_device;}
+            static inline vk::Device get_device() {return device;}
             static inline const std::unordered_set<std::string>& get_supported_instance_extensions() {return supported_instance_extensions;}
             static inline const std::unordered_set<std::string>& get_supported_instance_layers() {return supported_instance_layers;}
+            static inline const std::unordered_set<std::string>& get_supported_device_extensions() {return supported_device_extensions;}
     };
 
 } // namespace element
