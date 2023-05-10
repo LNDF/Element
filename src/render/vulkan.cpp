@@ -15,6 +15,7 @@ vk::Instance vulkan::instance;
 vk::DispatchLoaderDynamic vulkan::dld;
 vk::PhysicalDevice vulkan::physical_device;
 vk::Device vulkan::device;
+bool vulkan::device_created = false;
 #ifdef ELM_ENABLE_LOGGING
 vk::DebugUtilsMessengerEXT vulkan::debug_messenger;
 #endif
@@ -46,10 +47,70 @@ static VKAPI_ATTR VkBool32 VKAPI_CALL vulkan_logger(VkDebugUtilsMessageSeverityF
     return VK_FALSE;
 }
 
+vulkan_physical_device_info vulkan::get_physical_device_support(vk::PhysicalDevice& device, vk::SurfaceKHR& surface, const std::vector<const char*>& required_extensions) {
+    vulkan_physical_device_info info;
+    info.supported = false;
+    info.graphics_queue_index = 0;
+    info.present_queue_index = 0;
+    std::vector<vk::QueueFamilyProperties> props = device.getQueueFamilyProperties();
+    int i = 0, sup = 0;
+    for (vk::QueueFamilyProperties& prop : props) {
+        if (prop.queueFlags & vk::QueueFlagBits::eGraphics) {
+            info.graphics_queue_index = i;
+            sup++;
+        }
+        if (device.getSurfaceSupportKHR(i, surface)) {
+            info.present_queue_index = i;
+            sup++;
+        }
+        i++;
+        if (sup == 2) {
+            info.supported = true;
+            break;
+        }
+    }
+    for (vk::ExtensionProperties& props : device.enumerateDeviceExtensionProperties()) {
+        info.supported_extensions.insert(props.extensionName);
+    }
+    for (const char* extensions : required_extensions) {
+        if (!info.supported_extensions.contains(extensions)) {
+            info.supported = false;
+            break;
+        }
+    }
+    return info;
+}
 
+std::uint32_t vulkan::pick_best_physical_device(const std::vector<vk::PhysicalDevice>& devices) {
+    std::uint32_t index = devices.size(), i = 0;
+    vk::PhysicalDeviceProperties dev_props;
+    for (const vk::PhysicalDevice& dev : devices) {
+        vk::PhysicalDeviceProperties current_dev_props = dev.getProperties();
+        if (dev_props.deviceType == vk::PhysicalDeviceType::eOther || index == devices.size() ||
+            (current_dev_props.deviceType == vk::PhysicalDeviceType::eCpu &&
+             dev_props.deviceType == vk::PhysicalDeviceType::eOther) ||
+            (current_dev_props.deviceType == vk::PhysicalDeviceType::eVirtualGpu &&
+            (dev_props.deviceType == vk::PhysicalDeviceType::eOther ||
+             dev_props.deviceType == vk::PhysicalDeviceType::eCpu)) ||
+            (current_dev_props.deviceType == vk::PhysicalDeviceType::eIntegratedGpu &&
+            (dev_props.deviceType == vk::PhysicalDeviceType::eOther ||
+             dev_props.deviceType == vk::PhysicalDeviceType::eCpu ||
+             dev_props.deviceType == vk::PhysicalDeviceType::eVirtualGpu)) ||
+            (current_dev_props.deviceType == vk::PhysicalDeviceType::eDiscreteGpu &&
+            (dev_props.deviceType == vk::PhysicalDeviceType::eOther ||
+             dev_props.deviceType == vk::PhysicalDeviceType::eCpu ||
+             dev_props.deviceType == vk::PhysicalDeviceType::eVirtualGpu ||
+             dev_props.deviceType == vk::PhysicalDeviceType::eIntegratedGpu))) {
+            index = i;
+            dev_props = current_dev_props;
+        }
+        i++;
+    }
+    return index;
+}
 
-void vulkan::init() {
-    ELM_INFO("Starting Vulkan..");
+void vulkan::init_instance() {
+    ELM_INFO("Starting Vulkan instance..");
     version = vk::enumerateInstanceVersion();
     std::vector<vk::ExtensionProperties> supportedInstanceExtensions = vk::enumerateInstanceExtensionProperties();
     std::vector<vk::LayerProperties> supportedInstanceLayers = vk::enumerateInstanceLayerProperties();
@@ -109,49 +170,38 @@ void vulkan::init() {
         ELM_DEBUG("Vulkan debug messages will be logged.");
     }
 #endif
-    bool physical_device_foud = false;
+}
+
+void vulkan::init_device(vk::SurfaceKHR& surface) {
+    ELM_INFO("Creating Vulkan device..");
+    if (device_created) {
+        ELM_WARN("Device already created");
+        return;
+    }
     std::vector<const char*> required_device_extensions;
     required_device_extensions.push_back(VK_KHR_SWAPCHAIN_EXTENSION_NAME);
     std::vector<vk::PhysicalDevice> physical_devices = instance.enumeratePhysicalDevices();
-    vk::PhysicalDeviceProperties dev_properties;
+    std::vector<vk::PhysicalDevice> supported_devices;
+    std::vector<vulkan_physical_device_info> supported_device_infos;
     ELM_DEBUG("Found {0} physical devices", physical_devices.size());
     ELM_DEBUG("Using {0} device extensions", required_device_extensions.size());
     for (const char* extension : required_device_extensions) {
         ELM_DEBUG("    {}", extension);
     }
     for (vk::PhysicalDevice& dev : physical_devices) {
-        supported_device_extensions.clear();
-        for (vk::ExtensionProperties& properties : dev.enumerateDeviceExtensionProperties()) {
-            supported_device_extensions.insert(properties.extensionName);
-        }
-        for (const char* extension : required_device_extensions) {
-            if (supported_device_extensions.contains(extension)) {
-                vk::PhysicalDeviceProperties current_dev_properties = dev.getProperties();
-                if (dev_properties.deviceType == vk::PhysicalDeviceType::eOther || !physical_device_foud ||
-                    (current_dev_properties.deviceType == vk::PhysicalDeviceType::eCpu &&
-                        dev_properties.deviceType == vk::PhysicalDeviceType::eOther) ||
-                    (current_dev_properties.deviceType == vk::PhysicalDeviceType::eVirtualGpu &&
-                        (dev_properties.deviceType == vk::PhysicalDeviceType::eOther ||
-                         dev_properties.deviceType == vk::PhysicalDeviceType::eCpu)) ||
-                    (current_dev_properties.deviceType == vk::PhysicalDeviceType::eIntegratedGpu &&
-                        (dev_properties.deviceType == vk::PhysicalDeviceType::eOther ||
-                         dev_properties.deviceType == vk::PhysicalDeviceType::eCpu ||
-                         dev_properties.deviceType == vk::PhysicalDeviceType::eVirtualGpu)) ||
-                    (current_dev_properties.deviceType == vk::PhysicalDeviceType::eDiscreteGpu &&
-                        (dev_properties.deviceType == vk::PhysicalDeviceType::eOther ||
-                         dev_properties.deviceType == vk::PhysicalDeviceType::eCpu ||
-                         dev_properties.deviceType == vk::PhysicalDeviceType::eVirtualGpu ||
-                         dev_properties.deviceType == vk::PhysicalDeviceType::eIntegratedGpu))) {
-                    physical_device_foud = true;
-                    dev_properties = current_dev_properties;
-                    physical_device = dev;
-                }
-            }
+        vulkan_physical_device_info info = get_physical_device_support(dev, surface, required_device_extensions);
+        if (info.supported) {
+            supported_devices.push_back(dev);
+            supported_device_infos.push_back(std::move(info));
         }
     }
-    if (!physical_device_foud) {
+    ELM_DEBUG("{0} devices supported", supported_devices.size());
+    std::uint32_t device_index = pick_best_physical_device(supported_devices);
+    if (device_index == supported_devices.size()) {
         throw std::runtime_error("Couldn't find valid Vulkan physical device");
     }
+    physical_device = supported_devices[device_index];
+    vk::PhysicalDeviceProperties dev_properties = physical_device.getProperties();
     const char* dev_type = "Unknown";
     switch (dev_properties.deviceType) {
         case vk::PhysicalDeviceType::eCpu:
@@ -175,22 +225,19 @@ void vulkan::init() {
     ELM_INFO("Selected device properties:");
     ELM_INFO("  Device name: {}", dev_properties.deviceName);
     ELM_INFO("  Device type: {}", dev_type);
-    std::vector<vk::QueueFamilyProperties> queue_family_properties = physical_device.getQueueFamilyProperties();
-    bool graphics_queue_found = false;
-    std::uint32_t graphics_queue_index = 0;
-    for (vk::QueueFamilyProperties& properties : queue_family_properties) {
-        if (properties.queueFlags & vk::QueueFlagBits::eGraphics) {
-            graphics_queue_found = true;
-            break;
-        }
-        graphics_queue_index++;
+    std::vector<std::uint32_t> queue_indices;
+    queue_indices.push_back(supported_device_infos[device_index].graphics_queue_index);
+    if (supported_device_infos[device_index].graphics_queue_index != supported_device_infos[device_index].present_queue_index) {
+        queue_indices.push_back(supported_device_infos[device_index].present_queue_index);
     }
-    if (!graphics_queue_found) {
-        throw std::runtime_error("Couldn't find graphics queue family,");
-    }
-    ELM_DEBUG("Graphics queue family index is {}", graphics_queue_index);
+    ELM_DEBUG("  Graphics queue family: {}", supported_device_infos[device_index].graphics_queue_index);
+    ELM_DEBUG("  Present queue family: {}", supported_device_infos[device_index].present_queue_index);
+    ELM_DEBUG("{} queues will be created", queue_indices.size());
+    std::vector<vk::DeviceQueueCreateInfo> queue_create_infos(queue_indices.size());
     float queue_priority = 1.0f;
-    vk::DeviceQueueCreateInfo queue_create_info(vk::DeviceQueueCreateFlags(), graphics_queue_index, 1, &queue_priority);
+    for (std::uint32_t index : queue_indices) {
+        queue_create_infos.push_back(vk::DeviceQueueCreateInfo(vk::DeviceQueueCreateFlags(), index, 1, &queue_priority));
+    }
     vk::PhysicalDeviceFeatures physical_device_feautres;
     std::vector<const char*> device_layers;
 #ifndef NDEBUG
@@ -198,15 +245,19 @@ void vulkan::init() {
         device_layers.push_back("VK_LAYER_KHRONOS_validation");
     }
 #endif
-    vk::DeviceCreateInfo device_create_info{vk::DeviceCreateFlags(), 1, &queue_create_info, static_cast<std::uint32_t>(device_layers.size()), device_layers.data(), 0, nullptr, &physical_device_feautres};
+    vk::DeviceCreateInfo device_create_info{vk::DeviceCreateFlags(), static_cast<std::uint32_t>(queue_create_infos.size()), queue_create_infos.data(), static_cast<std::uint32_t>(device_layers.size()), device_layers.data(), 0, nullptr, &physical_device_feautres};
     device = physical_device.createDevice(device_create_info);
     ELM_INFO("Vulkan started");
+    device_created = true;
 }
 
 void vulkan::cleanup() {
     ELM_INFO("Cleanning up Vulkan...");
+    if (device_created) {
+        device_created = false;
+        device.destroy();
+    }
 #ifdef ELM_ENABLE_LOGGING
-    device.destroy();
     physical_device = nullptr;
     instance.destroyDebugUtilsMessengerEXT(debug_messenger, nullptr, dld);
 #endif
