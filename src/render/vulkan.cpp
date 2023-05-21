@@ -233,7 +233,7 @@ void vulkan::init_device(vk::SurfaceKHR& surface) {
     ELM_DEBUG("  Graphics queue family: {}", supported_device_infos[device_index].graphics_queue_index);
     ELM_DEBUG("  Present queue family: {}", supported_device_infos[device_index].present_queue_index);
     ELM_DEBUG("{} queues will be created", queue_indices.size());
-    std::vector<vk::DeviceQueueCreateInfo> queue_create_infos(queue_indices.size());
+    std::vector<vk::DeviceQueueCreateInfo> queue_create_infos;
     float queue_priority = 1.0f;
     for (std::uint32_t index : queue_indices) {
         queue_create_infos.push_back(vk::DeviceQueueCreateInfo(vk::DeviceQueueCreateFlags(), index, 1, &queue_priority));
@@ -256,9 +256,9 @@ void vulkan::cleanup() {
     if (device_created) {
         device_created = false;
         device.destroy();
+        physical_device = nullptr;
     }
 #ifdef ELM_ENABLE_LOGGING
-    physical_device = nullptr;
     instance.destroyDebugUtilsMessengerEXT(debug_messenger, nullptr, dld);
 #endif
     instance.destroy();

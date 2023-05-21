@@ -18,7 +18,6 @@ namespace element {
         bool supported;
     };
 
-
     class vulkan {
         private:
             static std::unordered_set<std::string> supported_instance_extensions;
@@ -49,6 +48,7 @@ namespace element {
 
             static inline std::uint32_t get_version() {return version;}
             static inline vk::Instance get_instance() {return instance;}
+            static inline vk::DispatchLoaderDynamic get_dld() {return dld;}
             static inline vk::PhysicalDevice get_physical_device() {return physical_device;}
             static inline vk::Device get_device() {return device;}
             static inline bool is_device_created() {return device_created;}
