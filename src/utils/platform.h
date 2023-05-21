@@ -20,7 +20,7 @@
     #elif TARGET_OS_MAC
         #define ELM_PLATFORM_MAC
     #else
-    #   error "Unknown Apple platform"
+        #error "Unknown Apple platform"
     #endif
 #elif __ANDROID__
     #error "Android is not supported"
