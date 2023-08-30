@@ -10,7 +10,7 @@ using namespace element;
 std::uint32_t vulkan::version = 0;
 std::unordered_set<std::string> vulkan::supported_instance_extensions;
 std::unordered_set<std::string> vulkan::supported_instance_layers;
-std::unordered_set<std::string> vulkan::supported_device_extensions;
+vulkan_physical_device_info vulkan::physical_device_info;
 vk::Instance vulkan::instance;
 vk::DispatchLoaderDynamic vulkan::dld;
 vk::PhysicalDevice vulkan::physical_device;
@@ -47,7 +47,7 @@ static VKAPI_ATTR VkBool32 VKAPI_CALL vulkan_logger(VkDebugUtilsMessageSeverityF
     return VK_FALSE;
 }
 
-vulkan_physical_device_info vulkan::get_physical_device_support(vk::PhysicalDevice& device, vk::SurfaceKHR& surface, const std::vector<const char*>& required_extensions) {
+vulkan_physical_device_info vulkan::get_physical_device_support(vk::PhysicalDevice& device, vk::SurfaceKHR& surface, const std::vector<const char*>& required_extensions, const std::vector<const char*>& required_layers) {
     vulkan_physical_device_info info;
     info.supported = false;
     info.graphics_queue_index = 0;
@@ -69,13 +69,23 @@ vulkan_physical_device_info vulkan::get_physical_device_support(vk::PhysicalDevi
             break;
         }
     }
+    if (!info.supported) return info;
     for (vk::ExtensionProperties& props : device.enumerateDeviceExtensionProperties()) {
         info.supported_extensions.insert(props.extensionName);
     }
-    for (const char* extensions : required_extensions) {
-        if (!info.supported_extensions.contains(extensions)) {
+    for (const char* extension : required_extensions) {
+        if (!info.supported_extensions.contains(extension)) {
             info.supported = false;
-            break;
+            return info;
+        }
+    }
+    for (vk::LayerProperties props : device.enumerateDeviceLayerProperties()) {
+        info.supported_layers.insert(props.layerName);
+    }
+    for (const char* layer : required_layers) {
+        if (!info.supported_layers.contains(layer)) {
+            info.supported = false;
+            return info;
         }
     }
     return info;
@@ -178,7 +188,7 @@ void vulkan::init_device(vk::SurfaceKHR& surface) {
         ELM_WARN("Device already created");
         return;
     }
-    std::vector<const char*> required_device_extensions;
+    std::vector<const char*> required_device_extensions, required_devices_layers;
     required_device_extensions.push_back(VK_KHR_SWAPCHAIN_EXTENSION_NAME);
     std::vector<vk::PhysicalDevice> physical_devices = instance.enumeratePhysicalDevices();
     std::vector<vk::PhysicalDevice> supported_devices;
@@ -189,7 +199,7 @@ void vulkan::init_device(vk::SurfaceKHR& surface) {
         ELM_DEBUG("    {}", extension);
     }
     for (vk::PhysicalDevice& dev : physical_devices) {
-        vulkan_physical_device_info info = get_physical_device_support(dev, surface, required_device_extensions);
+        vulkan_physical_device_info info = get_physical_device_support(dev, surface, required_device_extensions, required_devices_layers);
         if (info.supported) {
             supported_devices.push_back(dev);
             supported_device_infos.push_back(std::move(info));
@@ -201,6 +211,7 @@ void vulkan::init_device(vk::SurfaceKHR& surface) {
         throw std::runtime_error("Couldn't find valid Vulkan physical device");
     }
     physical_device = supported_devices[device_index];
+    physical_device_info = std::move(supported_device_infos[device_index]);
     vk::PhysicalDeviceProperties dev_properties = physical_device.getProperties();
     const char* dev_type = "Unknown";
     switch (dev_properties.deviceType) {
@@ -226,12 +237,12 @@ void vulkan::init_device(vk::SurfaceKHR& surface) {
     ELM_INFO("  Device name: {}", dev_properties.deviceName);
     ELM_INFO("  Device type: {}", dev_type);
     std::vector<std::uint32_t> queue_indices;
-    queue_indices.push_back(supported_device_infos[device_index].graphics_queue_index);
-    if (supported_device_infos[device_index].graphics_queue_index != supported_device_infos[device_index].present_queue_index) {
-        queue_indices.push_back(supported_device_infos[device_index].present_queue_index);
+    queue_indices.push_back(physical_device_info.graphics_queue_index);
+    if (physical_device_info.graphics_queue_index != physical_device_info.present_queue_index) {
+        queue_indices.push_back(physical_device_info.present_queue_index);
     }
-    ELM_DEBUG("  Graphics queue family: {}", supported_device_infos[device_index].graphics_queue_index);
-    ELM_DEBUG("  Present queue family: {}", supported_device_infos[device_index].present_queue_index);
+    ELM_DEBUG("  Graphics queue family: {}", physical_device_info.graphics_queue_index);
+    ELM_DEBUG("  Present queue family: {}", physical_device_info.present_queue_index);
     ELM_DEBUG("{} queues will be created", queue_indices.size());
     std::vector<vk::DeviceQueueCreateInfo> queue_create_infos;
     float queue_priority = 1.0f;
@@ -241,7 +252,7 @@ void vulkan::init_device(vk::SurfaceKHR& surface) {
     vk::PhysicalDeviceFeatures physical_device_feautres;
     std::vector<const char*> device_layers;
 #ifndef NDEBUG
-    if (supported_instance_layers.contains("VK_LAYER_KHRONOS_validation")) {
+    if (supported_instance_layers.contains("VK_LAYER_KHRONOS_validation") && physical_device_info.supported_layers.contains("VK_LAYER_KHRONOS_validation")) {
         device_layers.push_back("VK_LAYER_KHRONOS_validation");
     }
 #endif

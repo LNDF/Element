@@ -13,6 +13,7 @@ namespace element {
 
     struct vulkan_physical_device_info {
         std::unordered_set<std::string> supported_extensions;
+        std::unordered_set<std::string> supported_layers;
         std::uint32_t graphics_queue_index;
         std::uint32_t present_queue_index;
         bool supported;
@@ -22,7 +23,7 @@ namespace element {
         private:
             static std::unordered_set<std::string> supported_instance_extensions;
             static std::unordered_set<std::string> supported_instance_layers;
-            static std::unordered_set<std::string> supported_device_extensions;
+            static vulkan_physical_device_info physical_device_info;
             static std::uint32_t version;
 
             static vk::Instance instance;
@@ -36,7 +37,7 @@ namespace element {
 #endif
 
         public:
-            static vulkan_physical_device_info get_physical_device_support(vk::PhysicalDevice& device, vk::SurfaceKHR& surface, const std::vector<const char*>& required_extensions);
+            static vulkan_physical_device_info get_physical_device_support(vk::PhysicalDevice& device, vk::SurfaceKHR& surface, const std::vector<const char*>& required_extensions, const std::vector<const char*>& required_layers);
             static std::uint32_t pick_best_physical_device(const std::vector<vk::PhysicalDevice>& devices);
 
             static void init_instance();
@@ -54,7 +55,7 @@ namespace element {
             static inline bool is_device_created() {return device_created;}
             static inline const std::unordered_set<std::string>& get_supported_instance_extensions() {return supported_instance_extensions;}
             static inline const std::unordered_set<std::string>& get_supported_instance_layers() {return supported_instance_layers;}
-            static inline const std::unordered_set<std::string>& get_supported_device_extensions() {return supported_device_extensions;}
+            static inline const vulkan_physical_device_info& get_physical_device_info() {return physical_device_info;}
     };
 
 } // namespace element
