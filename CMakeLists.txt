@@ -35,8 +35,10 @@ endif(ELEMENT_ENABLE_LOG)
 #LIBS
 
 # vulkan
-find_package(Vulkan COMPONENTS shaderc_combined REQUIRED)
+find_package(Vulkan COMPONENTS shaderc_combined SPIRV-Tools glslang REQUIRED)
 target_link_libraries(element PUBLIC Vulkan::Vulkan)
+target_link_libraries(element PUBLIC Vulkan::SPIRV-Tools)
+target_link_libraries(element PUBLIC Vulkan::glslang)
 target_link_libraries(element PUBLIC Vulkan::shaderc_combined)
 
 # glm
