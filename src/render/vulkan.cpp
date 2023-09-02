@@ -1,6 +1,7 @@
 #include "vulkan.h"
 
 #include <stdexcept>
+#include <limits>
 
 #include <core/engine.h>
 #include <core/log.h>
@@ -188,18 +189,14 @@ void vulkan::init_device(vk::SurfaceKHR& surface) {
         ELM_WARN("Device already created");
         return;
     }
-    std::vector<const char*> required_device_extensions, required_devices_layers;
-    required_device_extensions.push_back(VK_KHR_SWAPCHAIN_EXTENSION_NAME);
+    std::vector<const char*> device_extensions, device_layers;
+    device_extensions.push_back(VK_KHR_SWAPCHAIN_EXTENSION_NAME);
     std::vector<vk::PhysicalDevice> physical_devices = instance.enumeratePhysicalDevices();
     std::vector<vk::PhysicalDevice> supported_devices;
     std::vector<vulkan_physical_device_info> supported_device_infos;
     ELM_DEBUG("Found {0} physical devices", physical_devices.size());
-    ELM_DEBUG("Using {0} device extensions", required_device_extensions.size());
-    for (const char* extension : required_device_extensions) {
-        ELM_DEBUG("    {}", extension);
-    }
     for (vk::PhysicalDevice& dev : physical_devices) {
-        vulkan_physical_device_info info = get_physical_device_support(dev, surface, required_device_extensions, required_devices_layers);
+        vulkan_physical_device_info info = get_physical_device_support(dev, surface, device_extensions, device_layers);
         if (info.supported) {
             supported_devices.push_back(dev);
             supported_device_infos.push_back(std::move(info));
@@ -213,29 +210,9 @@ void vulkan::init_device(vk::SurfaceKHR& surface) {
     physical_device = supported_devices[device_index];
     physical_device_info = std::move(supported_device_infos[device_index]);
     vk::PhysicalDeviceProperties dev_properties = physical_device.getProperties();
-    const char* dev_type = "Unknown";
-    switch (dev_properties.deviceType) {
-        case vk::PhysicalDeviceType::eCpu:
-            dev_type = "CPU";
-            break;
-        case vk::PhysicalDeviceType::eDiscreteGpu:
-            dev_type = "Discrete GPU";
-            break;
-        case vk::PhysicalDeviceType::eIntegratedGpu:
-            dev_type = "Integrated GPU";
-            break;
-        case vk::PhysicalDeviceType::eVirtualGpu:
-            dev_type = "Virtual GPU";
-            break;
-        case vk::PhysicalDeviceType::eOther:
-            dev_type = "Other";
-            break;
-        default:
-            break;
-    }
     ELM_INFO("Selected device properties:");
     ELM_INFO("  Device name: {}", dev_properties.deviceName);
-    ELM_INFO("  Device type: {}", dev_type);
+    ELM_INFO("  Device type: {}", vk::to_string(dev_properties.deviceType));
     std::vector<std::uint32_t> queue_indices;
     queue_indices.push_back(physical_device_info.graphics_queue_index);
     if (physical_device_info.graphics_queue_index != physical_device_info.present_queue_index) {
@@ -250,16 +227,117 @@ void vulkan::init_device(vk::SurfaceKHR& surface) {
         queue_create_infos.push_back(vk::DeviceQueueCreateInfo(vk::DeviceQueueCreateFlags(), index, 1, &queue_priority));
     }
     vk::PhysicalDeviceFeatures physical_device_feautres;
-    std::vector<const char*> device_layers;
 #ifndef NDEBUG
     if (supported_instance_layers.contains("VK_LAYER_KHRONOS_validation") && physical_device_info.supported_layers.contains("VK_LAYER_KHRONOS_validation")) {
         device_layers.push_back("VK_LAYER_KHRONOS_validation");
     }
 #endif
-    vk::DeviceCreateInfo device_create_info{vk::DeviceCreateFlags(), static_cast<std::uint32_t>(queue_create_infos.size()), queue_create_infos.data(), static_cast<std::uint32_t>(device_layers.size()), device_layers.data(), 0, nullptr, &physical_device_feautres};
+    ELM_DEBUG("Using {0} device extensions", device_extensions.size());
+    for (const char* extension : device_extensions) {
+        ELM_DEBUG("    {}", extension);
+    }
+    ELM_DEBUG("Using {0} device layers", device_layers.size());
+    for (const char* layer : device_layers) {
+        ELM_DEBUG("    {}", layer);
+    }
+    vk::DeviceCreateInfo device_create_info{vk::DeviceCreateFlags(), static_cast<std::uint32_t>(queue_create_infos.size()), queue_create_infos.data(), static_cast<std::uint32_t>(device_layers.size()), device_layers.data(), static_cast<std::uint32_t>(device_extensions.size()), device_extensions.data(), &physical_device_feautres};
     device = physical_device.createDevice(device_create_info);
     ELM_INFO("Vulkan started");
     device_created = true;
+}
+
+vulkan_swapchain_info vulkan::query_swapchain_info(vk::SurfaceKHR& surface, std::uint32_t width, std::uint32_t height) {
+    vulkan_swapchain_info info;
+    vk::SurfaceCapabilitiesKHR capabilities = physical_device.getSurfaceCapabilitiesKHR(surface);
+    info.support.min_image_count = capabilities.minImageCount;
+    info.support.max_image_count = capabilities.maxImageCount;
+    info.support.min_extent_width = capabilities.minImageExtent.width;
+    info.support.min_extent_height = capabilities.minImageExtent.height;
+    info.support.max_extent_width = capabilities.maxImageExtent.width;
+    info.support.max_extent_height = capabilities.maxImageExtent.height;
+    info.support.extent_width = capabilities.currentExtent.width;
+    info.support.extent_height = capabilities.currentExtent.height;
+    info.support.formats = physical_device.getSurfaceFormatsKHR(surface);
+    info.support.present_modes = physical_device.getSurfacePresentModesKHR(surface);
+    //capabilities.maxImageArrayLayers
+    //capabilities.supportedTransforms
+    //capabilities.supportedCompositeAlpha
+    //capabilities.supportedUsageFlags
+    ELM_DEBUG("Query swapchain information:");
+    ELM_DEBUG("    Image count: min {0}, max {1}", info.support.min_image_count, info.support.max_image_count);
+    ELM_DEBUG("    Image size: min {0}x{1}, max {2}x{3}, current {4}x{5}",
+            info.support.min_extent_width, info.support.min_extent_height,
+            info.support.max_extent_width, info.support.max_extent_height,
+            info.support.extent_width, info.support.extent_height);
+    ELM_DEBUG("    Supported surface formats:");
+    for (const vk::SurfaceFormatKHR& format : info.support.formats) {
+        ELM_DEBUG("      {0} {1}", vk::to_string(format.format), vk::to_string(format.colorSpace));
+    }
+    ELM_DEBUG("    Supported present modes:");
+    for (const vk::PresentModeKHR& present : info.support.present_modes) {
+        ELM_DEBUG("      {}", vk::to_string(present));
+    }
+    info.surface = surface;
+    info.format = info.support.formats[0];
+    for (const vk::SurfaceFormatKHR& format : info.support.formats) {
+        if (format.format == vk::Format::eB8G8R8A8Unorm && format.colorSpace == vk::ColorSpaceKHR::eSrgbNonlinear) {
+            info.format = format;
+            break;
+        }
+    }
+    info.present_mode = info.support.present_modes[0];
+    for (const vk::PresentModeKHR& present : info.support.present_modes) {
+        if (present == vk::PresentModeKHR::eMailbox) {
+            info.present_mode = present;
+            break;
+        }
+    }
+    if (info.support.extent_width != std::numeric_limits<std::uint32_t>::max()) {
+        info.width = info.support.extent_width;
+        info.height = info.support.extent_height;
+    } else {
+        info.width = std::min(info.support.max_extent_width, std::max(info.support.min_extent_width, width));
+        info.height = std::min(info.support.max_extent_height, std::max(info.support.min_extent_height, height));
+    }
+    if (info.support.max_image_count == 0) {
+        info.image_count = std::max(info.support.min_image_count, 3u);
+    } else {
+        info.image_count = std::min(info.support.max_image_count, std::max(info.support.min_image_count, 3u));
+    }
+    info.pre_transform = vk::SurfaceTransformFlagBitsKHR::eIdentity;
+    info.composite_alpha = vk::CompositeAlphaFlagBitsKHR::eOpaque;
+    info.clip = true;
+    return info;
+}
+
+vk::SwapchainKHR vulkan::create_swapchain(vulkan_swapchain_info& info) {
+    ELM_INFO("Creating swapchain...");
+    ELM_DEBUG("    Image size: {0}x{1}", info.width, info.height);
+    ELM_DEBUG("    Image count: {}", info.image_count);
+    ELM_DEBUG("    Format: {0} {1}", vk::to_string(info.format.format), vk::to_string(info.format.colorSpace));
+    ELM_DEBUG("    Present mode: {}", vk::to_string(info.present_mode));
+    ELM_DEBUG("    Pre transform: {}", vk::to_string(info.pre_transform));
+    ELM_DEBUG("    Composite alpha: {}", vk::to_string(info.composite_alpha));
+    vk::Extent2D extent(info.width, info.height);
+    vk::SwapchainCreateInfoKHR create_info = vk::SwapchainCreateInfoKHR(vk::SwapchainCreateFlagsKHR(), info.surface, info.image_count, info.format.format, info.format.colorSpace, extent, 1, vk::ImageUsageFlagBits::eColorAttachment);
+    if (physical_device_info.graphics_queue_index != physical_device_info.present_queue_index) {
+        ELM_DEBUG("Using concurrent sharing mode");
+        std::uint32_t queues[] = {physical_device_info.graphics_queue_index, physical_device_info.present_queue_index};
+        create_info.imageSharingMode = vk::SharingMode::eConcurrent;
+        create_info.pQueueFamilyIndices = queues;
+        create_info.queueFamilyIndexCount = 2;
+    } else {
+        ELM_DEBUG("Using exclusive sharing mode");
+        create_info.imageSharingMode = vk::SharingMode::eExclusive;
+    }
+    create_info.preTransform = info.pre_transform;
+    create_info.compositeAlpha = info.composite_alpha;
+    create_info.presentMode = info.present_mode;
+    create_info.clipped = info.clip ? VK_TRUE : VK_FALSE;
+    create_info.oldSwapchain = nullptr;
+    vk::SwapchainKHR swapchain = device.createSwapchainKHR(create_info);
+    ELM_INFO("Swapchain created");
+    return swapchain;
 }
 
 void vulkan::cleanup() {

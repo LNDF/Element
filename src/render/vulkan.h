@@ -19,6 +19,28 @@ namespace element {
         bool supported;
     };
 
+    struct vulkan_swapchain_support_info {
+        std::uint32_t min_image_count, max_image_count;
+        std::uint32_t min_extent_width, min_extent_height;
+        std::uint32_t max_extent_width, max_extent_height;
+        std::uint32_t extent_width, extent_height;
+        std::vector<vk::SurfaceFormatKHR> formats;
+        std::vector<vk::PresentModeKHR> present_modes;
+
+    };
+
+    struct vulkan_swapchain_info {
+        vulkan_swapchain_support_info support;
+        vk::SurfaceKHR surface;
+        std::uint32_t width, height;
+        std::uint32_t image_count;
+        vk::SurfaceFormatKHR format;
+        vk::PresentModeKHR present_mode;
+        vk::SurfaceTransformFlagBitsKHR pre_transform;
+        vk::CompositeAlphaFlagBitsKHR composite_alpha;
+        bool clip;
+    };
+
     class vulkan {
         private:
             static std::unordered_set<std::string> supported_instance_extensions;
@@ -42,6 +64,8 @@ namespace element {
 
             static void init_instance();
             static void init_device(vk::SurfaceKHR& surface);
+            static vulkan_swapchain_info query_swapchain_info(vk::SurfaceKHR& surface, std::uint32_t width, std::uint32_t height);
+            static vk::SwapchainKHR create_swapchain(vulkan_swapchain_info& info);
             static void cleanup();
 
             static std::vector<std::function<void(std::vector<const char*>&)>>& get_preregistered_required_extension_hook();
