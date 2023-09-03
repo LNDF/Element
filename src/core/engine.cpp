@@ -8,26 +8,26 @@
 
 using namespace element;
 
-bool engine::closed = false;
-engine_settings engine::settings;
+bool __detail::__engine_closed = false;
+engine::settings_t engine::settings;
 
-bool engine::close_event_listener(const events::close&) {
-    closed = true;
+bool __detail::__engine_close_event_listener(const events::close&) {
+    __detail::__engine_closed = true;
     return true;
 }
 
-void engine::setup_engine() {
+void engine::setup() {
     ELM_INFO("Element engine version {0} starting...", ELM_VERSION);
     ELM_INFO("Application {0} version {1}", settings.app_name, settings.app_version);
     ELM_INFO("Configuring application...");
     uuid::reseed_generator();
     vulkan::init_instance();
     fs::load_resources();
-    event_manager::register_default_listener<events::close>(close_event_listener);
+    event_manager::register_default_listener<events::close>(__detail::__engine_close_event_listener);
     ELM_INFO("Configuration done");
 }
 
-void engine::cleanup_engine() {
+void engine::cleanup() {
     ELM_INFO("Application will close soon. Cleanning up...");
     event_manager::cleanup();
     vulkan::cleanup();

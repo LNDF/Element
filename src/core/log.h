@@ -13,21 +13,20 @@ namespace element {
     
     #ifdef ELM_ENABLE_LOGGING
 
-    class log {
-        public:
-            using log_level = spdlog::level::level_enum;
-            static std::shared_ptr<spdlog::logger> console_log;
-            static std::shared_ptr<spdlog::logger> error_log;
-            static void init_log();
-            static std::shared_ptr<spdlog::logger> get_logger(log_level level);
-    };
+    namespace log {
+        using log_level = spdlog::level::level_enum;
+        extern std::shared_ptr<spdlog::logger> console_log;
+        extern std::shared_ptr<spdlog::logger> error_log;
+        void setup();
+        std::shared_ptr<spdlog::logger> get_logger(log_level level);
+    } // namespace log
 
     #endif
 
 } // namespace element
 
 #ifdef ELM_ENABLE_LOGGING
-#define ELM_INIT_LOG log::init_log()
+#define ELM_SETUP_LOG log::setup()
 #define ELM_LOG(level, ...) SPDLOG_LOGGER_CALL(element::log::get_logger(level), level, __VA_ARGS__)
 #define ELM_TRACE(...) SPDLOG_LOGGER_CALL(element::log::console_log, spdlog::level::trace, __VA_ARGS__)
 #define ELM_DEBUG(...) SPDLOG_LOGGER_CALL(element::log::console_log, spdlog::level::debug   , __VA_ARGS__)
@@ -44,7 +43,7 @@ namespace element {
 #define ELM_LOG_LEVEL_CRITICAL spdlog::level::critical
 #define ELM_LOG_LEVEL_DISABLE spdlog::level::off
 #else
-#define ELM_INIT_LOG
+#define ELM_SETUP_LOG
 #define ELM_LOG(level, ...)
 #define ELM_TRACE(...)
 #define ELM_DEBUG(...)

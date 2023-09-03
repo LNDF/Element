@@ -5,26 +5,31 @@
 
 namespace element {
     
-    struct engine_settings {
-        std::string app_name;
-        std::string app_version;
-    };
+    namespace __detail {
 
-    class engine {
-        private:
-            static bool closed;
+        extern bool __engine_closed;
 
-            static void init();
+        void __engine_init();
+        bool __engine_close_event_listener(const events::close&);
+        
+    } // namespace __detail
+    
 
-            static bool close_event_listener(const events::close&);
-        public:
-            static engine_settings settings;
-            static void setup_engine();
-            static void start();
-            static void tick();
-            static void stop();
-            static void cleanup_engine();
-            static void execute();
-            inline static bool should_close() {return closed;}
-    };
+    namespace engine {
+        struct settings_t {
+            std::string app_name;
+            std::string app_version;
+        };
+
+        extern settings_t settings;
+
+        void setup();
+        void start();
+        void tick();
+        void stop();
+        void cleanup();
+        void execute();
+        inline bool should_close() {return __detail::__engine_closed;}
+    } // namespace engine
+    
 } // namespace element
