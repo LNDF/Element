@@ -212,7 +212,7 @@ void vulkan::init_device(vk::SurfaceKHR& surface) {
     vk::PhysicalDeviceProperties dev_properties = physical_device.getProperties();
     ELM_INFO("Selected device properties:");
     ELM_INFO("  Device name: {}", dev_properties.deviceName);
-    ELM_INFO("  Device type: {}", vk::to_string(dev_properties.deviceType));
+    ELM_INFO("  Device type: {}", vk::to_string(dev_properties.deviceType).c_str());
     std::vector<std::uint32_t> queue_indices;
     queue_indices.push_back(physical_device_info.graphics_queue_index);
     if (physical_device_info.graphics_queue_index != physical_device_info.present_queue_index) {
@@ -271,11 +271,11 @@ vulkan_swapchain_info vulkan::query_swapchain_info(vk::SurfaceKHR& surface, std:
             info.support.extent_width, info.support.extent_height);
     ELM_DEBUG("    Supported surface formats:");
     for (const vk::SurfaceFormatKHR& format : info.support.formats) {
-        ELM_DEBUG("      {0} {1}", vk::to_string(format.format), vk::to_string(format.colorSpace));
+        ELM_DEBUG("      {0} {1}", vk::to_string(format.format).c_str(), vk::to_string(format.colorSpace).c_str());
     }
     ELM_DEBUG("    Supported present modes:");
     for (const vk::PresentModeKHR& present : info.support.present_modes) {
-        ELM_DEBUG("      {}", vk::to_string(present));
+        ELM_DEBUG("      {}", vk::to_string(present).c_str());
     }
     info.surface = surface;
     info.format = info.support.formats[0];
@@ -314,10 +314,10 @@ vk::SwapchainKHR vulkan::create_swapchain(vulkan_swapchain_info& info) {
     ELM_INFO("Creating swapchain...");
     ELM_DEBUG("    Image size: {0}x{1}", info.width, info.height);
     ELM_DEBUG("    Image count: {}", info.image_count);
-    ELM_DEBUG("    Format: {0} {1}", vk::to_string(info.format.format), vk::to_string(info.format.colorSpace));
-    ELM_DEBUG("    Present mode: {}", vk::to_string(info.present_mode));
-    ELM_DEBUG("    Pre transform: {}", vk::to_string(info.pre_transform));
-    ELM_DEBUG("    Composite alpha: {}", vk::to_string(info.composite_alpha));
+    ELM_DEBUG("    Format: {0} {1}", vk::to_string(info.format.format).c_str(), vk::to_string(info.format.colorSpace).c_str());
+    ELM_DEBUG("    Present mode: {}", vk::to_string(info.present_mode).c_str());
+    ELM_DEBUG("    Pre transform: {}", vk::to_string(info.pre_transform).c_str());
+    ELM_DEBUG("    Composite alpha: {}", vk::to_string(info.composite_alpha).c_str());
     vk::Extent2D extent(info.width, info.height);
     vk::SwapchainCreateInfoKHR create_info = vk::SwapchainCreateInfoKHR(vk::SwapchainCreateFlagsKHR(), info.surface, info.image_count, info.format.format, info.format.colorSpace, extent, 1, vk::ImageUsageFlagBits::eColorAttachment);
     if (physical_device_info.graphics_queue_index != physical_device_info.present_queue_index) {
