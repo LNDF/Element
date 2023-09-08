@@ -8,17 +8,17 @@
 
 using namespace element;
 
-std::uint32_t vulkan::version = 0;
-std::unordered_set<std::string> vulkan::supported_instance_extensions;
-std::unordered_set<std::string> vulkan::supported_instance_layers;
-vulkan_physical_device_info vulkan::physical_device_info;
-vk::Instance vulkan::instance;
-vk::DispatchLoaderDynamic vulkan::dld;
-vk::PhysicalDevice vulkan::physical_device;
-vk::Device vulkan::device;
-bool vulkan::device_created = false;
+std::uint32_t __detail::__vulkan_version = 0;
+std::unordered_set<std::string> __detail::__vulkan_supported_instance_extensions;
+std::unordered_set<std::string> __detail::__vulkan_supported_instance_layers;
+vulkan::physical_device_info __detail::__vulkan_physical_device_info;
+vk::Instance __detail::__vulkan_instance;
+vk::DispatchLoaderDynamic __detail::__vulkan_dld;
+vk::PhysicalDevice __detail::__vulkan_physical_device;
+vk::Device __detail::__vulkan_device;
+bool __detail::__vulkan_device_created = false;
 #ifdef ELM_ENABLE_LOGGING
-vk::DebugUtilsMessengerEXT vulkan::debug_messenger;
+vk::DebugUtilsMessengerEXT __detail::__vulkan_debug_messenger;
 #endif
 
 static VKAPI_ATTR VkBool32 VKAPI_CALL vulkan_logger(VkDebugUtilsMessageSeverityFlagBitsEXT severity, VkDebugUtilsMessageTypeFlagsEXT type, const VkDebugUtilsMessengerCallbackDataEXT* data, void* user_data) {
@@ -48,8 +48,8 @@ static VKAPI_ATTR VkBool32 VKAPI_CALL vulkan_logger(VkDebugUtilsMessageSeverityF
     return VK_FALSE;
 }
 
-vulkan_physical_device_info vulkan::get_physical_device_support(vk::PhysicalDevice& device, vk::SurfaceKHR& surface, const std::vector<const char*>& required_extensions, const std::vector<const char*>& required_layers) {
-    vulkan_physical_device_info info;
+vulkan::physical_device_info vulkan::get_physical_device_support(vk::PhysicalDevice& device, vk::SurfaceKHR& surface, const std::vector<const char*>& required_extensions, const std::vector<const char*>& required_layers) {
+    physical_device_info info;
     info.supported = false;
     info.graphics_queue_index = 0;
     info.present_queue_index = 0;
@@ -122,36 +122,36 @@ std::uint32_t vulkan::pick_best_physical_device(const std::vector<vk::PhysicalDe
 
 void vulkan::init_instance() {
     ELM_INFO("Starting Vulkan instance..");
-    version = vk::enumerateInstanceVersion();
+    __detail::__vulkan_version = vk::enumerateInstanceVersion();
     std::vector<vk::ExtensionProperties> supportedInstanceExtensions = vk::enumerateInstanceExtensionProperties();
     std::vector<vk::LayerProperties> supportedInstanceLayers = vk::enumerateInstanceLayerProperties();
-    ELM_DEBUG("Max supported Vulkan version: {0}.{1}.{2}", VK_API_VERSION_MAJOR(version), VK_API_VERSION_MINOR(version), VK_API_VERSION_PATCH(version));
+    ELM_DEBUG("Max supported Vulkan version: {0}.{1}.{2}", VK_API_VERSION_MAJOR(__detail::__vulkan_version), VK_API_VERSION_MINOR(__detail::__vulkan_version), VK_API_VERSION_PATCH(__detail::__vulkan_version));
     ELM_DEBUG("Supported instance extensions:");
     for (const vk::ExtensionProperties& properties : supportedInstanceExtensions) {
         ELM_DEBUG("    {0}", properties.extensionName.data());
-        supported_instance_extensions.insert(properties.extensionName.data());
+        __detail::__vulkan_supported_instance_extensions.insert(properties.extensionName.data());
     }
     ELM_DEBUG("Supported instance layers:");
     for (const vk::LayerProperties& properties : supportedInstanceLayers) {
         ELM_DEBUG("    {0}", properties.layerName.data());
-        supported_instance_layers.insert(properties.layerName.data());
+        __detail::__vulkan_supported_instance_layers.insert(properties.layerName.data());
     }
-    version = VK_MAKE_API_VERSION(0, 1, 0, 0);
-    vk::ApplicationInfo app_info(engine::settings.app_name.c_str(), 0, "element-engine", ELM_VERSION_ID, version);
+    __detail::__vulkan_version = VK_MAKE_API_VERSION(0, 1, 0, 0);
+    vk::ApplicationInfo app_info(engine::settings.app_name.c_str(), 0, "element-engine", ELM_VERSION_ID, __detail::__vulkan_version);
     std::vector<const char*> extensions;
     std::vector<const char*> layers;
     for (auto& hook : get_preregistered_required_extension_hook()) {
         hook(extensions);
     }
 #ifdef ELM_ENABLE_LOGGING
-    if (supported_instance_extensions.contains("VK_EXT_debug_utils")) {
+    if (__detail::__vulkan_supported_instance_extensions.contains("VK_EXT_debug_utils")) {
         extensions.push_back("VK_EXT_debug_utils");
     } else {
         ELM_WARN("Extension VK_EXT_debug_utils could not be found. Vulkan messages will not be logged.");
     }
 #endif
 #ifndef NDEBUG
-    if (supported_instance_layers.contains("VK_LAYER_KHRONOS_validation")) {
+    if (__detail::__vulkan_supported_instance_layers.contains("VK_LAYER_KHRONOS_validation")) {
         layers.push_back("VK_LAYER_KHRONOS_validation");
     } else {
         ELM_WARN("Vulkan validation layers are not available on this system. Install them to be able to use this feature.");
@@ -166,10 +166,10 @@ void vulkan::init_instance() {
         ELM_DEBUG("    {}", layer);
     }
     vk::InstanceCreateInfo create_info(vk::InstanceCreateFlags(), &app_info, layers.size(), layers.data(), extensions.size(), extensions.data());
-    instance = vk::createInstance(create_info);
-    dld = vk::DispatchLoaderDynamic(instance, vkGetInstanceProcAddr);
+    __detail::__vulkan_instance = vk::createInstance(create_info);
+    __detail::__vulkan_dld = vk::DispatchLoaderDynamic(__detail::__vulkan_instance, vkGetInstanceProcAddr);
 #ifdef ELM_ENABLE_LOGGING
-    if (supported_instance_extensions.contains("VK_EXT_debug_utils")) {
+    if (__detail::__vulkan_supported_instance_extensions.contains("VK_EXT_debug_utils")) {
         vk::DebugUtilsMessengerCreateInfoEXT dbg_create_info(
             vk::DebugUtilsMessengerCreateFlagsEXT(),
             vk::DebugUtilsMessageSeverityFlagBitsEXT::eVerbose | vk::DebugUtilsMessageSeverityFlagBitsEXT::eWarning | vk::DebugUtilsMessageSeverityFlagBitsEXT::eError,
@@ -177,7 +177,7 @@ void vulkan::init_instance() {
 			vulkan_logger,
 			nullptr
         );
-        debug_messenger = instance.createDebugUtilsMessengerEXT(dbg_create_info, nullptr, dld);
+        __detail::__vulkan_debug_messenger = __detail::__vulkan_instance.createDebugUtilsMessengerEXT(dbg_create_info, nullptr, __detail::__vulkan_dld);
         ELM_DEBUG("Vulkan debug messages will be logged.");
     }
 #endif
@@ -185,18 +185,18 @@ void vulkan::init_instance() {
 
 void vulkan::init_device(vk::SurfaceKHR& surface) {
     ELM_INFO("Creating Vulkan device..");
-    if (device_created) {
+    if (__detail::__vulkan_device_created) {
         ELM_WARN("Device already created");
         return;
     }
     std::vector<const char*> device_extensions, device_layers;
     device_extensions.push_back(VK_KHR_SWAPCHAIN_EXTENSION_NAME);
-    std::vector<vk::PhysicalDevice> physical_devices = instance.enumeratePhysicalDevices();
+    std::vector<vk::PhysicalDevice> physical_devices = __detail::__vulkan_instance.enumeratePhysicalDevices();
     std::vector<vk::PhysicalDevice> supported_devices;
-    std::vector<vulkan_physical_device_info> supported_device_infos;
+    std::vector<physical_device_info> supported_device_infos;
     ELM_DEBUG("Found {0} physical devices", physical_devices.size());
     for (vk::PhysicalDevice& dev : physical_devices) {
-        vulkan_physical_device_info info = get_physical_device_support(dev, surface, device_extensions, device_layers);
+        physical_device_info info = get_physical_device_support(dev, surface, device_extensions, device_layers);
         if (info.supported) {
             supported_devices.push_back(dev);
             supported_device_infos.push_back(std::move(info));
@@ -207,19 +207,19 @@ void vulkan::init_device(vk::SurfaceKHR& surface) {
     if (device_index == supported_devices.size()) {
         throw std::runtime_error("Couldn't find valid Vulkan physical device");
     }
-    physical_device = supported_devices[device_index];
-    physical_device_info = std::move(supported_device_infos[device_index]);
-    vk::PhysicalDeviceProperties dev_properties = physical_device.getProperties();
+    __detail::__vulkan_physical_device = supported_devices[device_index];
+    __detail::__vulkan_physical_device_info = std::move(supported_device_infos[device_index]);
+    vk::PhysicalDeviceProperties dev_properties = __detail::__vulkan_physical_device.getProperties();
     ELM_INFO("Selected device properties:");
     ELM_INFO("  Device name: {}", dev_properties.deviceName);
     ELM_INFO("  Device type: {}", vk::to_string(dev_properties.deviceType).c_str());
     std::vector<std::uint32_t> queue_indices;
-    queue_indices.push_back(physical_device_info.graphics_queue_index);
-    if (physical_device_info.graphics_queue_index != physical_device_info.present_queue_index) {
-        queue_indices.push_back(physical_device_info.present_queue_index);
+    queue_indices.push_back(__detail::__vulkan_physical_device_info.graphics_queue_index);
+    if (__detail::__vulkan_physical_device_info.graphics_queue_index != __detail::__vulkan_physical_device_info.present_queue_index) {
+        queue_indices.push_back(__detail::__vulkan_physical_device_info.present_queue_index);
     }
-    ELM_DEBUG("  Graphics queue family: {}", physical_device_info.graphics_queue_index);
-    ELM_DEBUG("  Present queue family: {}", physical_device_info.present_queue_index);
+    ELM_DEBUG("  Graphics queue family: {}", __detail::__vulkan_physical_device_info.graphics_queue_index);
+    ELM_DEBUG("  Present queue family: {}", __detail::__vulkan_physical_device_info.present_queue_index);
     ELM_DEBUG("{} queues will be created", queue_indices.size());
     std::vector<vk::DeviceQueueCreateInfo> queue_create_infos;
     float queue_priority = 1.0f;
@@ -228,7 +228,7 @@ void vulkan::init_device(vk::SurfaceKHR& surface) {
     }
     vk::PhysicalDeviceFeatures physical_device_feautres;
 #ifndef NDEBUG
-    if (supported_instance_layers.contains("VK_LAYER_KHRONOS_validation") && physical_device_info.supported_layers.contains("VK_LAYER_KHRONOS_validation")) {
+    if (__detail::__vulkan_supported_instance_layers.contains("VK_LAYER_KHRONOS_validation") && __detail::__vulkan_physical_device_info.supported_layers.contains("VK_LAYER_KHRONOS_validation")) {
         device_layers.push_back("VK_LAYER_KHRONOS_validation");
     }
 #endif
@@ -241,14 +241,14 @@ void vulkan::init_device(vk::SurfaceKHR& surface) {
         ELM_DEBUG("    {}", layer);
     }
     vk::DeviceCreateInfo device_create_info{vk::DeviceCreateFlags(), static_cast<std::uint32_t>(queue_create_infos.size()), queue_create_infos.data(), static_cast<std::uint32_t>(device_layers.size()), device_layers.data(), static_cast<std::uint32_t>(device_extensions.size()), device_extensions.data(), &physical_device_feautres};
-    device = physical_device.createDevice(device_create_info);
-    ELM_INFO("Vulkan started");
-    device_created = true;
+    __detail::__vulkan_device = __detail::__vulkan_physical_device.createDevice(device_create_info);
+    ELM_INFO("Vulkan device created");
+    __detail::__vulkan_device_created = true;
 }
 
-vulkan_swapchain_info vulkan::query_swapchain_info(vk::SurfaceKHR& surface, std::uint32_t width, std::uint32_t height) {
-    vulkan_swapchain_info info;
-    vk::SurfaceCapabilitiesKHR capabilities = physical_device.getSurfaceCapabilitiesKHR(surface);
+vulkan::swapchain_creation_info vulkan::query_swapchain_info(vk::SurfaceKHR& surface, std::uint32_t width, std::uint32_t height) {
+    swapchain_creation_info info;
+    vk::SurfaceCapabilitiesKHR capabilities = __detail::__vulkan_physical_device.getSurfaceCapabilitiesKHR(surface);
     info.support.min_image_count = capabilities.minImageCount;
     info.support.max_image_count = capabilities.maxImageCount;
     info.support.min_extent_width = capabilities.minImageExtent.width;
@@ -257,8 +257,8 @@ vulkan_swapchain_info vulkan::query_swapchain_info(vk::SurfaceKHR& surface, std:
     info.support.max_extent_height = capabilities.maxImageExtent.height;
     info.support.extent_width = capabilities.currentExtent.width;
     info.support.extent_height = capabilities.currentExtent.height;
-    info.support.formats = physical_device.getSurfaceFormatsKHR(surface);
-    info.support.present_modes = physical_device.getSurfacePresentModesKHR(surface);
+    info.support.formats = __detail::__vulkan_physical_device.getSurfaceFormatsKHR(surface);
+    info.support.present_modes = __detail::__vulkan_physical_device.getSurfacePresentModesKHR(surface);
     //capabilities.maxImageArrayLayers
     //capabilities.supportedTransforms
     //capabilities.supportedCompositeAlpha
@@ -310,7 +310,7 @@ vulkan_swapchain_info vulkan::query_swapchain_info(vk::SurfaceKHR& surface, std:
     return info;
 }
 
-vk::SwapchainKHR vulkan::create_swapchain(vulkan_swapchain_info& info) {
+vk::SwapchainKHR vulkan::create_swapchain(vulkan::swapchain_creation_info& info) {
     ELM_INFO("Creating swapchain...");
     ELM_DEBUG("    Image size: {0}x{1}", info.width, info.height);
     ELM_DEBUG("    Image count: {}", info.image_count);
@@ -320,9 +320,9 @@ vk::SwapchainKHR vulkan::create_swapchain(vulkan_swapchain_info& info) {
     ELM_DEBUG("    Composite alpha: {}", vk::to_string(info.composite_alpha).c_str());
     vk::Extent2D extent(info.width, info.height);
     vk::SwapchainCreateInfoKHR create_info = vk::SwapchainCreateInfoKHR(vk::SwapchainCreateFlagsKHR(), info.surface, info.image_count, info.format.format, info.format.colorSpace, extent, 1, vk::ImageUsageFlagBits::eColorAttachment);
-    if (physical_device_info.graphics_queue_index != physical_device_info.present_queue_index) {
+    if (__detail::__vulkan_physical_device_info.graphics_queue_index != __detail::__vulkan_physical_device_info.present_queue_index) {
         ELM_DEBUG("Using concurrent sharing mode");
-        std::uint32_t queues[] = {physical_device_info.graphics_queue_index, physical_device_info.present_queue_index};
+        std::uint32_t queues[] = {__detail::__vulkan_physical_device_info.graphics_queue_index, __detail::__vulkan_physical_device_info.present_queue_index};
         create_info.imageSharingMode = vk::SharingMode::eConcurrent;
         create_info.pQueueFamilyIndices = queues;
         create_info.queueFamilyIndexCount = 2;
@@ -335,22 +335,22 @@ vk::SwapchainKHR vulkan::create_swapchain(vulkan_swapchain_info& info) {
     create_info.presentMode = info.present_mode;
     create_info.clipped = info.clip ? VK_TRUE : VK_FALSE;
     create_info.oldSwapchain = nullptr;
-    vk::SwapchainKHR swapchain = device.createSwapchainKHR(create_info);
+    vk::SwapchainKHR swapchain = __detail::__vulkan_device.createSwapchainKHR(create_info);
     ELM_INFO("Swapchain created");
     return swapchain;
 }
 
 void vulkan::cleanup() {
     ELM_INFO("Cleanning up Vulkan...");
-    if (device_created) {
-        device_created = false;
-        device.destroy();
-        physical_device = nullptr;
+    if (__detail::__vulkan_device_created) {
+        __detail::__vulkan_device_created = false;
+        __detail::__vulkan_device.destroy();
+        __detail::__vulkan_physical_device = nullptr;
     }
 #ifdef ELM_ENABLE_LOGGING
-    instance.destroyDebugUtilsMessengerEXT(debug_messenger, nullptr, dld);
+    __detail::__vulkan_instance.destroyDebugUtilsMessengerEXT(__detail::__vulkan_debug_messenger, nullptr, __detail::__vulkan_dld);
 #endif
-    instance.destroy();
+    __detail::__vulkan_instance.destroy();
 }
 
 std::vector<std::function<void(std::vector<const char*>&)>>& vulkan::get_preregistered_required_extension_hook() {
