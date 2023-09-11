@@ -7,7 +7,7 @@
 #include <vector>
 #include <functional>
 
-#define ELM_REGISTER_VULKAN_REQUIRED_EXTENSION_HOOK(hook) static bool __elm_register_required_extension_hook_##hook = element::vulkan::preregister_required_extension_hook(hook)
+#define ELM_REGISTER_VULKAN_REQUIRED_EXTENSION_HOOK(hook) static bool __elm_register_required_extension_hook_##hook = element::__detail::__vulkan_preregister_required_extension_hook(hook)
 
 namespace element {
 
@@ -18,28 +18,6 @@ namespace element {
             std::uint32_t graphics_queue_index;
             std::uint32_t present_queue_index;
             bool supported;
-        };
-
-        struct swapchain_support_info {
-            std::uint32_t min_image_count, max_image_count;
-            std::uint32_t min_extent_width, min_extent_height;
-            std::uint32_t max_extent_width, max_extent_height;
-            std::uint32_t extent_width, extent_height;
-            std::vector<vk::SurfaceFormatKHR> formats;
-            std::vector<vk::PresentModeKHR> present_modes;
-
-        };
-
-        struct swapchain_creation_info {
-            swapchain_support_info support;
-            vk::SurfaceKHR surface;
-            std::uint32_t width, height;
-            std::uint32_t image_count;
-            vk::SurfaceFormatKHR format;
-            vk::PresentModeKHR present_mode;
-            vk::SurfaceTransformFlagBitsKHR pre_transform;
-            vk::CompositeAlphaFlagBitsKHR composite_alpha;
-            bool clip;
         };
     } // namespace vulkan
     
@@ -58,6 +36,9 @@ namespace element {
 #ifdef ELM_ENABLE_LOGGING
         extern vk::DebugUtilsMessengerEXT __vulkan_debug_messenger;
 #endif
+
+        std::vector<std::function<void(std::vector<const char*>&)>>& __vulkan_get_preregistered_required_extension_hook();
+        bool __vulkan_preregister_required_extension_hook(std::function<void(std::vector<const char*>&)> hook);
     } // namespace __detail
 
     namespace vulkan {
@@ -66,12 +47,7 @@ namespace element {
 
         void init_instance();
         void init_device(vk::SurfaceKHR& surface);
-        swapchain_creation_info query_swapchain_info(vk::SurfaceKHR& surface, std::uint32_t width, std::uint32_t height);
-        vk::SwapchainKHR create_swapchain(swapchain_creation_info& info);
         void cleanup();
-
-        std::vector<std::function<void(std::vector<const char*>&)>>& get_preregistered_required_extension_hook();
-        bool preregister_required_extension_hook(std::function<void(std::vector<const char*>&)> hook);
 
         inline std::uint32_t get_version() {return __detail::__vulkan_version;}
         inline vk::Instance get_instance() {return __detail::__vulkan_instance;}
