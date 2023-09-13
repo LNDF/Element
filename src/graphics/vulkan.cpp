@@ -71,7 +71,9 @@ vulkan::physical_device_info vulkan::get_physical_device_support(vk::PhysicalDev
         }
     }
     if (!info.supported) return info;
-    for (vk::ExtensionProperties& props : device.enumerateDeviceExtensionProperties()) {
+    std::vector<vk::ExtensionProperties> extprops = device.enumerateDeviceExtensionProperties();
+    info.supported_extensions.reserve(extprops.size());
+    for (vk::ExtensionProperties& props : extprops) {
         info.supported_extensions.insert(props.extensionName);
     }
     for (const char* extension : required_extensions) {
@@ -80,7 +82,9 @@ vulkan::physical_device_info vulkan::get_physical_device_support(vk::PhysicalDev
             return info;
         }
     }
-    for (vk::LayerProperties props : device.enumerateDeviceLayerProperties()) {
+    std::vector<vk::LayerProperties> layerprops = device.enumerateDeviceLayerProperties();
+    info.supported_layers.reserve(layerprops.size());
+    for (vk::LayerProperties props : layerprops) {
         info.supported_layers.insert(props.layerName);
     }
     for (const char* layer : required_layers) {
@@ -123,16 +127,18 @@ std::uint32_t vulkan::pick_best_physical_device(const std::vector<vk::PhysicalDe
 void vulkan::init_instance() {
     ELM_INFO("Starting Vulkan instance..");
     __detail::__vulkan_version = vk::enumerateInstanceVersion();
-    std::vector<vk::ExtensionProperties> supportedInstanceExtensions = vk::enumerateInstanceExtensionProperties();
-    std::vector<vk::LayerProperties> supportedInstanceLayers = vk::enumerateInstanceLayerProperties();
+    std::vector<vk::ExtensionProperties> supported_instance_extensions = vk::enumerateInstanceExtensionProperties();
+    std::vector<vk::LayerProperties> supported_instance_layers = vk::enumerateInstanceLayerProperties();
     ELM_DEBUG("Max supported Vulkan version: {0}.{1}.{2}", VK_API_VERSION_MAJOR(__detail::__vulkan_version), VK_API_VERSION_MINOR(__detail::__vulkan_version), VK_API_VERSION_PATCH(__detail::__vulkan_version));
     ELM_DEBUG("Supported instance extensions:");
-    for (const vk::ExtensionProperties& properties : supportedInstanceExtensions) {
+    __detail::__vulkan_supported_instance_extensions.reserve(supported_instance_extensions.size());
+    for (const vk::ExtensionProperties& properties : supported_instance_extensions) {
         ELM_DEBUG("    {0}", properties.extensionName.data());
         __detail::__vulkan_supported_instance_extensions.insert(properties.extensionName.data());
     }
     ELM_DEBUG("Supported instance layers:");
-    for (const vk::LayerProperties& properties : supportedInstanceLayers) {
+    __detail::__vulkan_supported_instance_layers.reserve(supported_instance_layers.size());
+    for (const vk::LayerProperties& properties : supported_instance_layers) {
         ELM_DEBUG("    {0}", properties.layerName.data());
         __detail::__vulkan_supported_instance_layers.insert(properties.layerName.data());
     }
@@ -195,6 +201,8 @@ void vulkan::init_device(vk::SurfaceKHR& surface) {
     std::vector<vk::PhysicalDevice> supported_devices;
     std::vector<physical_device_info> supported_device_infos;
     ELM_DEBUG("Found {0} physical devices", physical_devices.size());
+    supported_devices.reserve(physical_devices.size());
+    supported_device_infos.reserve(physical_devices.size());
     for (vk::PhysicalDevice& dev : physical_devices) {
         physical_device_info info = get_physical_device_support(dev, surface, device_extensions, device_layers);
         if (info.supported) {

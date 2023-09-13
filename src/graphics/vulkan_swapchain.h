@@ -30,8 +30,21 @@ namespace element {
             bool clip;
         };
 
+        struct swapchain_image_data {
+            vk::Image image;
+            vk::ImageView image_view;
+        };
+
+        struct swapchain_info {
+            vk::SwapchainKHR swapchain;
+            std::vector<swapchain_image_data> image_data;
+            std::uint32_t width, height;
+        };
+
         swapchain_creation_info query_swapchain_info(vk::SurfaceKHR& surface, std::uint32_t width, std::uint32_t height);
-        vk::SwapchainKHR create_swapchain(swapchain_creation_info& info);
+        swapchain_info create_swapchain(swapchain_creation_info& info);
+        void destroy_swapchain(swapchain_info& info);
+
     } // namespace vulkan 
 
 } // namespace element

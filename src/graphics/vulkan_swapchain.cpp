@@ -69,7 +69,7 @@ vulkan::swapchain_creation_info vulkan::query_swapchain_info(vk::SurfaceKHR& sur
     return info;
 }
 
-vk::SwapchainKHR vulkan::create_swapchain(vulkan::swapchain_creation_info& info) {
+vulkan::swapchain_info vulkan::create_swapchain(vulkan::swapchain_creation_info& info) {
     ELM_INFO("Creating swapchain...");
     ELM_DEBUG("    Image size: {0}x{1}", info.width, info.height);
     ELM_DEBUG("    Image count: {}", info.image_count);
@@ -96,5 +96,38 @@ vk::SwapchainKHR vulkan::create_swapchain(vulkan::swapchain_creation_info& info)
     create_info.oldSwapchain = nullptr;
     vk::SwapchainKHR swapchain = __detail::__vulkan_device.createSwapchainKHR(create_info);
     ELM_INFO("Swapchain created");
-    return swapchain;
+    swapchain_info sinfo;
+    sinfo.swapchain = swapchain;
+    std::vector<vk::Image> images = __detail::__vulkan_device.getSwapchainImagesKHR(swapchain);
+    sinfo.image_data.reserve(images.size());
+    sinfo.width = info.width;
+    sinfo.height = info.height;
+    for (vk::Image& image : images) {
+        vk::ImageViewCreateInfo img_view_info;
+        img_view_info.image = image;
+        img_view_info.viewType = vk::ImageViewType::e2D;
+        img_view_info.format = info.format.format;
+        img_view_info.components.r = vk::ComponentSwizzle::eIdentity;
+        img_view_info.components.g = vk::ComponentSwizzle::eIdentity;
+        img_view_info.components.b = vk::ComponentSwizzle::eIdentity;
+        img_view_info.components.a = vk::ComponentSwizzle::eIdentity;
+        img_view_info.subresourceRange.aspectMask = vk::ImageAspectFlagBits::eColor;
+        img_view_info.subresourceRange.baseMipLevel = 0;
+        img_view_info.subresourceRange.levelCount = 1;
+        img_view_info.subresourceRange.baseArrayLayer = 0;
+        img_view_info.subresourceRange.layerCount = 1;
+        swapchain_image_data img_data;
+        img_data.image = image,
+        img_data.image_view = __detail::__vulkan_device.createImageView(img_view_info);
+        sinfo.image_data.push_back(img_data);
+    }
+    return sinfo;
+}
+
+void vulkan::destroy_swapchain(vulkan::swapchain_info& info) {
+    ELM_INFO("Destroying swapchain");
+    for (swapchain_image_data& img_data : info.image_data) {
+        __detail::__vulkan_device.destroyImageView(img_data.image_view);
+    }
+    __detail::__vulkan_device.destroySwapchainKHR(info.swapchain);
 }
