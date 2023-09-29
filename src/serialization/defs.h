@@ -6,6 +6,7 @@
 #include <iostream>
 
 #define ELM_SERIALIZE_NVP(n, v) cereal::make_nvp(n, v)
+#define ELM_SERIALIZE_BASE(c) cereal::base_class(c)
 #define ELM_SERIALIZE_SIZE(s)   cereal::make_size_tag(static_cast<element::size64_t>(s))
 #define ELM_DESERIALIZE_SIZE(s) cereal::make_size_tag(static_cast<std::size_t>(s))
 
