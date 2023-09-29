@@ -2,12 +2,13 @@
 
 #include <cinttypes>
 #include <vulkan/vulkan.hpp>
+#include <utils/pre_exec.h>
 
 #include <unordered_set>
 #include <vector>
 #include <functional>
 
-#define ELM_REGISTER_VULKAN_REQUIRED_EXTENSION_HOOK(hook) static bool __elm_register_required_extension_hook_##hook = element::__detail::__vulkan_preregister_required_extension_hook(hook)
+#define ELM_REGISTER_VULKAN_REQUIRED_EXTENSION_HOOK(hook) ELM_PRE_EXECUTE(element::__detail::__vulkan_preregister_required_extension_hook, hook);
 
 namespace element {
 
