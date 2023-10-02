@@ -42,6 +42,11 @@ namespace element {
                 }
 
                 inline const uuid& get_id() const {return id;}
+                inline void set_id(const uuid& id) {
+                    this->id = id;
+                    this->cache = nullptr;
+                    this->storage = nullptr;
+                }
         };
     } // namespace scenegraph
 } // namespace element
