@@ -1,6 +1,7 @@
 #include "node_storage.h"
 
 #include <scenegraph/node.h>
+#include <ostream>
 
 using namespace element;
 

@@ -8,7 +8,7 @@ std::uint32_t __detail::__scenegraph_node_manager_cache_number = 0;
 uuid scenegraph::get_new_node_id() {
     uuid id;
     auto it = __detail::__scenegraph_node_storage_map.find(id);
-    while (it == __detail::__scenegraph_node_storage_map.end()) {
+    while (it != __detail::__scenegraph_node_storage_map.end()) {
         id.regenerate();
         it = __detail::__scenegraph_node_storage_map.find(id);
     }

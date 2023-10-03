@@ -12,18 +12,7 @@
 #include <typeindex>
 #include <type_traits>
 
-#define __ELM_SCENEGRAPH_MAKE_STORAGE_NAME(type) "storage_" #type
-
-#define __ELM_SCENEGRAPH_REGISTER_NODE(type, name) ELM_PRE_EXECUTE(element::__detail::__scenegraph_register_node_type_info<type>, name)
-
-#define __ELM_SCENEGRAPH_REGISTER_NODE_STORAGE(type, name) \
-ELM_REGISTER_SERIALIZABLE_DERIVED_NAMED_TYPE(element::scenegraph::node_storage<type>, __ELM_SCENEGRAPH_MAKE_STORAGE_NAME(type)) \
-ELM_REGISTER_DERIVED_BASE_SERIALIZATION_RELATION(element::scenegraph::node_storage<type>, element::scenegraph::node_storage_base)
-
-#define ELM_REGISTER_NODE_TYPE(type, name) __ELM_SCENEGRAPH_REGISTER_NODE(type, name) \
-__ELM_SCENEGRAPH_REGISTER_NODE_STORAGE(type, name) \
-ELM_REGISTER_SERIALIZABLE_DERIVED_NAMED_TYPE(type, #type) \
-ELM_REGISTER_DERIVED_BASE_SERIALIZATION_RELATION(type, element::scenegraph::node)
+#define ELM_REGISTER_NODE_TYPE(type, name) ELM_PRE_EXECUTE(element::__detail::__scenegraph_register_node_type_info<type>, name)
 
 namespace element {
     namespace __detail {
@@ -61,17 +50,17 @@ namespace element {
 
                 void destroy();
                 void add_child(const node_ref& child);
-                void add_child(std::type_index type, const std::string& name);
-                void add_child(std::type_index type, std::string&& name);
+                node_ref add_child(std::type_index type, const std::string& name);
+                node_ref add_child(std::type_index type, std::string&& name);
                 
                 template<typename T, typename = std::enable_if<std::is_base_of_v<node, T>>>
-                void add_child(const std::string& name) {
-                    add_child(std::type_index(typeid(T)), name);
+                node_ref add_child(const std::string& name) {
+                    return add_child(std::type_index(typeid(T)), name);
                 }
 
                 template<typename T, typename = std::enable_if<std::is_base_of_v<node, T>>>
-                void add_child(std::string&& name) {
-                    add_child(std::type_index(typeid(T)), std::move(name));
+                node_ref add_child(std::string&& name) {
+                    return add_child(std::type_index(typeid(T)), std::move(name));
                 }
 
                 inline const std::string& get_name() const {return name;}
@@ -88,6 +77,3 @@ namespace element {
 
     } // namespace scenegraph
 } // namespace element
-
-__ELM_SCENEGRAPH_REGISTER_NODE(element::scenegraph::node, "Node")
-__ELM_SCENEGRAPH_REGISTER_NODE_STORAGE(element::scenegraph::node, "Node")

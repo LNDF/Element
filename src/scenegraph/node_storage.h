@@ -37,6 +37,7 @@ namespace element {
                 virtual void delete_node(const uuid& id) = 0;
                 virtual void emplace_node(const uuid& id, const std::string& name, const node_ref& parent) = 0;
                 virtual void emplace_node(const uuid& id, std::string&& name, const node_ref& parent) = 0;
+                virtual void emplace_root(const uuid& id) = 0;
                 virtual scenegraph::node* get_node_ptr(const uuid& id) = 0;
                 virtual std::type_index get_type_index() = 0;
                 virtual void init_scene(scenegraph::scene* owner_scene) = 0;
@@ -48,7 +49,8 @@ namespace element {
             private:
                 packed_map<uuid, T> storage;
             public:
-                node_storage(scenegraph::scene* owner_scene) {}
+                node_storage() {}
+                node_storage(scenegraph::scene* owner_scene) : node_storage_base(owner_scene) {}
 
                 ~node_storage() final override {
                     if (owner_scene == nullptr) return;
@@ -93,6 +95,14 @@ namespace element {
                     }
                 }
 
+                void emplace_root(const uuid& id) final override {
+                    if (owner_scene == nullptr) return;
+                    scenegraph::update_node_storage_mapping(id, this);
+                    auto it = storage.try_emplace(id, id, "Root", owner_scene).first;
+                    this->cache_number++;
+                    setup_node(it->second);
+                }
+
                 T& at(const uuid& id) {
                     return storage.at(at);
                 }
@@ -100,7 +110,7 @@ namespace element {
                 scenegraph::node* get_node_ptr(const uuid& id) final override {
                     auto it = storage.find(id);
                     if (it == storage.end()) return nullptr;
-                    return (scenegraph::node*) std::addressof(*it);
+                    return (scenegraph::node*) std::addressof(it->second);
                 }
 
                 std::type_index get_type_index() final override {

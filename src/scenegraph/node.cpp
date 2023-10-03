@@ -4,8 +4,6 @@
 #include <scenegraph/node_manager.h>
 #include <scenegraph/scene.h>
 
-using namespace element::__detail;
-
 using namespace element::scenegraph;
 
 node::node() : id(uuid::null()) {}
@@ -38,24 +36,30 @@ void node::add_child(const node_ref& child) {
     //TODO: insert into scene
 }
 
-void node::add_child(std::type_index type, const std::string& name) {
+node_ref node::add_child(std::type_index type, const std::string& name) {
     if (owner_scene != nullptr) {
         uuid new_id = get_new_node_id();
         node_storage_base* storage = owner_scene->get_storage(type);
         storage->emplace_node(new_id, name, this);
         children.push_back(new_id);
+        return new_id;
     }
+    return nullptr;
 }
 
-void node::add_child(std::type_index type, std::string&& name) {
+node_ref node::add_child(std::type_index type, std::string&& name) {
     if (owner_scene != nullptr) {
         uuid new_id = get_new_node_id();
         node_storage_base* storage = owner_scene->get_storage(type);
         storage->emplace_node(new_id, std::move(name), this);
         children.push_back(new_id);
+        return new_id;
     }
+    return nullptr;
 }
 
 void node::node_setup() {}
 
 void node::node_cleanup() {}
+
+ELM_REGISTER_NODE_TYPE(element::scenegraph::node, "Node")
