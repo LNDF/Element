@@ -40,8 +40,8 @@ node_ref node::add_child(std::type_index type, const std::string& name) {
     if (owner_scene != nullptr) {
         uuid new_id = get_new_node_id();
         node_storage_base* storage = owner_scene->get_storage(type);
-        storage->emplace_node(new_id, name, this);
         children.push_back(new_id);
+        storage->emplace_node(new_id, name, this);
         return new_id;
     }
     return nullptr;
@@ -51,8 +51,8 @@ node_ref node::add_child(std::type_index type, std::string&& name) {
     if (owner_scene != nullptr) {
         uuid new_id = get_new_node_id();
         node_storage_base* storage = owner_scene->get_storage(type);
-        storage->emplace_node(new_id, std::move(name), this);
         children.push_back(new_id);
+        storage->emplace_node(new_id, std::move(name), this);
         return new_id;
     }
     return nullptr;
