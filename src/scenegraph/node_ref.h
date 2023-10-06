@@ -38,7 +38,7 @@ namespace element {
                 }
 
                 inline bool operator==(const std::nullptr_t other) const noexcept {
-                    return exists();
+                    return !exists();
                 }
 
                 inline const uuid& get_id() const {return id;}
