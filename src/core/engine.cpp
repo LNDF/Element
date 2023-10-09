@@ -11,7 +11,7 @@ using namespace element;
 bool __detail::__engine_closed = false;
 engine::settings_t engine::settings;
 
-bool __detail::__engine_close_event_listener(const events::close&) {
+bool __detail::__engine_close_event_listener(events::close&) {
     __detail::__engine_closed = true;
     return true;
 }
@@ -23,13 +23,11 @@ void engine::setup() {
     uuid::reseed_generator();
     vulkan::init_instance();
     fs::load_resources();
-    event_manager::register_default_listener<events::close>(__detail::__engine_close_event_listener);
     ELM_INFO("Configuration done");
 }
 
 void engine::cleanup() {
     ELM_INFO("Application will close soon. Cleanning up...");
-    event_manager::cleanup();
     vulkan::cleanup();
 }
 
@@ -38,8 +36,8 @@ void engine::start() {
 }
 
 void engine::tick() {
-    event_manager::send_event<events::update>({0}); //TODO: correct delta time
-    event_manager::dispatch_queued_events();
+    events::update u{0};
+    event_manager::send_event<events::update>(u);
 }
 
 void engine::stop() {
@@ -52,3 +50,5 @@ void engine::execute() {
     while (!should_close()) tick();
     stop();
 }
+
+ELM_REGISTER_EVENT_CALLBACK(events::close, __detail::__engine_close_event_listener, event_callback_priority::lowest)

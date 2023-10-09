@@ -13,13 +13,7 @@ namespace element {
             };
             key_event_type type;
             int keycode;
-        };
-
-        struct surface_resize {
-            int width, height;
-        };
-        
-        
+        };        
 
     } // namespace events
 } // namespace element

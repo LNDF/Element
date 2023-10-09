@@ -10,7 +10,7 @@ namespace element {
         extern bool __engine_closed;
 
         void __engine_init();
-        bool __engine_close_event_listener(const events::close&);
+        bool __engine_close_event_listener(events::close&);
         
     } // namespace __detail
     
