@@ -15,6 +15,7 @@ vulkan::physical_device_info __detail::__vulkan_physical_device_info;
 vk::Instance __detail::__vulkan_instance;
 vk::DispatchLoaderDynamic __detail::__vulkan_dld;
 vk::PhysicalDevice __detail::__vulkan_physical_device;
+vk::CommandPool __detail::__vulkan_command_pool;
 vk::Device __detail::__vulkan_device;
 bool __detail::__vulkan_device_created = false;
 #ifdef ELM_ENABLE_LOGGING
@@ -252,12 +253,18 @@ void vulkan::init_device(vk::SurfaceKHR& surface) {
     __detail::__vulkan_device = __detail::__vulkan_physical_device.createDevice(device_create_info);
     ELM_INFO("Vulkan device created");
     __detail::__vulkan_device_created = true;
+    vk::CommandPoolCreateInfo command_pool_create_info;
+    command_pool_create_info.flags = vk::CommandPoolCreateFlags() | vk::CommandPoolCreateFlagBits::eResetCommandBuffer;
+    command_pool_create_info.queueFamilyIndex = __detail::__vulkan_physical_device_info.graphics_queue_index;
+    __detail::__vulkan_command_pool = __detail::__vulkan_device.createCommandPool(command_pool_create_info);
+    ELM_DEBUG("Command pool created");
 }
 
 void vulkan::cleanup() {
     ELM_INFO("Cleanning up Vulkan...");
     if (__detail::__vulkan_device_created) {
         __detail::__vulkan_device_created = false;
+        __detail::__vulkan_device.destroyCommandPool(__detail::__vulkan_command_pool);
         __detail::__vulkan_device.destroy();
         __detail::__vulkan_physical_device = nullptr;
     }

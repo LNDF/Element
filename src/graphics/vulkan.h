@@ -33,6 +33,7 @@ namespace element {
         extern vk::DispatchLoaderDynamic __vulkan_dld;
         extern vk::PhysicalDevice __vulkan_physical_device;
         extern vk::Device __vulkan_device;
+        extern vk::CommandPool __vulkan_command_pool;
         extern bool __vulkan_device_created;
 #ifdef ELM_ENABLE_LOGGING
         extern vk::DebugUtilsMessengerEXT __vulkan_debug_messenger;
@@ -55,6 +56,7 @@ namespace element {
         inline vk::DispatchLoaderDynamic get_dld() {return __detail::__vulkan_dld;}
         inline vk::PhysicalDevice get_physical_device() {return __detail::__vulkan_physical_device;}
         inline vk::Device get_device() {return __detail::__vulkan_device;}
+        inline vk::CommandPool get_command_pool() {return __detail::__vulkan_command_pool;}
         inline bool is_device_created() {return __detail::__vulkan_device_created;}
         inline const std::unordered_set<std::string>& get_supported_instance_extensions() {return __detail::__vulkan_supported_instance_extensions;}
         inline const std::unordered_set<std::string>& get_supported_instance_layers() {return __detail::__vulkan_supported_instance_layers;}
