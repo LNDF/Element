@@ -9,19 +9,18 @@ namespace element {
 
         extern bool __engine_closed;
 
-        void __engine_init();
         bool __engine_close_event_listener(events::close&);
         
     } // namespace __detail
     
 
     namespace engine {
-        struct settings_t {
+        struct settings_type {
             std::string app_name;
             std::string app_version;
         };
 
-        extern settings_t settings;
+        extern settings_type settings;
 
         void setup();
         void start();

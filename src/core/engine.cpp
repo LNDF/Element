@@ -9,7 +9,7 @@
 using namespace element;
 
 bool __detail::__engine_closed = false;
-engine::settings_t engine::settings;
+engine::settings_type engine::settings;
 
 bool __detail::__engine_close_event_listener(events::close&) {
     __detail::__engine_closed = true;

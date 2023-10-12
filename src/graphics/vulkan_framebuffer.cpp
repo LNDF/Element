@@ -11,5 +11,5 @@ vk::Framebuffer vulkan::create_framebuffer(vk::RenderPass renderpass, vk::ImageV
     info.width = width;
     info.height = height;
     info.layers = 1;
-    return get_device().createFramebuffer(info);
+    return device.createFramebuffer(info);
 }

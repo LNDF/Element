@@ -7,7 +7,7 @@ using namespace element;
 
 vulkan::swapchain_creation_info vulkan::query_swapchain_info(vk::SurfaceKHR& surface, std::uint32_t width, std::uint32_t height) {
     swapchain_creation_info info;
-    vk::SurfaceCapabilitiesKHR capabilities = __detail::__vulkan_physical_device.getSurfaceCapabilitiesKHR(surface);
+    vk::SurfaceCapabilitiesKHR capabilities = physical_device.getSurfaceCapabilitiesKHR(surface);
     info.support.min_image_count = capabilities.minImageCount;
     info.support.max_image_count = capabilities.maxImageCount;
     info.support.min_extent_width = capabilities.minImageExtent.width;
@@ -16,8 +16,8 @@ vulkan::swapchain_creation_info vulkan::query_swapchain_info(vk::SurfaceKHR& sur
     info.support.max_extent_height = capabilities.maxImageExtent.height;
     info.support.extent_width = capabilities.currentExtent.width;
     info.support.extent_height = capabilities.currentExtent.height;
-    info.support.formats = __detail::__vulkan_physical_device.getSurfaceFormatsKHR(surface);
-    info.support.present_modes = __detail::__vulkan_physical_device.getSurfacePresentModesKHR(surface);
+    info.support.formats = physical_device.getSurfaceFormatsKHR(surface);
+    info.support.present_modes = physical_device.getSurfacePresentModesKHR(surface);
     //capabilities.maxImageArrayLayers
     //capabilities.supportedTransforms
     //capabilities.supportedCompositeAlpha
@@ -79,9 +79,9 @@ vulkan::swapchain_info vulkan::create_swapchain(vulkan::swapchain_creation_info&
     ELM_DEBUG("    Composite alpha: {}", vk::to_string(info.composite_alpha).c_str());
     vk::Extent2D extent(info.width, info.height);
     vk::SwapchainCreateInfoKHR create_info = vk::SwapchainCreateInfoKHR(vk::SwapchainCreateFlagsKHR(), info.surface, info.image_count, info.format.format, info.format.colorSpace, extent, 1, vk::ImageUsageFlagBits::eColorAttachment);
-    if (__detail::__vulkan_physical_device_info.graphics_queue_index != __detail::__vulkan_physical_device_info.present_queue_index) {
+    if (physical_device_info.graphics_queue_index != physical_device_info.present_queue_index) {
         ELM_DEBUG("Using concurrent sharing mode");
-        std::uint32_t queues[] = {__detail::__vulkan_physical_device_info.graphics_queue_index, __detail::__vulkan_physical_device_info.present_queue_index};
+        std::uint32_t queues[] = {physical_device_info.graphics_queue_index, physical_device_info.present_queue_index};
         create_info.imageSharingMode = vk::SharingMode::eConcurrent;
         create_info.pQueueFamilyIndices = queues;
         create_info.queueFamilyIndexCount = 2;
@@ -94,11 +94,11 @@ vulkan::swapchain_info vulkan::create_swapchain(vulkan::swapchain_creation_info&
     create_info.presentMode = info.present_mode;
     create_info.clipped = info.clip ? VK_TRUE : VK_FALSE;
     create_info.oldSwapchain = nullptr;
-    vk::SwapchainKHR swapchain = __detail::__vulkan_device.createSwapchainKHR(create_info);
+    vk::SwapchainKHR swapchain = device.createSwapchainKHR(create_info);
     ELM_INFO("Swapchain created");
     swapchain_info sinfo;
     sinfo.swapchain = swapchain;
-    std::vector<vk::Image> images = __detail::__vulkan_device.getSwapchainImagesKHR(swapchain);
+    std::vector<vk::Image> images = device.getSwapchainImagesKHR(swapchain);
     sinfo.image_data.reserve(images.size());
     sinfo.width = info.width;
     sinfo.height = info.height;
@@ -118,7 +118,7 @@ vulkan::swapchain_info vulkan::create_swapchain(vulkan::swapchain_creation_info&
         img_view_info.subresourceRange.layerCount = 1;
         swapchain_image_data img_data;
         img_data.image = image,
-        img_data.image_view = __detail::__vulkan_device.createImageView(img_view_info);
+        img_data.image_view = device.createImageView(img_view_info);
         sinfo.image_data.push_back(img_data);
     }
     return sinfo;
@@ -127,7 +127,7 @@ vulkan::swapchain_info vulkan::create_swapchain(vulkan::swapchain_creation_info&
 void vulkan::destroy_swapchain(vulkan::swapchain_info& info) {
     ELM_INFO("Destroying swapchain");
     for (swapchain_image_data& img_data : info.image_data) {
-        __detail::__vulkan_device.destroyImageView(img_data.image_view);
+        device.destroyImageView(img_data.image_view);
     }
-    __detail::__vulkan_device.destroySwapchainKHR(info.swapchain);
+    device.destroySwapchainKHR(info.swapchain);
 }
