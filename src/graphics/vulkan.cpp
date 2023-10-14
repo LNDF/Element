@@ -12,10 +12,12 @@ std::uint32_t vulkan::version = 0;
 std::unordered_set<std::string> vulkan::supported_instance_extensions;
 std::unordered_set<std::string> vulkan::supported_instance_layers;
 vulkan::physical_device_info_type vulkan::physical_device_info;
-vk::Instance vulkan::instance = nullptr;
+vk::Instance vulkan::instance;
 vk::DispatchLoaderDynamic vulkan::dld;
 vk::PhysicalDevice vulkan::physical_device = nullptr;
-vk::CommandPool vulkan::command_pool = nullptr;
+vk::CommandPool vulkan::command_pool;
+vk::Queue vulkan::graphics_queue;
+vk::Queue vulkan::present_queue;
 vk::Device vulkan::device = nullptr;
 #ifdef ELM_ENABLE_LOGGING
 vk::DebugUtilsMessengerEXT vulkan::debug_messenger = nullptr;
@@ -250,6 +252,8 @@ void vulkan::init_device(vk::SurfaceKHR& surface) {
     vk::PhysicalDeviceFeatures physical_device_feautres;
     vk::DeviceCreateInfo device_create_info{vk::DeviceCreateFlags(), static_cast<std::uint32_t>(queue_create_infos.size()), queue_create_infos.data(), static_cast<std::uint32_t>(device_layers.size()), device_layers.data(), static_cast<std::uint32_t>(device_extensions.size()), device_extensions.data(), &physical_device_feautres};
     device = physical_device.createDevice(device_create_info);
+    graphics_queue = device.getQueue(physical_device_info.graphics_queue_index, 0);
+    present_queue = device.getQueue(physical_device_info.present_queue_index, 0);
     ELM_INFO("Vulkan device created");
     vk::CommandPoolCreateInfo command_pool_create_info;
     command_pool_create_info.flags = vk::CommandPoolCreateFlags() | vk::CommandPoolCreateFlagBits::eResetCommandBuffer;
@@ -261,12 +265,11 @@ void vulkan::init_device(vk::SurfaceKHR& surface) {
 void vulkan::cleanup() {
     ELM_INFO("Cleanning up Vulkan...");
     if (device != nullptr) {
+        device.waitIdle();
         device.destroyCommandPool(command_pool);
         device.destroy();
         supported_instance_extensions.clear();
         supported_instance_layers.clear();
-        version = 0;
-        command_pool = nullptr;
         device = nullptr;
         physical_device = nullptr;
     }

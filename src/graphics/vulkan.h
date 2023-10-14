@@ -36,6 +36,8 @@ namespace element {
         extern vk::PhysicalDevice physical_device;
         extern vk::Device device;
         extern vk::CommandPool command_pool;
+        extern vk::Queue graphics_queue;
+        extern vk::Queue present_queue;
 #ifdef ELM_ENABLE_LOGGING
         extern vk::DebugUtilsMessengerEXT debug_messenger;
 #endif
