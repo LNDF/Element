@@ -13,6 +13,8 @@ namespace element {
             vk::Fence fence;
         };
 
+        extern bool renderer_initialized;
+
         extern std::uint32_t frames_in_flight;
         extern std::uint32_t current_frame;
         extern swapchain_frame_info swapchain_frames[ELM_MAX_FRAMES_IN_FLIGHT];

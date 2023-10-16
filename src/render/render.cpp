@@ -1,11 +1,13 @@
 #include "render.h"
 
+#include <stdexcept>
 #include <core/log.h>
 #include <graphics/vulkan_command_buffer.h>
 #include <graphics/vulkan_sync.h>
 
 using namespace element;
 
+bool render::renderer_initialized = false;
 std::uint32_t render::frames_in_flight = ELM_MAX_FRAMES_IN_FLIGHT;
 std::uint32_t render::current_frame = 0;
 render::swapchain_frame_info render::swapchain_frames[ELM_MAX_FRAMES_IN_FLIGHT];
@@ -29,6 +31,7 @@ void render::unselect_swapchain() {
 }
 
 void render::init_renderer() {
+    if (renderer_initialized) return;
     ELM_INFO("Initializing renderer...");
     main_command_buffer = vulkan::create_command_buffer();
     ELM_DEBUG("Creating sync structures...");
@@ -38,9 +41,11 @@ void render::init_renderer() {
         swapchain_frames[i].image_acquired = vulkan::create_semaphore();
         swapchain_frames[i].render_done = vulkan::create_semaphore();
     }
+    renderer_initialized = true;
 }
 
 void render::cleanup_renderer() {
+    if (!renderer_initialized) return;
     ELM_INFO("Cleanning up renderer...");
     vulkan::device.waitIdle();
     for (std::uint32_t i = 0; i < ELM_MAX_FRAMES_IN_FLIGHT; ++i) {
@@ -48,12 +53,17 @@ void render::cleanup_renderer() {
         vulkan::device.destroySemaphore(swapchain_frames[i].image_acquired);
         vulkan::device.destroySemaphore(swapchain_frames[i].render_done);
     }
+    renderer_initialized = false;
 }
 
-void render::render() { //TODO: handle errors of waitForFences, resetFences, presentKHR
+void render::render() { //Handle VK_ERROR_OUT_OF_DATE_KHR on acquireNextImageKHR
     swapchain_frame_info& frame = swapchain_frames[current_frame];
-    vulkan::device.waitForFences(1, &frame.fence, VK_TRUE, UINT64_MAX);
-    vulkan::device.resetFences(1, &frame.fence);
+    if (vulkan::device.waitForFences(1, &frame.fence, VK_TRUE, UINT64_MAX) == vk::Result::eTimeout) {
+        throw std::runtime_error("Timeout when waiting for fence.");
+    }
+    if (vulkan::device.resetFences(1, &frame.fence) != vk::Result::eSuccess) {
+        throw std::runtime_error("Couldn't reset fence");
+    }
     std::uint32_t image_index = vulkan::device.acquireNextImageKHR(current_swapchain->swapchain, UINT64_MAX, frame.image_acquired, nullptr).value;
     frame.command_buffer.reset();
 
@@ -75,6 +85,8 @@ void render::render() { //TODO: handle errors of waitForFences, resetFences, pre
     present_info.swapchainCount = 1;
     present_info.pSwapchains = &current_swapchain->swapchain;
     present_info.pImageIndices = &image_index;
-    vulkan::present_queue.presentKHR(present_info);
+    if (vulkan::present_queue.presentKHR(present_info) == vk::Result::eSuboptimalKHR) {
+        ELM_DEBUG("Suboptimal presentation");
+    }
     current_frame = (current_frame + 1) % frames_in_flight;
 }

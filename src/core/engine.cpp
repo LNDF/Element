@@ -4,6 +4,7 @@
 #include <core/fs.h>
 #include <event/event.h>
 #include <graphics/vulkan.h>
+#include <render/render.h>
 #include <utils/uuid.h>
 
 using namespace element;
@@ -28,6 +29,7 @@ void engine::setup() {
 
 void engine::cleanup() {
     ELM_INFO("Application will close soon. Cleanning up...");
+    render::cleanup_renderer();
     vulkan::cleanup();
 }
 
