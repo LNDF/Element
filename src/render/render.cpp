@@ -93,7 +93,7 @@ void render::render() { //Handle VK_ERROR_OUT_OF_DATE_KHR on acquireNextImageKHR
     current_frame = (current_frame + 1) % frames_in_flight;
     vk::Result present_result;
     try {
-        present_result = vulkan::present_queue..presentKHR(present_info);
+        present_result = vulkan::present_queue.presentKHR(present_info);
     } catch (vk::OutOfDateKHRError& error) {
         present_result = vk::Result::eErrorOutOfDateKHR;
     }
