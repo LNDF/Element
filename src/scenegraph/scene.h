@@ -1,6 +1,7 @@
 #pragma once
 
 #include <scenegraph/node_ref.h>
+#include <scenegraph/node_storage.h>
 #include <unordered_map>
 #include <memory>
 #include <typeindex>
@@ -9,7 +10,6 @@
 
 namespace element {
     namespace scenegraph {
-        class node_storage_base;
 
         class scene {
             private:

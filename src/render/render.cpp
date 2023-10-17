@@ -24,7 +24,7 @@ void render::select_swapchain(const vulkan::swapchain_info& info) {
 }
 
 void render::unselect_swapchain() {
-    //TODO: wait until all gpu work is done
+    vulkan::device.waitIdle();
     current_swapchain = nullptr;
     frames_in_flight = ELM_MAX_FRAMES_IN_FLIGHT;
     current_frame = 0;
@@ -61,12 +61,17 @@ void render::render() { //Handle VK_ERROR_OUT_OF_DATE_KHR on acquireNextImageKHR
     if (vulkan::device.waitForFences(1, &frame.fence, VK_TRUE, UINT64_MAX) == vk::Result::eTimeout) {
         throw std::runtime_error("Timeout when waiting for fence.");
     }
+    std::uint32_t image_index;
+    try {
+        image_index = vulkan::device.acquireNextImageKHR(current_swapchain->swapchain, UINT64_MAX, frame.image_acquired, nullptr).value;
+    } catch (vk::OutOfDateKHRError& err) {
+        ELM_DEBUG("Skipping frame");
+        return;
+    }
+    frame.command_buffer.reset();
     if (vulkan::device.resetFences(1, &frame.fence) != vk::Result::eSuccess) {
         throw std::runtime_error("Couldn't reset fence");
     }
-    std::uint32_t image_index = vulkan::device.acquireNextImageKHR(current_swapchain->swapchain, UINT64_MAX, frame.image_acquired, nullptr).value;
-    frame.command_buffer.reset();
-
     //TODO: record command buffer
 
     vk::PipelineStageFlags wait_mask = vk::PipelineStageFlagBits::eColorAttachmentOutput;
@@ -85,8 +90,14 @@ void render::render() { //Handle VK_ERROR_OUT_OF_DATE_KHR on acquireNextImageKHR
     present_info.swapchainCount = 1;
     present_info.pSwapchains = &current_swapchain->swapchain;
     present_info.pImageIndices = &image_index;
-    if (vulkan::present_queue.presentKHR(present_info) == vk::Result::eSuboptimalKHR) {
-        ELM_DEBUG("Suboptimal presentation");
-    }
     current_frame = (current_frame + 1) % frames_in_flight;
+    vk::Result present_result;
+    try {
+        present_result = vulkan::present_queue.presentKHR(present_info);
+    } catch (vk::OutOfDateKHRError& error) {
+        present_result = vk::Result::eErrorOutOfDateKHR;
+    }
+    if (present_result == vk::Result::eErrorOutOfDateKHR || present_result == vk::Result::eSuboptimalKHR) {
+        ELM_DEBUG("Subotimal or outdated frame");
+    }
 }
