@@ -2,6 +2,7 @@
 
 #include <vector>
 #include <string>
+#include <scenegraph/node.h>
 #include <scenegraph/node_ref.h>
 #include <scenegraph/node_storage.h>
 #include <serialization/defs.h>
