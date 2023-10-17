@@ -31,6 +31,7 @@ namespace element {
         extern element::vulkan::physical_device_info_type physical_device_info;
         extern std::uint32_t version;
 
+        extern bool device_initialized;
         extern vk::Instance instance;
         extern vk::DispatchLoaderDynamic dld;
         extern vk::PhysicalDevice physical_device;

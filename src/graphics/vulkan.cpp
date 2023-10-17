@@ -12,6 +12,7 @@ std::uint32_t vulkan::version = 0;
 std::unordered_set<std::string> vulkan::supported_instance_extensions;
 std::unordered_set<std::string> vulkan::supported_instance_layers;
 vulkan::physical_device_info_type vulkan::physical_device_info;
+bool vulkan::device_initialized = false;
 vk::Instance vulkan::instance;
 vk::DispatchLoaderDynamic vulkan::dld;
 vk::PhysicalDevice vulkan::physical_device = nullptr;
@@ -193,7 +194,7 @@ void vulkan::init_instance() {
 
 void vulkan::init_device(vk::SurfaceKHR& surface) {
     ELM_INFO("Creating Vulkan device..");
-    if (device != nullptr) {
+    if (device_initialized) {
         ELM_WARN("Device already created");
         return;
     }
@@ -260,11 +261,12 @@ void vulkan::init_device(vk::SurfaceKHR& surface) {
     command_pool_create_info.queueFamilyIndex = physical_device_info.graphics_queue_index;
     command_pool = device.createCommandPool(command_pool_create_info);
     ELM_DEBUG("Command pool created");
+    device_initialized = true;
 }
 
 void vulkan::cleanup() {
     ELM_INFO("Cleanning up Vulkan...");
-    if (device != nullptr) {
+    if (device_initialized) {
         device.waitIdle();
         device.destroyCommandPool(command_pool);
         device.destroy();
@@ -272,6 +274,7 @@ void vulkan::cleanup() {
         supported_instance_layers.clear();
         device = nullptr;
         physical_device = nullptr;
+        device_initialized = false;
     }
 #ifdef ELM_ENABLE_LOGGING
     instance.destroyDebugUtilsMessengerEXT(debug_messenger, nullptr, dld);
