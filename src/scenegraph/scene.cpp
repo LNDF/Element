@@ -29,7 +29,7 @@ void scenegraph::scene::init_scene(const uuid& id) {
         storage->init_scene(this);
     }
     if (root_node != nullptr) return;
-    uuid root_node_id = get_new_node_id();
+    uuid root_node_id;
     node_storage_base* storage = get_storage(std::type_index(typeid(node)));
     storage->emplace_root(root_node_id);
     this->root_node = root_node_id;

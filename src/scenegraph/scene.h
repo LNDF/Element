@@ -19,6 +19,10 @@ namespace element {
             public:
                 scene();
                 ~scene();
+                scene(const scene& other) = delete;
+                scene(scene&&) = default;
+                scene& operator=(const scene& other) = delete;
+                scene& operator=(scene& other) = default;
 
                 node_storage_base* get_storage(std::type_index type);
 

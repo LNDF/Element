@@ -16,14 +16,10 @@ node_ref::node_ref(std::nullptr_t) : id(uuid::null()) {}
 
 bool node_ref::exists() const {
     if (id.is_null()) return false;
-    if (storage == nullptr || manager_cache_number != __detail::__scenegraph_node_manager_cache_number) {
-        manager_cache_number = __detail::__scenegraph_node_manager_cache_number;
-        auto it = __detail::__scenegraph_node_storage_map.find(id);
-        if (it == __detail::__scenegraph_node_storage_map.end()) {
-            storage = nullptr;
-            return false;
-        }
-        storage = it->second;
+    if (storage == nullptr || manager_cache_number != get_node_manager_cache_number()) {
+        manager_cache_number = get_node_manager_cache_number();
+        storage = get_node_storage_mapping(id);
+        if (storage == nullptr) return false;
     }
     if (cache == nullptr || storage_cache_number != storage->get_cache_number() || storage_id != storage->get_storage_id()) {
         storage_cache_number = storage->get_cache_number();
