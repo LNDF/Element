@@ -35,10 +35,8 @@ endif(ELEMENT_ENABLE_LOG)
 #LIBS
 
 # vulkan
-find_package(Vulkan COMPONENTS SPIRV-Tools glslang REQUIRED)
+find_package(Vulkan)
 target_link_libraries(element PUBLIC Vulkan::Vulkan)
-target_link_libraries(element PUBLIC Vulkan::SPIRV-Tools)
-target_link_libraries(element PUBLIC Vulkan::glslang)
 
 # glm
 add_subdirectory(lib/glm)
