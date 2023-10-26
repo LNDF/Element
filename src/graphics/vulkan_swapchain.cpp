@@ -98,6 +98,7 @@ vulkan::swapchain_info vulkan::create_swapchain(vulkan::swapchain_creation_info&
     ELM_INFO("Swapchain created");
     swapchain_info sinfo;
     sinfo.swapchain = swapchain;
+    sinfo.format = info.format;
     std::vector<vk::Image> images = device.getSwapchainImagesKHR(swapchain);
     sinfo.image_data.reserve(images.size());
     sinfo.width = info.width;

@@ -37,6 +37,7 @@ namespace element {
 
         struct swapchain_info {
             vk::SwapchainKHR swapchain;
+            vk::SurfaceFormatKHR format;
             std::vector<swapchain_image_data> image_data;
             std::uint32_t width, height;
         };
