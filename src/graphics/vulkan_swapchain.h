@@ -30,15 +30,10 @@ namespace element {
             bool clip;
         };
 
-        struct swapchain_image_data {
-            vk::Image image;
-            vk::ImageView image_view;
-        };
-
         struct swapchain_info {
             vk::SwapchainKHR swapchain;
             vk::SurfaceFormatKHR format;
-            std::vector<swapchain_image_data> image_data;
+            std::vector<vk::Image> images;
             std::uint32_t width, height;
         };
 

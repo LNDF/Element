@@ -1,5 +1,6 @@
 #include "vulkan_swapchain.h"
 
+#include <stdexcept>
 #include <graphics/vulkan.h>
 #include <core/log.h>
 
@@ -36,10 +37,14 @@ vulkan::swapchain_creation_info vulkan::query_swapchain_info(vk::SurfaceKHR& sur
     for (const vk::PresentModeKHR& present : info.support.present_modes) {
         ELM_DEBUG("      {}", vk::to_string(present).c_str());
     }
+    if (!(capabilities.supportedUsageFlags & vk::ImageUsageFlagBits::eTransferDst)) {
+        ELM_ERROR("Cannot create a swapchain that doesn't support image blitting");
+        throw std::runtime_error("Unsupported surface capabilities");
+    }
     info.surface = surface;
     info.format = info.support.formats[0];
     for (const vk::SurfaceFormatKHR& format : info.support.formats) {
-        if (format.format == vk::Format::eB8G8R8A8Unorm && format.colorSpace == vk::ColorSpaceKHR::eSrgbNonlinear) {
+        if (format.format == vk::Format::eB8G8R8A8Srgb && format.colorSpace == vk::ColorSpaceKHR::eSrgbNonlinear) {
             info.format = format;
             break;
         }
@@ -78,7 +83,7 @@ vulkan::swapchain_info vulkan::create_swapchain(vulkan::swapchain_creation_info&
     ELM_DEBUG("    Pre transform: {}", vk::to_string(info.pre_transform).c_str());
     ELM_DEBUG("    Composite alpha: {}", vk::to_string(info.composite_alpha).c_str());
     vk::Extent2D extent(info.width, info.height);
-    vk::SwapchainCreateInfoKHR create_info = vk::SwapchainCreateInfoKHR(vk::SwapchainCreateFlagsKHR(), info.surface, info.image_count, info.format.format, info.format.colorSpace, extent, 1, vk::ImageUsageFlagBits::eColorAttachment);
+    vk::SwapchainCreateInfoKHR create_info = vk::SwapchainCreateInfoKHR(vk::SwapchainCreateFlagsKHR(), info.surface, info.image_count, info.format.format, info.format.colorSpace, extent, 1, vk::ImageUsageFlagBits::eTransferDst);
     if (physical_device_info.graphics_queue_index != physical_device_info.present_queue_index) {
         ELM_DEBUG("Using concurrent sharing mode");
         std::uint32_t queues[] = {physical_device_info.graphics_queue_index, physical_device_info.present_queue_index};
@@ -99,36 +104,11 @@ vulkan::swapchain_info vulkan::create_swapchain(vulkan::swapchain_creation_info&
     swapchain_info sinfo;
     sinfo.swapchain = swapchain;
     sinfo.format = info.format;
-    std::vector<vk::Image> images = device.getSwapchainImagesKHR(swapchain);
-    sinfo.image_data.reserve(images.size());
-    sinfo.width = info.width;
-    sinfo.height = info.height;
-    for (vk::Image& image : images) {
-        vk::ImageViewCreateInfo img_view_info;
-        img_view_info.image = image;
-        img_view_info.viewType = vk::ImageViewType::e2D;
-        img_view_info.format = info.format.format;
-        img_view_info.components.r = vk::ComponentSwizzle::eIdentity;
-        img_view_info.components.g = vk::ComponentSwizzle::eIdentity;
-        img_view_info.components.b = vk::ComponentSwizzle::eIdentity;
-        img_view_info.components.a = vk::ComponentSwizzle::eIdentity;
-        img_view_info.subresourceRange.aspectMask = vk::ImageAspectFlagBits::eColor;
-        img_view_info.subresourceRange.baseMipLevel = 0;
-        img_view_info.subresourceRange.levelCount = 1;
-        img_view_info.subresourceRange.baseArrayLayer = 0;
-        img_view_info.subresourceRange.layerCount = 1;
-        swapchain_image_data img_data;
-        img_data.image = image,
-        img_data.image_view = device.createImageView(img_view_info);
-        sinfo.image_data.push_back(img_data);
-    }
+    sinfo.images = device.getSwapchainImagesKHR(swapchain);
     return sinfo;
 }
 
 void vulkan::destroy_swapchain(vulkan::swapchain_info& info) {
     ELM_INFO("Destroying swapchain");
-    for (swapchain_image_data& img_data : info.image_data) {
-        device.destroyImageView(img_data.image_view);
-    }
     device.destroySwapchainKHR(info.swapchain);
 }

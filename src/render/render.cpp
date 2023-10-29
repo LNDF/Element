@@ -4,6 +4,7 @@
 #include <core/log.h>
 #include <graphics/vulkan_command_buffer.h>
 #include <graphics/vulkan_sync.h>
+#include <render/scene_render.h>
 
 using namespace element;
 
@@ -16,8 +17,8 @@ vk::CommandBuffer render::main_command_buffer;
 
 void render::select_swapchain(const vulkan::swapchain_info& info) {
     current_swapchain = &info;
-    if (info.image_data.size() < ELM_MAX_FRAMES_IN_FLIGHT) {
-        frames_in_flight = info.image_data.size();
+    if (info.images.size() < ELM_MAX_FRAMES_IN_FLIGHT) {
+        frames_in_flight = info.images.size();
     }
     current_frame = 0;
     ELM_DEBUG("Using {} frames in flight", frames_in_flight);
@@ -41,6 +42,7 @@ void render::init_renderer() {
         swapchain_frames[i].image_acquired = vulkan::create_semaphore();
         swapchain_frames[i].render_done = vulkan::create_semaphore();
     }
+    scene_renderer::init();
     renderer_initialized = true;
 }
 
@@ -48,6 +50,7 @@ void render::cleanup_renderer() {
     if (!renderer_initialized) return;
     ELM_INFO("Cleanning up renderer...");
     vulkan::device.waitIdle();
+    scene_renderer::cleanup();
     for (std::uint32_t i = 0; i < ELM_MAX_FRAMES_IN_FLIGHT; ++i) {
         vulkan::device.destroyFence(swapchain_frames[i].fence);
         vulkan::device.destroySemaphore(swapchain_frames[i].image_acquired);
