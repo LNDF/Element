@@ -36,6 +36,8 @@ namespace element {
 
             static constexpr std::size_t local_end = std::numeric_limits<std::size_t>::max();
 
+            friend class packed_set_iterator<V, !is_const>;
+
             node_type* curr;
         public:
             using iterator_category = std::input_iterator_tag;
@@ -95,7 +97,7 @@ namespace element {
             }
 
             packed_set_iterator operator+(difference_type diff) noexcept {
-                packed_set_iterator tmp;
+                packed_set_iterator tmp(curr);
                 return tmp += diff;
             }
 
@@ -105,8 +107,12 @@ namespace element {
             }
 
             packed_set_iterator operator-(difference_type diff) noexcept {
-                packed_set_iterator tmp;
+                packed_set_iterator tmp(curr);
                 return tmp -= diff;
+            }
+
+            difference_type operator-(const packed_set_iterator& other) const noexcept {
+                return curr - other.curr;
             }
     };
 
@@ -447,7 +453,7 @@ namespace element {
                 for (const value_type& v : i) insert(v);
             }
 
-            iterator erase(const_iterator pos) const {
+            iterator erase(const_iterator pos) {
                 const difference_type d = pos - cbegin();
                 erase(*pos);
                 return begin() + d;

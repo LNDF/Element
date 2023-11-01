@@ -98,7 +98,7 @@ namespace element {
             }
 
             packed_map_iterator operator+(difference_type diff) noexcept {
-                packed_map_iterator tmp;
+                packed_map_iterator tmp(curr);
                 return tmp += diff;
             }
 
@@ -108,8 +108,12 @@ namespace element {
             }
 
             packed_map_iterator operator-(difference_type diff) noexcept {
-                packed_map_iterator tmp;
+                packed_map_iterator tmp(curr);
                 return tmp -= diff;
+            }
+
+            difference_type operator-(const packed_map_iterator& other) {
+                return curr - other.curr;
             }
     };
 
@@ -519,7 +523,7 @@ namespace element {
                 insert_or_assign(std::move(k), std::forward<O>(o));
             }
 
-            iterator erase(const_iterator pos) const {
+            iterator erase(const_iterator pos) {
                 const difference_type d = pos - cbegin();
                 erase(pos->first);
                 return begin() + d;
