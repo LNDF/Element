@@ -14,8 +14,7 @@ add_library(element ${SRC_FILES})
 target_include_directories(element PUBLIC ./src/)
 
 # asset files
-file(GLOB_RECURSE RESOURCE_FILES ./resources/*.*)
-file(COPY ${RESOURCE_FILES} DESTINATION ${CMAKE_BINARY_DIR})
+file(COPY ./resources DESTINATION ${CMAKE_BINARY_DIR})
 
 # user options
 option(ELEMENT_ENABLE_LOG "Enable logging in Element engine" ON) 
