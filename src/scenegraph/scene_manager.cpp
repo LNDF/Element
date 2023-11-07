@@ -3,6 +3,7 @@
 #include <unordered_map>
 #include <utility>
 #include <core/fs.h>
+#include <serialization/serializers.h>
 #include <serialization/scenegraph.h>
 
 static std::unordered_map<element::uuid, element::scenegraph::scene> scene_map;

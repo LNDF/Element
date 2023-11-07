@@ -1,6 +1,5 @@
 #pragma once
 
-#include <serialization/defs.h>
 #include <scenegraph/node_storage.h>
 #include <utils/packed_map.h>
 #include <utils/uuid.h>

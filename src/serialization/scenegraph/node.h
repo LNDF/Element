@@ -5,7 +5,6 @@
 #include <scenegraph/node.h>
 #include <scenegraph/node_ref.h>
 #include <scenegraph/node_storage.h>
-#include <serialization/defs.h>
 #include <serialization/scenegraph/node_ref.h>
 #include <serialization/vector.h>
 #include <serialization/string.h>
