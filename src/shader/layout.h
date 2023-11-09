@@ -45,7 +45,7 @@ namespace element {
             std::vector<member_layout> members;
         };
 
-        struct layout {
+        struct shader_layout {
             resource_layout push_constants;
             std::vector<resource_layout> descriptor_sets;
         };

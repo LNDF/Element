@@ -31,7 +31,7 @@ namespace cereal {
     }
 
     template<class Archiver>
-    void serialize(Archiver& ar, element::shader::layout& layout) {
+    void serialize(Archiver& ar, element::shader::shader_layout& layout) {
         ar(make_nvp("push_constants", layout.push_constants));
         ar(make_nvp("descriptor_sets", layout.descriptor_sets));
     }
