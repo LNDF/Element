@@ -1,6 +1,6 @@
 #pragma once
 
-#include <shader/layout.h>
+#include <render/shader_layout.h>
 #include <serialization/vector.h>
 
 #include <cereal/cereal.hpp>
@@ -8,7 +8,7 @@
 namespace cereal {
     
     template<class Archiver>
-    void serialize(Archiver& ar, element::shader::member_layout& member) {
+    void serialize(Archiver& ar, element::render::member_layout& member) {
         ar(make_nvp("name", member.name));
         ar(make_nvp("type", member.type));
         ar(make_nvp("size", member.size));
@@ -22,8 +22,8 @@ namespace cereal {
     }
 
     template<class Archiver>
-    void serialize(Archiver& ar, element::shader::resource_layout& res) {
-        ar(make_nvp("member_data", cereal::base_class<element::shader::member_layout>(&res)));
+    void serialize(Archiver& ar, element::render::resource_layout& res) {
+        ar(make_nvp("member_data", cereal::base_class<element::render::member_layout>(&res)));
         ar(make_nvp("set", res.set));
         ar(make_nvp("binding", res.binding));
         ar(make_nvp("sampler_resource",res.sampler_resource));
@@ -31,7 +31,7 @@ namespace cereal {
     }
 
     template<class Archiver>
-    void serialize(Archiver& ar, element::shader::shader_layout& layout) {
+    void serialize(Archiver& ar, element::render::layout& layout) {
         ar(make_nvp("push_constants", layout.push_constants));
         ar(make_nvp("descriptor_sets", layout.descriptor_sets));
     }

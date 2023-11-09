@@ -1,10 +1,16 @@
 #pragma once
 
-#include <graphics/vulkan_shader.h>
 #include <utils/uuid.h>
 
 namespace element {
     namespace render {
-        vk::ShaderModule load_shader(const uuid& id);
+        
+        struct pipeline_data {
+            uuid vert_id;
+            uuid frag_id;
+            bool backface_culling;
+            bool transparent;
+        };
+
     } // namespace render
 } // namespace element

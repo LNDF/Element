@@ -1,14 +1,14 @@
 #pragma once
 
-#include <shader/layout.h>
+#include <render/shader_layout.h>
 #include <vector>
 
 namespace element {
-    namespace shader {
+    namespace render {
         
-        struct shader_data {
+        struct shader {
             std::vector<std::uint32_t> spv;
-            shader_layout layout;
+            layout reflect;
         };
 
     } // namespace shader

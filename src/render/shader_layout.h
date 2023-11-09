@@ -5,7 +5,7 @@
 #include <cinttypes>
 
 namespace element {
-    namespace shader {
+    namespace render {
         
         enum member_type {
             unknown,
@@ -45,7 +45,7 @@ namespace element {
             std::vector<member_layout> members;
         };
 
-        struct shader_layout {
+        struct layout {
             resource_layout push_constants;
             std::vector<resource_layout> descriptor_sets;
         };

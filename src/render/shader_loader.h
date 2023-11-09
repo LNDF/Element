@@ -1,12 +1,12 @@
 #pragma once
 
-#include <serialization/shader.h>
+#include <serialization/render/shader.h>
 #include <resource/loader.h>
 
 namespace element {
-    namespace shader {
+    namespace render {
         
-        ELM_MAKE_RESOURCE_LOADER(load_shader, shader_data)
+        ELM_MAKE_RESOURCE_LOADER(load_shader, shader)
 
     } // namespace shader
 } // namespace element
