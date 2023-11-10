@@ -8,7 +8,7 @@ namespace element {
         
         struct shader {
             std::vector<std::uint32_t> spv;
-            layout reflect;
+            shader_layout reflect;
         };
 
     } // namespace shader

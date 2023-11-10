@@ -8,7 +8,7 @@
 namespace cereal {
     
     template<class Archiver>
-    void serialize(Archiver& ar, element::render::member_layout& member) {
+    void serialize(Archiver& ar, element::render::shader_block& member) {
         ar(make_nvp("name", member.name));
         ar(make_nvp("type", member.type));
         ar(make_nvp("size", member.size));
@@ -22,8 +22,8 @@ namespace cereal {
     }
 
     template<class Archiver>
-    void serialize(Archiver& ar, element::render::resource_layout& res) {
-        ar(make_nvp("member_data", cereal::base_class<element::render::member_layout>(&res)));
+    void serialize(Archiver& ar, element::render::shader_resource_layout& res) {
+        ar(make_nvp("member_data", cereal::base_class<element::render::shader_block>(&res)));
         ar(make_nvp("set", res.set));
         ar(make_nvp("binding", res.binding));
         ar(make_nvp("sampler_resource",res.sampler_resource));
@@ -31,7 +31,7 @@ namespace cereal {
     }
 
     template<class Archiver>
-    void serialize(Archiver& ar, element::render::layout& layout) {
+    void serialize(Archiver& ar, element::render::shader_layout& layout) {
         ar(make_nvp("push_constants", layout.push_constants));
         ar(make_nvp("descriptor_sets", layout.descriptor_sets));
     }

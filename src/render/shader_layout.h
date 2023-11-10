@@ -7,7 +7,7 @@
 namespace element {
     namespace render {
         
-        enum member_type {
+        enum shader_block_member_type {
             unknown,
             boolean_type,
             sint8_type,
@@ -25,9 +25,9 @@ namespace element {
             sampler_type
         };
 
-        struct member_layout {
+        struct shader_block {
             std::string name;
-            member_type type = member_type::unknown;
+            shader_block_member_type type = shader_block_member_type::unknown;
             std::size_t size = 0;
             std::uint32_t offset = 0;
             std::size_t array_stride = 0;
@@ -38,16 +38,16 @@ namespace element {
             std::uint32_t array_cols = 0;
         };
 
-        struct resource_layout : public member_layout {
+        struct shader_resource_layout : public shader_block {
             std::uint32_t set = 0;
             std::uint32_t binding = 0;
             bool sampler_resource = false;
-            std::vector<member_layout> members;
+            std::vector<shader_block> members;
         };
 
-        struct layout {
-            resource_layout push_constants;
-            std::vector<resource_layout> descriptor_sets;
+        struct shader_layout {
+            shader_resource_layout push_constants;
+            std::vector<shader_resource_layout> descriptor_sets;
         };
 
     } // namespace render

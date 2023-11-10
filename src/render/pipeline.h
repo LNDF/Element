@@ -19,5 +19,10 @@ namespace element {
             bool transparent;
         };
 
+        struct pipeline {
+            vk::Pipeline pipeline;
+            vk::PipelineLayout layout;
+        }
+
     } // namespace render
 } // namespace element

@@ -7,6 +7,10 @@
 
 using namespace element;
 
+static vk::PipelineLayout create_pipeline_layout(const render::shader_layout& layout) {
+
+}
+
 static vk::PipelineDepthStencilStateCreateInfo create_pipeline_depth_stencil_state() {
     vk::PipelineDepthStencilStateCreateInfo info;
     info.flags = vk::PipelineDepthStencilStateCreateFlags();
@@ -92,7 +96,13 @@ static vk::Pipeline create_forward_pipeline(const render::pipeline_data& data) {
     input_assembly_info.topology = vk::PrimitiveTopology::eTriangleList;
     input_assembly_info.primitiveRestartEnable = vk::True;
     info.pInputAssemblyState = &input_assembly_info;
-    //VIEWPORT STATE
+    vk::PipelineViewportStateCreateInfo viewport_state_info;
+    viewport_state_info.flags = vk::PipelineViewportStateCreateFlags();
+    viewport_state_info.pViewports = nullptr;
+    viewport_state_info.pScissors = nullptr;
+    viewport_state_info.viewportCount = 1;
+    viewport_state_info.scissorCount = 1;
+    info.pViewportState = &viewport_state_info;
     vk::PipelineRasterizationStateCreateInfo rasterization_state_info = create_pipeline_rasterization_state(data.backface_culling, data.frontface);
     info.pRasterizationState = & rasterization_state_info;
     vk::PipelineMultisampleStateCreateInfo multisample_state_info;
@@ -102,4 +112,19 @@ static vk::Pipeline create_forward_pipeline(const render::pipeline_data& data) {
     info.pMultisampleState = &multisample_state_info;
     vk::PipelineDepthStencilStateCreateInfo depth_stencil_state_info = create_pipeline_depth_stencil_state();
     info.pDepthStencilState = &depth_stencil_state_info;
+    //TODO: transparent support
+    vk::PipelineColorBlendStateCreateInfo color_blending_state_info;
+    color_blending_state_info.flags = vk::PipelineColorBlendStateCreateFlags();
+    vk::PipelineColorBlendAttachmentState color_blend_attachment;
+    color_blend_attachment.blendEnable = vk::False;
+    color_blend_attachment.colorWriteMask = vk::ColorComponentFlagBits::eR | vk::ColorComponentFlagBits::eG | vk::ColorComponentFlagBits::eB | vk::ColorComponentFlagBits::eA;
+    color_blending_state_info.attachmentCount = 1;
+    color_blending_state_info.pAttachments = &color_blend_attachment;
+    info.pColorBlendState = &color_blending_state_info;
+    vk::PipelineDynamicStateCreateInfo dynamic_state_info;
+    dynamic_state_info.flags = vk::PipelineDynamicStateCreateFlags();
+    vk::DynamicState dynamic_states[2] = {vk::DynamicState::eViewport, vk::DynamicState::eScissor};
+    dynamic_state_info.pDynamicStates = dynamic_states;
+    dynamic_state_info.dynamicStateCount = 2;
+    info.pDynamicState = &dynamic_state_info;
 }
