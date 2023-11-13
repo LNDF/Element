@@ -9,7 +9,7 @@
 
 namespace element {
     namespace render {
-        
+
         enum culling_face {
             counter_clockwise,
             clockwise
@@ -32,6 +32,7 @@ namespace element {
         };
 
         const pipeline* get_forward_pipeline(const uuid& id);
+        pipeline_data* get_pipeline_data(const uuid& id);
         void destroy_pipeline(const uuid& id);
         void destroy_all_pipelines();
 

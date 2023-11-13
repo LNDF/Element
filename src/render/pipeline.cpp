@@ -4,12 +4,14 @@
 #include <graphics/vulkan_descriptor..h>
 #include <render/shader.h>
 #include <render/scene_render.h>
-#include <render/pipeline_loader.h>
 #include <render/mesh.h>
+#include <resource/manager.h>
 #include <glm/glm.hpp>
 #include <unordered_map>
 
 using namespace element;
+
+using pipeline_data_manager = resource::manager<render::pipeline_data>;
 
 static std::unordered_map<uuid, render::pipeline> loaded_forward_pipelines;
 
@@ -201,12 +203,16 @@ const render::pipeline* render::get_forward_pipeline(const uuid& id) {
     if (it != loaded_forward_pipelines.end()) {
         return &it->second;
     }
-    auto data = load_pipeline_data(id);
-    if (data == std::nullopt) return nullptr;
-    pipeline p = create_forward_pipeline(data.value());
+    const pipeline_data* data = get_pipeline_data(id);
+    if (data == nullptr) return nullptr;
+    pipeline p = create_forward_pipeline(*data);
     if (p.pipeline == nullptr) return nullptr;
     it = loaded_forward_pipelines.insert_or_assign(id, std::move(p)).first;
     return &it->second;
+}
+
+render::pipeline_data* render::get_pipeline_data(const uuid& id) {
+    return pipeline_data_manager::get(id);
 }
 
 void render::destroy_pipeline(const uuid& id) {
@@ -214,6 +220,7 @@ void render::destroy_pipeline(const uuid& id) {
     if (it != loaded_forward_pipelines.end()) {
         ::destroy_pipeline(it->second);
     }
+    pipeline_data_manager::destroy(id);
 }
 
 void render::destroy_all_pipelines() {
@@ -221,5 +228,6 @@ void render::destroy_all_pipelines() {
     for (auto& [id, pipeline] : loaded_forward_pipelines) {
         ::destroy_pipeline(pipeline);
     }
+    pipeline_data_manager::destroy_all();
 }
 
