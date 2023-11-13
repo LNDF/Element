@@ -5,6 +5,7 @@
 #include <graphics/vulkan_command_buffer.h>
 #include <graphics/vulkan_sync.h>
 #include <render/scene_render.h>
+#include <render/pipeline.h>
 
 using namespace element;
 
@@ -51,6 +52,7 @@ void render::cleanup_renderer() {
     ELM_INFO("Cleanning up renderer...");
     vulkan::device.waitIdle();
     scene_renderer::cleanup();
+    destroy_all_pipelines();
     for (std::uint32_t i = 0; i < ELM_MAX_FRAMES_IN_FLIGHT; ++i) {
         vulkan::device.destroyFence(swapchain_frames[i].fence);
         vulkan::device.destroySemaphore(swapchain_frames[i].image_acquired);

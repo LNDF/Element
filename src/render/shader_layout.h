@@ -25,7 +25,7 @@ namespace element {
             sampler_type
         };
 
-        struct shader_block {
+        struct shader_block_member {
             std::string name;
             shader_block_member_type type = shader_block_member_type::unknown;
             std::size_t size = 0;
@@ -38,11 +38,11 @@ namespace element {
             std::uint32_t array_cols = 0;
         };
 
-        struct shader_resource_layout : public shader_block {
+        struct shader_resource_layout : public shader_block_member {
             std::uint32_t set = 0;
             std::uint32_t binding = 0;
             bool sampler_resource = false;
-            std::vector<shader_block> members;
+            std::vector<shader_block_member> members;
         };
 
         struct shader_layout {

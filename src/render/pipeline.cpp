@@ -1,14 +1,46 @@
 #include "pipeline.h"
 
 #include <graphics/vulkan_shader.h>
-#include <render/shader_loader.h>
+#include <graphics/vulkan_descriptor..h>
+#include <render/shader.h>
+#include <render/scene_render.h>
+#include <render/pipeline_loader.h>
 #include <render/mesh.h>
 #include <glm/glm.hpp>
+#include <unordered_map>
 
 using namespace element;
 
-static vk::PipelineLayout create_pipeline_layout(const render::shader_layout& layout) {
+static std::unordered_map<uuid, render::pipeline> loaded_forward_pipelines;
 
+static vk::DescriptorSetLayoutBinding create_descriptorset_layout_binding_from_resource(const render::shader_resource_layout& res, const vk::ShaderStageFlags& stage) {
+    vk::DescriptorSetLayoutBinding binding;
+    binding.binding = res.binding;
+    binding.descriptorType = vk::DescriptorType::eUniformBuffer;
+    binding.descriptorCount = 1;
+    binding.stageFlags = stage;
+    binding.pImmutableSamplers = nullptr;
+    return binding;
+}
+
+static void populate_descriptorset_layouts(std::vector<vk::DescriptorSetLayout>& out, const render::pipeline_data& data) {
+    std::vector<std::vector<vk::DescriptorSetLayoutBinding>> bindings;
+    for (const auto& [resource, stages] : data.layouts) {
+        if (resource.set == 0) continue;
+        if (resource.set > bindings.size()) {
+            bindings.resize(resource.set);
+        }
+        bindings[resource.set - 1].push_back(create_descriptorset_layout_binding_from_resource(resource, stages));
+    }
+    out.reserve(bindings.size() + 1);
+    out.push_back(render::scene_renderer::global_descriptorset_layout);
+    for (const std::vector<vk::DescriptorSetLayoutBinding>& set : bindings) {
+        if (set.empty()) {
+            out.push_back(vulkan::create_empty_descriptorset_layout());
+        } else {
+            out.push_back(vulkan::create_descriptorset_layout_from_bindings(set));
+        }
+    }
 }
 
 static vk::PipelineDepthStencilStateCreateInfo create_pipeline_depth_stencil_state() {
@@ -67,12 +99,15 @@ static void create_pipeline_vertex_input_state(std::vector<vk::VertexInputAttrib
     bindings.emplace_back(1, sizeof(glm::mat4), vk::VertexInputRate::eInstance); //instance data
 }
 
-static vk::Pipeline create_forward_pipeline(const render::pipeline_data& data) {
-    auto vert_data = render::load_shader(data.vert_id);
-    auto frag_data = render::load_shader(data.frag_id);
-    if (vert_data == std::nullopt || frag_data == std::nullopt) return nullptr;
-    vk::ShaderModule vert_mod = vulkan::create_shader_module(vert_data->spv);
-    vk::ShaderModule frag_mod = vulkan::create_shader_module(frag_data->spv);
+static render::pipeline create_forward_pipeline(const render::pipeline_data& data) {
+    auto vert_spv = render::load_shader_spv(data.vert_id);
+    auto frag_spv = render::load_shader_spv(data.frag_id);
+    render::pipeline result;
+    result.pipeline = nullptr;
+    result.layout = nullptr;
+    if (vert_spv.empty() || frag_spv.empty()) return result;
+    vk::ShaderModule vert_mod = vulkan::create_shader_module(vert_spv);
+    vk::ShaderModule frag_mod = vulkan::create_shader_module(frag_spv);
     vk::GraphicsPipelineCreateInfo info;
     info.flags = vk::PipelineCreateFlags();
     vk::PipelineShaderStageCreateInfo stages[2] = {
@@ -112,7 +147,7 @@ static vk::Pipeline create_forward_pipeline(const render::pipeline_data& data) {
     info.pMultisampleState = &multisample_state_info;
     vk::PipelineDepthStencilStateCreateInfo depth_stencil_state_info = create_pipeline_depth_stencil_state();
     info.pDepthStencilState = &depth_stencil_state_info;
-    //TODO: transparent support
+    //TODO: transparency support
     vk::PipelineColorBlendStateCreateInfo color_blending_state_info;
     color_blending_state_info.flags = vk::PipelineColorBlendStateCreateFlags();
     vk::PipelineColorBlendAttachmentState color_blend_attachment;
@@ -127,4 +162,64 @@ static vk::Pipeline create_forward_pipeline(const render::pipeline_data& data) {
     dynamic_state_info.pDynamicStates = dynamic_states;
     dynamic_state_info.dynamicStateCount = 2;
     info.pDynamicState = &dynamic_state_info;
+    vk::PipelineLayoutCreateInfo pipeline_layout_info;
+    pipeline_layout_info.flags = vk::PipelineLayoutCreateFlags();
+    populate_descriptorset_layouts(result.descriptorset_layouts, data);
+    pipeline_layout_info.pSetLayouts = result.descriptorset_layouts.data();
+    pipeline_layout_info.setLayoutCount = result.descriptorset_layouts.size();
+    vk::PushConstantRange push_constant_range;
+    if (data.push_constants.first.size > 0) {
+        push_constant_range.offset = 0;
+        push_constant_range.size = data.push_constants.first.size;
+        push_constant_range.stageFlags = data.push_constants.second;
+        pipeline_layout_info.pPushConstantRanges = &push_constant_range;
+        pipeline_layout_info.pushConstantRangeCount = 1;
+    } else {
+        pipeline_layout_info.pPushConstantRanges = nullptr;
+        pipeline_layout_info.pushConstantRangeCount = 0;
+    }
+    result.layout = vulkan::device.createPipelineLayout(pipeline_layout_info);
+    info.layout = result.layout;
+    result.descriptorset_layouts.erase(result.descriptorset_layouts.begin());
+    info.renderPass = render::scene_renderer::forward_renderpass;
+    info.subpass = 0;
+    info.basePipelineHandle = nullptr;
+    result.pipeline = vulkan::device.createGraphicsPipeline(nullptr, info).value;
+    return result;
 }
+
+static void destroy_pipeline(const render::pipeline& pipeline) {
+    if (pipeline.pipeline != nullptr) vulkan::device.destroyPipeline(pipeline.pipeline);
+    if (pipeline.layout != nullptr) vulkan::device.destroyPipelineLayout(pipeline.layout);
+    for (const vk::DescriptorSetLayout& layout : pipeline.descriptorset_layouts) {
+        vulkan::device.destroyDescriptorSetLayout(layout);
+    }
+}
+
+const render::pipeline* render::get_forward_pipeline(const uuid& id) {
+    auto it = loaded_forward_pipelines.find(id);
+    if (it != loaded_forward_pipelines.end()) {
+        return &it->second;
+    }
+    auto data = load_pipeline_data(id);
+    if (data == std::nullopt) return nullptr;
+    pipeline p = create_forward_pipeline(data.value());
+    if (p.pipeline == nullptr) return nullptr;
+    it = loaded_forward_pipelines.insert_or_assign(id, std::move(p)).first;
+    return &it->second;
+}
+
+void render::destroy_pipeline(const uuid& id) {
+    auto it = loaded_forward_pipelines.find(id);
+    if (it != loaded_forward_pipelines.end()) {
+        ::destroy_pipeline(it->second);
+    }
+}
+
+void render::destroy_all_pipelines() {
+    ELM_INFO("Destroying all loaded pipelines");
+    for (auto& [id, pipeline] : loaded_forward_pipelines) {
+        ::destroy_pipeline(pipeline);
+    }
+}
+

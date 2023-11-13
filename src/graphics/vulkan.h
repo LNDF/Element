@@ -1,5 +1,7 @@
 #pragma once
 
+#define VULKAN_HPP_FLAGS_MASK_TYPE_AS_PUBLIC
+
 #include <cinttypes>
 #include <vulkan/vulkan.hpp>
 #include <utils/pre_exec.h>
