@@ -77,7 +77,7 @@ vulkan::physical_device_info_type vulkan::get_physical_device_support(vk::Physic
     std::vector<vk::ExtensionProperties> extprops = device.enumerateDeviceExtensionProperties();
     info.supported_extensions.reserve(extprops.size());
     for (vk::ExtensionProperties& props : extprops) {
-        info.supported_extensions.insert(props.extensionName);
+        info.supported_extensions.insert(props.extensionName.data());
     }
     for (const char* extension : required_extensions) {
         if (!info.supported_extensions.contains(extension)) {
@@ -88,7 +88,7 @@ vulkan::physical_device_info_type vulkan::get_physical_device_support(vk::Physic
     std::vector<vk::LayerProperties> layerprops = device.enumerateDeviceLayerProperties();
     info.supported_layers.reserve(layerprops.size());
     for (vk::LayerProperties props : layerprops) {
-        info.supported_layers.insert(props.layerName);
+        info.supported_layers.insert(props.layerName.data());
     }
     for (const char* layer : required_layers) {
         if (!info.supported_layers.contains(layer)) {
