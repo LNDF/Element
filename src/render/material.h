@@ -6,13 +6,12 @@
 #include <cinttypes>
 #include <vector>
 #include <limits>
+#include <utility>
+#include <optional>
 #include <unordered_map>
 
 namespace element {
     namespace render {
-        
-        static constexpr std::uint32_t push_constants_index = std::numeric_limits<std::uint32_t>::max();
-
         struct material_property {
             std::uint32_t buffer_index;
             shader_block_member* property;
@@ -25,11 +24,15 @@ namespace element {
 
         class material {
             private:
+                static constexpr std::uint32_t push_constants_index = std::numeric_limits<std::uint32_t>::max();
+
                 std::vector<material_buffer> uniform_buffers;
                 material_buffer push_constants_buffer;
                 std::unordered_map<std::string, material_property> properties;
                 pipeline_data* data = nullptr;
                 uuid pipeline_id;
+
+                std::pair<material_buffer*, shader_block_member*> get_buffer_and_layout(const std::string& name);
             public:
                 void init(bool reset_buffers);
 
@@ -45,30 +48,14 @@ namespace element {
                 template<typename T>
                 T get_property(const std::string& name);
 
-                template<typename T>
-                void set_array_property(const std::string& name, const std::vector<T>& vec);
+                std::uint32_t get_array_size(const std::string& name);
+                std::uint32_t get_array2d_size(const std::string& name);
 
                 template<typename T>
-                std::vector<T> get_array_property(const std::string& name);
-
+                void set_property_array(const std::string& name, const T* t);
+                
                 template<typename T>
-                void set_array2d_property(const std::string& name, const std::vector<std::vector<T>>& vec);
-
-                template<typename T>
-                std::vector<std::vector<T>> get_array2d_property(const std::string& name);
-
-                template<glm::length_t L, typename T, glm::qualifier Q>
-                void set_vec_property(const std::string& name, const glm::vec<L, T, Q>& vec);
-
-                template<glm::length_t L, typename T, glm::qualifier Q>
-                glm::vec<L, T, Q> get_vec_property(const std::string& name);
-
-                template<glm::length_t C, glm::length_t R, typename T, glm::qualifier Q>
-                void set_mat_property(const std::string& name, const glm::mat<C, R, T, Q>& vec);
-
-                template<glm::length_t C, glm::length_t R, typename T, glm::qualifier Q>
-                glm::mat<C, R, T, Q> get_mat_property(const std::string& name);
-
+                void get_property_array(const std::string& name, T* t);
         };
 
     } // namespace render
