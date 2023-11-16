@@ -6,6 +6,7 @@
 #include <render/scene_render.h>
 #include <render/mesh.h>
 #include <resource/manager.h>
+#include <serialization/render/pipeline.h>
 #include <glm/glm.hpp>
 #include <unordered_map>
 

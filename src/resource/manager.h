@@ -21,7 +21,7 @@ namespace element {
                         if (res == std::nullopt) return nullptr;
                         it = loaded.insert_or_assign(id, std::move(res.value())).first;
                     }
-                    return it->second;
+                    return &it->second;
                 }
 
                 static void destroy(const uuid& id) {
