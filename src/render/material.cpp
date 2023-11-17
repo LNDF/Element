@@ -116,3 +116,22 @@ std::uint32_t render::material::get_array2d_size(const std::string& name) {
     return layout->array_cols;
 }
 
+template<typename T>
+void render::material::set_property_array(const std::string& name, const T* t) {
+    auto& [buffer, layout] = get_buffer_and_layout(name);
+    if (buffer == nullptr || layout == nullptr) return;
+    std::uint32_t array_size = layout->array_rows;
+    std::uint32_t array2d_size = layout->array_cols;
+    if (array2d_size > 0) array_size *= array2d_size;
+    write_array_to_buffer(t, array_size, buffer, layout->offset, layout->array_stride);
+}
+
+template<typename T>
+void render::material::get_property_array(const std::string& name, T* t) {
+    const auto& [buffer, layout] = get_buffer_and_layout(name);
+    if (buffer == nullptr || layout == nullptr) return;
+    std::uint32_t array_size = layout->array_rows;
+    std::uint32_t array2d_size = layout->array_cols;
+    if (array2d_size > 0) array_size *= array2d_size;
+    read_array_from_buffer(t, array_size, buffer, layout->offset, layout->array_stride);
+}
