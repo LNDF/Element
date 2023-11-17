@@ -46,7 +46,13 @@ namespace element {
                 void set_property(const std::string& name, const T& t);
 
                 template<typename T>
-                T get_property(const std::string& name);
+                void get_property(const std::string& name, T& t);
+                
+                template<typename T, glm::length_t C, glm::length_t R, glm::qualifier Q>
+                void set_property(const std::string& name, const glm::mat<C, R, T, Q>& mat);
+
+                template<typename T, glm::length_t C, glm::length_t R, glm::qualifier Q>
+                void get_property(const std::string& name, glm::mat<C, R, T, Q>& mat);
 
                 std::uint32_t get_array_size(const std::string& name);
                 std::uint32_t get_array2d_size(const std::string& name);
