@@ -68,11 +68,12 @@ namespace element {
                 inline const node_ref& get_parent() const {return parent;}
                 inline const std::vector<node_ref>& get_children() const {return children;}
                 inline scene* get_owner_scene() const {return owner_scene;}
-                inline void set_id(const uuid& id) {if (owner_scene == nullptr) this->id = id;}
                 inline void set_name(const std::string& new_name) {name = new_name;}
                 inline void set_name(std::string&& new_name) {name = std::move(new_name);}
-                inline void set_parent(const node_ref& parent) {if (owner_scene == nullptr) this->parent = parent;}
-                inline void set_children(std::vector<node_ref>&& children) {if (owner_scene == nullptr) this->children = std::move(children);}
+
+                inline void __set_id(const uuid& id) {if (owner_scene == nullptr) this->id = id;}
+                inline void __set_parent(const node_ref& parent) {if (owner_scene == nullptr) this->parent = parent;}
+                inline void __set_children(std::vector<node_ref>&& children) {if (owner_scene == nullptr) this->children = std::move(children);}
         };
 
     } // namespace scenegraph

@@ -131,7 +131,8 @@ namespace element {
                 }
 
                 inline const packed_map<uuid, T>& get_storage() const {return storage;}
-                inline void set_storage(packed_map<uuid, T>&& storage) {if (owner_scene == nullptr) this->storage = std::move(storage);}
+
+                inline void __set_storage(packed_map<uuid, T>&& storage) {if (owner_scene == nullptr) this->storage = std::move(storage);}
 
         };
 

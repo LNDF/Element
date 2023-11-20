@@ -31,8 +31,9 @@ namespace element {
                 inline const uuid& get_id() const {return id;}
                 inline const node_ref& get_root_node() const {return root_node;}
                 inline const std::unordered_map<std::type_index, std::unique_ptr<node_storage_base>>& get_node_storages() const {return node_storages;}
-                inline void set_root_node(const node_ref& root_node) {if (id.is_null()) this->root_node = root_node;}
-                inline void set_node_storages(std::unordered_map<std::type_index, std::unique_ptr<node_storage_base>>&& storages) {
+
+                inline void __set_root_node(const node_ref& root_node) {if (id.is_null()) this->root_node = root_node;}
+                inline void __set_node_storages(std::unordered_map<std::type_index, std::unique_ptr<node_storage_base>>&& storages) {
                     if (id.is_null()) this->node_storages = std::move(storages);
                 }
         };

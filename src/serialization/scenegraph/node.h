@@ -39,10 +39,10 @@ namespace cereal {
         ar(make_nvp("name", name));
         ar(make_nvp("parent", parent));
         ar(make_nvp("children", children));
-        node.set_id(id);
+        node.__set_id(id);
         node.set_name(std::move(name));
-        node.set_parent(parent);
-        node.set_children(std::move(children));
+        node.__set_parent(parent);
+        node.__set_children(std::move(children));
     }
 
 } // namespace cereal

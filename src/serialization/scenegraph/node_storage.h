@@ -37,7 +37,7 @@ namespace cereal {
     void load(Archive& ar, element::scenegraph::node_storage<T>& storage) {
         element::packed_map<element::uuid, T> map;
         ar(make_nvp("storage", map));
-        storage.set_storage(std::move(map));
+        storage.__set_storage(std::move(map));
     }
 
 } // namespace cereal

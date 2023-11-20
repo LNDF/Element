@@ -45,8 +45,8 @@ namespace cereal {
         std::unordered_map<std::type_index, std::unique_ptr<element::scenegraph::node_storage_base>> nodes;
         ar(make_nvp("root_node", root_node));
         ar(make_nvp("nodes", nodes));
-        scene.set_root_node(root_node);
-        scene.set_node_storages(std::move(nodes));
+        scene.__set_root_node(root_node);
+        scene.__set_node_storages(std::move(nodes));
     }
 
 } // namespace cereal
