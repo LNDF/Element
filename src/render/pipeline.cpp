@@ -5,14 +5,11 @@
 #include <render/shader.h>
 #include <render/scene_render.h>
 #include <render/mesh.h>
-#include <resource/manager.h>
-#include <serialization/render/pipeline.h>
+#include <render/pipeline_manager.h>
 #include <glm/glm.hpp>
 #include <unordered_map>
 
 using namespace element;
-
-using pipeline_data_manager = resource::manager<render::pipeline_data>;
 
 static std::unordered_map<uuid, render::pipeline> loaded_forward_pipelines;
 

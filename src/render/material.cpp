@@ -1,5 +1,7 @@
 #include "material.h"
 
+#include <render/pipeline_manager.h>
+
 using namespace element;
 
 template<typename T>
@@ -63,10 +65,59 @@ static void read_array_from_buffer(T* t, std::uint32_t size, render::material_bu
     }
 }
 
-std::pair<render::material_buffer*, render::shader_block_member*> render::material::get_buffer_and_layout(const std::string& name) {
+void render::material::init(bool reset_buffers) {
+    data = pipeline_data_manager::get(pipeline_id);
+    if (data == nullptr) return;
+    for (const auto& member : data->push_constants.first.members) {
+        material_property prop;
+        prop.buffer_index = material::push_constants_index;
+        prop.property = &member;
+        properties[member.name] = std::move(prop);
+    }
+    if (reset_buffers) {
+        uniform_buffers.clear();
+        properties.clear();
+        push_constants_buffer.binding = 0;
+        push_constants_buffer.set = 0;
+        push_constants_buffer.needs_sync = true;
+        push_constants_buffer.data.resize(data->push_constants.first.size);
+        for (const auto& [layout, stage] : data->layouts) {
+            material_buffer buffer;
+            buffer.data.resize(layout.size);
+            buffer.set = layout.set;
+            buffer.binding = layout.binding;
+            std::uint32_t index = uniform_buffers.size();
+            uniform_buffers.push_back(std::move(buffer));
+            for (const auto& member : layout.members) {
+                material_property prop;
+                prop.buffer_index = index;
+                prop.property = &member;
+                properties[member.name] = std::move(prop);
+            }
+        }
+    } else {
+        std::uint32_t index = 0;
+        for (const auto& buffer : uniform_buffers) {
+            for (const auto& [layout, stage] : data->layouts) {
+                if (buffer.set == layout.set && buffer.binding == layout.binding) {
+                    for (const auto& member : layout.members) {
+                        material_property prop;
+                        prop.buffer_index = index;
+                        prop.property = &member;
+                        properties[member.name] = std::move(prop);
+                    }
+                    break;
+                }
+            }
+            ++index;
+        }
+    }
+}
+
+std::pair<render::material_buffer*, const render::shader_block_member*> render::material::get_buffer_and_layout(const std::string& name) {
     auto prop_it = properties.find(name);
     if (prop_it == properties.end()) return std::make_pair(nullptr, nullptr);
-    std::pair<material_buffer*, render::shader_block_member*> result;
+    std::pair<material_buffer*, const render::shader_block_member*> result;
     if (prop_it->second.buffer_index == material::push_constants_index) {
         result.first = &push_constants_buffer;
     } else {

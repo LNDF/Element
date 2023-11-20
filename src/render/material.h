@@ -14,12 +14,13 @@ namespace element {
     namespace render {
         struct material_property {
             std::uint32_t buffer_index;
-            shader_block_member* property;
+            const shader_block_member* property;
         };
         
         struct material_buffer {
             std::vector<std::uint8_t> data;
-            bool needs_sync;
+            bool needs_sync = true;
+            std::uint32_t set = 0, binding = 0;
         };
 
         class material {
@@ -32,15 +33,13 @@ namespace element {
                 pipeline_data* data = nullptr;
                 uuid pipeline_id;
 
-                std::pair<material_buffer*, shader_block_member*> get_buffer_and_layout(const std::string& name);
+                std::pair<material_buffer*, const shader_block_member*> get_buffer_and_layout(const std::string& name);
             public:
                 void init(bool reset_buffers);
 
-                const material_buffer& get_material_buffer(std::uint32_t index);
-
                 inline const uuid& get_pipeline_id() {return pipeline_id;}
                 inline pipeline_data* get_pipeline_data() {return data;}
-                inline const material_buffer& get_push_constants_buffer() {return get_material_buffer(push_constants_index);}
+                inline void set_pipeline_id(const uuid& id) {if (data != nullptr) pipeline_id = id;}
                 
                 template<typename T>
                 void set_property(const std::string& name, const T& t);
@@ -62,6 +61,9 @@ namespace element {
                 
                 template<typename T>
                 void get_property_array(const std::string& name, T* t);
+
+                inline void __set_uniform_buffer(std::vector<material_buffer>&& buffer) {if (data != nullptr) uniform_buffers = std::move(buffer);}
+                inline void __set_push_constants_buffer(material_buffer&& buffer) {if (data != nullptr) push_constants_buffer = std::move(buffer);}
         };
 
     } // namespace render
