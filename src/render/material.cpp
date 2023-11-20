@@ -129,60 +129,126 @@ std::pair<render::material_buffer*, const render::shader_block_member*> render::
 
 template<typename T>
 void render::material::set_property(const std::string& name, const T& t) {
-    auto& [buffer, layout] = get_buffer_and_layout(name);
+    auto [buffer, layout] = get_buffer_and_layout(name);
     if (buffer == nullptr || layout == nullptr) return;
-    write_to_buffer(t, buffer, layout->offset);
+    write_to_buffer(t, *buffer, layout->offset);
 }
 
 template<typename T>
 void render::material::get_property(const std::string& name, T& t) {
-    const auto& [buffer, layout] = get_buffer_and_layout(name);
+    const auto [buffer, layout] = get_buffer_and_layout(name);
     if (buffer == nullptr || layout == nullptr) return;
-    read_from_buffer(t, buffer, layout->offset);
+    read_from_buffer(t, *buffer, layout->offset);
 }
 
 template<typename T, glm::length_t C, glm::length_t R, glm::qualifier Q>
 void render::material::set_property(const std::string& name, const glm::mat<C, R, T, Q>& mat) {
-    auto& [buffer, layout] = get_buffer_and_layout(name);
+    auto [buffer, layout] = get_buffer_and_layout(name);
     if (buffer == nullptr || layout == nullptr) return;
-    write_to_buffer(mat, buffer, layout->offset, layout->matrix_stride);
+    write_to_buffer(mat, *buffer, layout->offset, layout->matrix_stride);
 }
 
 template<typename T, glm::length_t C, glm::length_t R, glm::qualifier Q>
 void render::material::get_property(const std::string& name, glm::mat<C, R, T, Q>& mat) {
-    const auto& [buffer, layout] = get_buffer_and_layout(name);
+    const auto [buffer, layout] = get_buffer_and_layout(name);
     if (buffer == nullptr || layout == nullptr) return;
-    write_to_buffer(mat, buffer, layout->offset, layout->matrix_stride);
+    write_to_buffer(mat, *buffer, layout->offset, layout->matrix_stride);
 }
 
 std::uint32_t render::material::get_array_size(const std::string& name) {
-    const auto& [buffer, layout] = get_buffer_and_layout(name);
+    const auto [buffer, layout] = get_buffer_and_layout(name);
     if (layout == nullptr) return 0;
     return layout->array_rows;
 }
 
 std::uint32_t render::material::get_array2d_size(const std::string& name) {
-    const auto& [buffer, layout] = get_buffer_and_layout(name);
+    const auto [buffer, layout] = get_buffer_and_layout(name);
     if (layout == nullptr) return 0;
     return layout->array_cols;
 }
 
 template<typename T>
 void render::material::set_property_array(const std::string& name, const T* t) {
-    auto& [buffer, layout] = get_buffer_and_layout(name);
+    auto [buffer, layout] = get_buffer_and_layout(name);
     if (buffer == nullptr || layout == nullptr) return;
     std::uint32_t array_size = layout->array_rows;
     std::uint32_t array2d_size = layout->array_cols;
     if (array2d_size > 0) array_size *= array2d_size;
-    write_array_to_buffer(t, array_size, buffer, layout->offset, layout->array_stride);
+    write_array_to_buffer(t, array_size, *buffer, layout->offset, layout->array_stride);
 }
 
 template<typename T>
 void render::material::get_property_array(const std::string& name, T* t) {
-    const auto& [buffer, layout] = get_buffer_and_layout(name);
+    const auto [buffer, layout] = get_buffer_and_layout(name);
     if (buffer == nullptr || layout == nullptr) return;
     std::uint32_t array_size = layout->array_rows;
     std::uint32_t array2d_size = layout->array_cols;
     if (array2d_size > 0) array_size *= array2d_size;
-    read_array_from_buffer(t, array_size, buffer, layout->offset, layout->array_stride);
+    read_array_from_buffer(t, array_size, *buffer, layout->offset, layout->array_stride);
 }
+
+#define MATERIAL_TYPE_ARRAY(...) template void render::material::set_property_array<__VA_ARGS__>(const std::string& name, const __VA_ARGS__* t); \
+                               template void render::material::get_property_array<__VA_ARGS__>(const std::string& name, __VA_ARGS__* t);
+
+#define MATERIAL_TYPE(...) template void render::material::set_property<__VA_ARGS__>(const std::string& name, const __VA_ARGS__& t); \
+                         template void render::material::get_property<__VA_ARGS__>(const std::string& name, __VA_ARGS__& t); \
+                         MATERIAL_TYPE_ARRAY(__VA_ARGS__)
+
+#define MATERIAL_TYPE_MAT(T, C, R, Q) template void render::material::set_property<T, C, R, Q>(const std::string& name, const glm::mat<C, R, T, Q>& mat); \
+                                      template void render::material::get_property<T, C, R, Q>(const std::string& name, glm::mat<C, R, T, Q>& mat); \
+                                      MATERIAL_TYPE_ARRAY(glm::mat<C, R, T, Q>)
+
+#define MATERIAL_TYPE_VEC(T, L, Q) MATERIAL_TYPE(glm::vec<L, T, Q>)
+
+#define MATERIAL_TYPE_NUMERIC(T) MATERIAL_TYPE(T) \
+                                 MATERIAL_TYPE_MAT(T, 2, 2, glm::qualifier::lowp) \
+                                 MATERIAL_TYPE_MAT(T, 2, 3, glm::qualifier::lowp) \
+                                 MATERIAL_TYPE_MAT(T, 2, 4, glm::qualifier::lowp) \
+                                 MATERIAL_TYPE_MAT(T, 3, 2, glm::qualifier::lowp) \
+                                 MATERIAL_TYPE_MAT(T, 3, 3, glm::qualifier::lowp) \
+                                 MATERIAL_TYPE_MAT(T, 3, 4, glm::qualifier::lowp) \
+                                 MATERIAL_TYPE_MAT(T, 4, 2, glm::qualifier::lowp) \
+                                 MATERIAL_TYPE_MAT(T, 4, 3, glm::qualifier::lowp) \
+                                 MATERIAL_TYPE_MAT(T, 4, 4, glm::qualifier::lowp) \
+                                 MATERIAL_TYPE_MAT(T, 2, 2, glm::qualifier::mediump) \
+                                 MATERIAL_TYPE_MAT(T, 2, 3, glm::qualifier::mediump) \
+                                 MATERIAL_TYPE_MAT(T, 2, 4, glm::qualifier::mediump) \
+                                 MATERIAL_TYPE_MAT(T, 3, 2, glm::qualifier::mediump) \
+                                 MATERIAL_TYPE_MAT(T, 3, 3, glm::qualifier::mediump) \
+                                 MATERIAL_TYPE_MAT(T, 3, 4, glm::qualifier::mediump) \
+                                 MATERIAL_TYPE_MAT(T, 4, 2, glm::qualifier::mediump) \
+                                 MATERIAL_TYPE_MAT(T, 4, 3, glm::qualifier::mediump) \
+                                 MATERIAL_TYPE_MAT(T, 4, 4, glm::qualifier::mediump) \
+                                 MATERIAL_TYPE_MAT(T, 2, 2, glm::qualifier::highp) \
+                                 MATERIAL_TYPE_MAT(T, 2, 3, glm::qualifier::highp) \
+                                 MATERIAL_TYPE_MAT(T, 2, 4, glm::qualifier::highp) \
+                                 MATERIAL_TYPE_MAT(T, 3, 2, glm::qualifier::highp) \
+                                 MATERIAL_TYPE_MAT(T, 3, 3, glm::qualifier::highp) \
+                                 MATERIAL_TYPE_MAT(T, 3, 4, glm::qualifier::highp) \
+                                 MATERIAL_TYPE_MAT(T, 4, 2, glm::qualifier::highp) \
+                                 MATERIAL_TYPE_MAT(T, 4, 3, glm::qualifier::highp) \
+                                 MATERIAL_TYPE_MAT(T, 4, 4, glm::qualifier::highp) \
+                                 MATERIAL_TYPE_VEC(T, 1, glm::qualifier::lowp) \
+                                 MATERIAL_TYPE_VEC(T, 2, glm::qualifier::lowp) \
+                                 MATERIAL_TYPE_VEC(T, 3, glm::qualifier::lowp) \
+                                 MATERIAL_TYPE_VEC(T, 4, glm::qualifier::lowp) \
+                                 MATERIAL_TYPE_VEC(T, 1, glm::qualifier::mediump) \
+                                 MATERIAL_TYPE_VEC(T, 2, glm::qualifier::mediump) \
+                                 MATERIAL_TYPE_VEC(T, 3, glm::qualifier::mediump) \
+                                 MATERIAL_TYPE_VEC(T, 4, glm::qualifier::mediump) \
+                                 MATERIAL_TYPE_VEC(T, 1, glm::qualifier::highp) \
+                                 MATERIAL_TYPE_VEC(T, 2, glm::qualifier::highp) \
+                                 MATERIAL_TYPE_VEC(T, 3, glm::qualifier::highp) \
+                                 MATERIAL_TYPE_VEC(T, 4, glm::qualifier::highp)
+
+MATERIAL_TYPE(bool)
+MATERIAL_TYPE_NUMERIC(std::int8_t)
+MATERIAL_TYPE_NUMERIC(std::int16_t)
+MATERIAL_TYPE_NUMERIC(std::int32_t)
+MATERIAL_TYPE_NUMERIC(std::int64_t)
+MATERIAL_TYPE_NUMERIC(std::uint8_t)
+MATERIAL_TYPE_NUMERIC(std::uint16_t)
+MATERIAL_TYPE_NUMERIC(std::uint32_t)
+MATERIAL_TYPE_NUMERIC(std::uint64_t)
+MATERIAL_TYPE_NUMERIC(float)
+MATERIAL_TYPE_NUMERIC(double)

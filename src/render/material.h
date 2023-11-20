@@ -14,7 +14,7 @@ namespace element {
     namespace render {
         struct material_property {
             std::uint32_t buffer_index;
-            const shader_block_member* property;
+            const shader_block_member* property = nullptr;
         };
         
         struct material_buffer {
@@ -38,6 +38,8 @@ namespace element {
                 void init(bool reset_buffers);
 
                 inline const uuid& get_pipeline_id() {return pipeline_id;}
+                inline const std::vector<material_buffer>& get_uniform_buffers() {return uniform_buffers;}
+                inline const material_buffer& get_push_constants_buffer() {return push_constants_buffer;}
                 inline pipeline_data* get_pipeline_data() {return data;}
                 inline void set_pipeline_id(const uuid& id) {if (data != nullptr) pipeline_id = id;}
                 
