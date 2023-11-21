@@ -37,9 +37,10 @@ namespace element {
             public:
                 void init(bool reset_buffers);
 
-                inline const uuid& get_pipeline_id() {return pipeline_id;}
-                inline const std::vector<material_buffer>& get_uniform_buffers() {return uniform_buffers;}
-                inline const material_buffer& get_push_constants_buffer() {return push_constants_buffer;}
+                inline const uuid& get_pipeline_id() const {return pipeline_id;}
+                inline const std::vector<material_buffer>& get_uniform_buffers() const {return uniform_buffers;}
+                inline const material_buffer& get_push_constants_buffer() const {return push_constants_buffer;}
+                inline const std::unordered_map<std::string, material_property>& get_properties() const {return properties;}
                 inline pipeline_data* get_pipeline_data() {return data;}
                 inline void set_pipeline_id(const uuid& id) {if (data != nullptr) pipeline_id = id;}
                 
