@@ -10,11 +10,21 @@
 namespace element {
 
     namespace __detail {
+        struct __render_material_prop_load_data {
+            render::material* material;
+            const std::unordered_map<std::string, render::material_property>* properties;
+        };
+
+        struct __render_material_prop_save_data {
+            const render::material* material;
+            const std::unordered_map<std::string, render::material_property>* properties;
+        };
+
         template<class Archive, typename T>
         void __render_material_property_load(Archive& ar, render::material& mat, const render::material_property& prop) {
             try {
-                std::uint32_t arr_size = prop.property->array_rows;
-                std::uint32_t arr2d_size = prop.property->array_cols;
+                std::uint32_t arr_size = prop.property->array_cols;
+                std::uint32_t arr2d_size = prop.property->array_rows;
                 if (arr_size > 0 || arr2d_size > 0) {
                     std::vector<T> vec;
                     ar(cereal::make_nvp(prop.property->name, vec));
@@ -30,13 +40,10 @@ namespace element {
         template<class Archive, typename T>
         void __render_material_property_vec_mat_load(Archive& ar, render::material& mat, const render::material_property& prop) {
             switch(prop.property->columns) {
-                case 0:
+                case 1:
                     switch(prop.property->vecsize) {
-                        case 0:
-                            __render_material_property_load<Archive, T>(ar, mat, prop);
-                            break;
                         case 1:
-                            __render_material_property_load<Archive, glm::vec<1, T>>(ar, mat, prop);
+                            __render_material_property_load<Archive, T>(ar, mat, prop);
                             break;
                         case 2:
                             __render_material_property_load<Archive, glm::vec<2, T>>(ar, mat, prop);
@@ -143,13 +150,13 @@ namespace element {
         template<class Archive, typename T>
         void __render_material_property_save(Archive& ar, const render::material& mat, const render::material_property& prop) {
             try {
-                std::uint32_t arr_size = prop.property->array_rows;
-                std::uint32_t arr2d_size = prop.property->array_cols;
+                std::uint32_t arr_size = prop.property->array_cols;
+                std::uint32_t arr2d_size = prop.property->array_rows;
                 if (arr2d_size > 0) arr_size *= arr2d_size;
                 if (arr_size > 0) {
                     std::vector<T> vec;
                     vec.resize(arr_size);
-                    mat.set_property_array(prop.property->name, &vec[0]);
+                    mat.get_property_array(prop.property->name, &vec[0]);
                     ar(cereal::make_nvp(prop.property->name, vec));
                 } else {
                     T t;
@@ -162,13 +169,10 @@ namespace element {
         template<class Archive, typename T>
         void __render_material_property_vec_mat_save(Archive& ar, const render::material& mat, const render::material_property& prop) {
             switch(prop.property->columns) {
-                case 0:
+                case 1:
                     switch(prop.property->vecsize) {
-                        case 0:
-                            __render_material_property_save<Archive, T>(ar, mat, prop);
-                            break;
                         case 1:
-                            __render_material_property_save<Archive, glm::vec<1, T>>(ar, mat, prop);
+                            __render_material_property_save<Archive, T>(ar, mat, prop);
                             break;
                         case 2:
                             __render_material_property_save<Archive, glm::vec<2, T>>(ar, mat, prop);
@@ -286,18 +290,18 @@ namespace cereal {
     template <class Archive,
         cereal::traits::EnableIf<cereal::traits::is_text_archive<Archive>::value>
         = cereal::traits::sfinae>
-    void load(Archive& ar, std::pair<element::render::material*, const std::unordered_map<std::string, element::render::material_property>*>& data) {
-        for (const auto& [name, property] : *data.second) {
-            element::__detail::__render_material_property_base_type_load(ar, *data.first, property);
+    void load(Archive& ar, element::__detail::__render_material_prop_load_data& data) {
+        for (const auto& [name, property] : *data.properties) {
+            element::__detail::__render_material_property_base_type_load(ar, *data.material, property);
         }
     }
 
     template <class Archive,
         cereal::traits::EnableIf<cereal::traits::is_text_archive<Archive>::value>
         = cereal::traits::sfinae>
-    void save(Archive& ar, const std::pair<element::render::material*, const std::unordered_map<std::string, element::render::material_property>*>& data) {
-        for (const auto& [name, property] : *data.second) {
-            element::__detail::__render_material_property_base_type_save(ar, *data.first, property);
+    void save(Archive& ar, const element::__detail::__render_material_prop_save_data& data) {
+        for (const auto& [name, property] : *data.properties) {
+            element::__detail::__render_material_property_base_type_save(ar, *data.material, property);
         }
     }
 
@@ -309,7 +313,9 @@ namespace cereal {
         ar(make_nvp("pipeline_id", pipeline_id));
         material.set_pipeline_id(pipeline_id);
         material.init(true);
-        auto properties = std::make_pair(&material, &material.get_properties());
+        element::__detail::__render_material_prop_load_data properties;
+        properties.material = &material;
+        properties.properties = &material.get_properties();
         ar(make_nvp("properties", properties));
     }
 
@@ -318,7 +324,9 @@ namespace cereal {
         = cereal::traits::sfinae>
     void save(Archive& ar, const element::render::material& material) {
         ar(make_nvp("pipeline_id", material.get_pipeline_id()));
-        auto properties = std::make_pair(&material, &material.get_properties());
+        element::__detail::__render_material_prop_save_data properties;
+        properties.material = &material;
+        properties.properties = &material.get_properties();
         ar(make_nvp("properties", properties));
     }
 

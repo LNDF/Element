@@ -32,8 +32,9 @@ namespace element {
                 std::unordered_map<std::string, material_property> properties;
                 pipeline_data* data = nullptr;
                 uuid pipeline_id;
-
+                
                 std::pair<material_buffer*, const shader_block_member*> get_buffer_and_layout(const std::string& name);
+                std::pair<const material_buffer*, const shader_block_member*> get_buffer_and_layout(const std::string& name) const;
             public:
                 void init(bool reset_buffers);
 
@@ -42,31 +43,31 @@ namespace element {
                 inline const material_buffer& get_push_constants_buffer() const {return push_constants_buffer;}
                 inline const std::unordered_map<std::string, material_property>& get_properties() const {return properties;}
                 inline pipeline_data* get_pipeline_data() {return data;}
-                inline void set_pipeline_id(const uuid& id) {if (data != nullptr) pipeline_id = id;}
+                inline void set_pipeline_id(const uuid& id) {if (data == nullptr) pipeline_id = id;}
                 
                 template<typename T>
                 void set_property(const std::string& name, const T& t);
 
                 template<typename T>
-                void get_property(const std::string& name, T& t);
+                void get_property(const std::string& name, T& t) const;
                 
                 template<typename T, glm::length_t C, glm::length_t R, glm::qualifier Q>
                 void set_property(const std::string& name, const glm::mat<C, R, T, Q>& mat);
 
                 template<typename T, glm::length_t C, glm::length_t R, glm::qualifier Q>
-                void get_property(const std::string& name, glm::mat<C, R, T, Q>& mat);
+                void get_property(const std::string& name, glm::mat<C, R, T, Q>& mat) const;
 
-                std::uint32_t get_array_size(const std::string& name);
-                std::uint32_t get_array2d_size(const std::string& name);
+                std::uint32_t get_array_size(const std::string& name) const;
+                std::uint32_t get_array2d_size(const std::string& name) const;
 
                 template<typename T>
                 void set_property_array(const std::string& name, const T* t);
                 
                 template<typename T>
-                void get_property_array(const std::string& name, T* t);
+                void get_property_array(const std::string& name, T* t) const;
 
-                inline void __set_uniform_buffer(std::vector<material_buffer>&& buffer) {if (data != nullptr) uniform_buffers = std::move(buffer);}
-                inline void __set_push_constants_buffer(material_buffer&& buffer) {if (data != nullptr) push_constants_buffer = std::move(buffer);}
+                inline void __set_uniform_buffer(std::vector<material_buffer>&& buffer) {if (data == nullptr) uniform_buffers = std::move(buffer);}
+                inline void __set_push_constants_buffer(material_buffer&& buffer) {if (data == nullptr) push_constants_buffer = std::move(buffer);}
         };
 
     } // namespace render

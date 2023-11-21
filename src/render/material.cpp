@@ -58,7 +58,7 @@ static void write_array_to_buffer(const T* t, std::uint32_t size, render::materi
 }
 
 template<typename T>
-static void read_array_from_buffer(T* t, std::uint32_t size, render::material_buffer& buffer, std::uint32_t offset, std::uint32_t stride) {
+static void read_array_from_buffer(T* t, std::uint32_t size, const render::material_buffer& buffer, std::uint32_t offset, std::uint32_t stride) {
     for (std::uint32_t i = 0; i < size; ++i) {
         read_from_buffer(t[i], buffer, offset);
         offset += stride;
@@ -127,6 +127,19 @@ std::pair<render::material_buffer*, const render::shader_block_member*> render::
     return result;
 }
 
+std::pair<const render::material_buffer*, const render::shader_block_member*> render::material::get_buffer_and_layout(const std::string& name) const {
+    auto prop_it = properties.find(name);
+    if (prop_it == properties.end()) return std::make_pair(nullptr, nullptr);
+    std::pair<const material_buffer*, const render::shader_block_member*> result;
+    if (prop_it->second.buffer_index == material::push_constants_index) {
+        result.first = &push_constants_buffer;
+    } else {
+        result.first = &uniform_buffers[prop_it->second.buffer_index];
+    }
+    result.second = prop_it->second.property;
+    return result;
+}
+
 template<typename T>
 void render::material::set_property(const std::string& name, const T& t) {
     auto [buffer, layout] = get_buffer_and_layout(name);
@@ -135,7 +148,7 @@ void render::material::set_property(const std::string& name, const T& t) {
 }
 
 template<typename T>
-void render::material::get_property(const std::string& name, T& t) {
+void render::material::get_property(const std::string& name, T& t) const {
     const auto [buffer, layout] = get_buffer_and_layout(name);
     if (buffer == nullptr || layout == nullptr) return;
     read_from_buffer(t, *buffer, layout->offset);
@@ -149,53 +162,53 @@ void render::material::set_property(const std::string& name, const glm::mat<C, R
 }
 
 template<typename T, glm::length_t C, glm::length_t R, glm::qualifier Q>
-void render::material::get_property(const std::string& name, glm::mat<C, R, T, Q>& mat) {
+void render::material::get_property(const std::string& name, glm::mat<C, R, T, Q>& mat) const {
     const auto [buffer, layout] = get_buffer_and_layout(name);
     if (buffer == nullptr || layout == nullptr) return;
-    write_to_buffer(mat, *buffer, layout->offset, layout->matrix_stride);
+    read_from_buffer(mat, *buffer, layout->offset, layout->matrix_stride);
 }
 
-std::uint32_t render::material::get_array_size(const std::string& name) {
-    const auto [buffer, layout] = get_buffer_and_layout(name);
-    if (layout == nullptr) return 0;
-    return layout->array_rows;
-}
-
-std::uint32_t render::material::get_array2d_size(const std::string& name) {
+std::uint32_t render::material::get_array_size(const std::string& name) const {
     const auto [buffer, layout] = get_buffer_and_layout(name);
     if (layout == nullptr) return 0;
     return layout->array_cols;
+}
+
+std::uint32_t render::material::get_array2d_size(const std::string& name) const {
+    const auto [buffer, layout] = get_buffer_and_layout(name);
+    if (layout == nullptr) return 0;
+    return layout->array_rows;
 }
 
 template<typename T>
 void render::material::set_property_array(const std::string& name, const T* t) {
     auto [buffer, layout] = get_buffer_and_layout(name);
     if (buffer == nullptr || layout == nullptr) return;
-    std::uint32_t array_size = layout->array_rows;
-    std::uint32_t array2d_size = layout->array_cols;
+    std::uint32_t array_size = layout->array_cols;
+    std::uint32_t array2d_size = layout->array_rows;
     if (array2d_size > 0) array_size *= array2d_size;
     write_array_to_buffer(t, array_size, *buffer, layout->offset, layout->array_stride);
 }
 
 template<typename T>
-void render::material::get_property_array(const std::string& name, T* t) {
+void render::material::get_property_array(const std::string& name, T* t) const {
     const auto [buffer, layout] = get_buffer_and_layout(name);
     if (buffer == nullptr || layout == nullptr) return;
-    std::uint32_t array_size = layout->array_rows;
-    std::uint32_t array2d_size = layout->array_cols;
+    std::uint32_t array_size = layout->array_cols;
+    std::uint32_t array2d_size = layout->array_rows;
     if (array2d_size > 0) array_size *= array2d_size;
     read_array_from_buffer(t, array_size, *buffer, layout->offset, layout->array_stride);
 }
 
 #define MATERIAL_TYPE_ARRAY(...) template void render::material::set_property_array<__VA_ARGS__>(const std::string& name, const __VA_ARGS__* t); \
-                               template void render::material::get_property_array<__VA_ARGS__>(const std::string& name, __VA_ARGS__* t);
+                               template void render::material::get_property_array<__VA_ARGS__>(const std::string& name, __VA_ARGS__* t) const;
 
 #define MATERIAL_TYPE(...) template void render::material::set_property<__VA_ARGS__>(const std::string& name, const __VA_ARGS__& t); \
-                         template void render::material::get_property<__VA_ARGS__>(const std::string& name, __VA_ARGS__& t); \
+                         template void render::material::get_property<__VA_ARGS__>(const std::string& name, __VA_ARGS__& t) const; \
                          MATERIAL_TYPE_ARRAY(__VA_ARGS__)
 
 #define MATERIAL_TYPE_MAT(T, C, R, Q) template void render::material::set_property<T, C, R, Q>(const std::string& name, const glm::mat<C, R, T, Q>& mat); \
-                                      template void render::material::get_property<T, C, R, Q>(const std::string& name, glm::mat<C, R, T, Q>& mat); \
+                                      template void render::material::get_property<T, C, R, Q>(const std::string& name, glm::mat<C, R, T, Q>& mat) const; \
                                       MATERIAL_TYPE_ARRAY(glm::mat<C, R, T, Q>)
 
 #define MATERIAL_TYPE_VEC(T, L, Q) MATERIAL_TYPE(glm::vec<L, T, Q>)
