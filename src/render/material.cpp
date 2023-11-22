@@ -186,8 +186,12 @@ void render::material::set_property_array(const std::string& name, const T* t) {
     if (buffer == nullptr || layout == nullptr) return;
     std::uint32_t array_size = layout->array_cols;
     std::uint32_t array2d_size = layout->array_rows;
-    if (array2d_size > 0) array_size *= array2d_size;
-    write_array_to_buffer(t, array_size, *buffer, layout->offset, layout->array_stride);
+    std::uint32_t stride = layout->array_stride;
+    if (array2d_size > 0) {
+        array_size *= array2d_size;
+        stride /= array2d_size;
+    }
+    write_array_to_buffer(t, array_size, *buffer, layout->offset, stride);
 }
 
 template<typename T>
@@ -197,15 +201,20 @@ void render::material::get_property_array(const std::string& name, T* t) const {
     std::uint32_t array_size = layout->array_cols;
     std::uint32_t array2d_size = layout->array_rows;
     if (array2d_size > 0) array_size *= array2d_size;
-    read_array_from_buffer(t, array_size, *buffer, layout->offset, layout->array_stride);
+    std::uint32_t stride = layout->array_stride;
+    if (array2d_size > 0) {
+        array_size *= array2d_size;
+        stride /= array2d_size;
+    }
+    read_array_from_buffer(t, array_size, *buffer, layout->offset, stride);
 }
 
 #define MATERIAL_TYPE_ARRAY(...) template void render::material::set_property_array<__VA_ARGS__>(const std::string& name, const __VA_ARGS__* t); \
-                               template void render::material::get_property_array<__VA_ARGS__>(const std::string& name, __VA_ARGS__* t) const;
+                                 template void render::material::get_property_array<__VA_ARGS__>(const std::string& name, __VA_ARGS__* t) const;
 
 #define MATERIAL_TYPE(...) template void render::material::set_property<__VA_ARGS__>(const std::string& name, const __VA_ARGS__& t); \
-                         template void render::material::get_property<__VA_ARGS__>(const std::string& name, __VA_ARGS__& t) const; \
-                         MATERIAL_TYPE_ARRAY(__VA_ARGS__)
+                           template void render::material::get_property<__VA_ARGS__>(const std::string& name, __VA_ARGS__& t) const; \
+                           MATERIAL_TYPE_ARRAY(__VA_ARGS__)
 
 #define MATERIAL_TYPE_MAT(T, C, R, Q) template void render::material::set_property<T, C, R, Q>(const std::string& name, const glm::mat<C, R, T, Q>& mat); \
                                       template void render::material::get_property<T, C, R, Q>(const std::string& name, glm::mat<C, R, T, Q>& mat) const; \
