@@ -5,4 +5,4 @@
 
 namespace element {
     using pipeline_data_manager = resource::manager<render::pipeline_data>;
-};
+}
