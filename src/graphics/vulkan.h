@@ -1,9 +1,14 @@
 #pragma once
 
 #define VULKAN_HPP_FLAGS_MASK_TYPE_AS_PUBLIC
+#define VMA_VULKAN_VERSION 1000000
+
+//See https://github.com/GPUOpen-LibrariesAndSDKs/VulkanMemoryAllocator/commit/383f06b9fd9d36fb54cb3d4ac3363a670104bc62
+#include <cstdio>
 
 #include <cinttypes>
 #include <vulkan/vulkan.hpp>
+#include <vk_mem_alloc.h>
 #include <utils/pre_exec.h>
 
 #include <unordered_set>

@@ -37,6 +37,10 @@ endif(ELEMENT_ENABLE_LOG)
 find_package(Vulkan)
 target_link_libraries(element PUBLIC Vulkan::Vulkan)
 
+# Vulkan Memory Allocator
+target_include_directories(element PUBLIC lib/VulkanMemoryAllocator/include)
+set_source_files_properties(src/graphics/vulkan_vma.cpp PROPERTIES APPEND_STRING PROPERTY COMPILE_FLAGS " -w")
+
 # glm
 add_subdirectory(lib/glm)
 target_link_libraries(element PUBLIC glm)
