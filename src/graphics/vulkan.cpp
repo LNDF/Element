@@ -5,6 +5,7 @@
 
 #include <core/engine.h>
 #include <core/log.h>
+#include <graphics/vulkan_descriptor..h>
 
 using namespace element;
 
@@ -268,6 +269,7 @@ void vulkan::cleanup() {
     ELM_INFO("Cleanning up Vulkan...");
     if (device_initialized) {
         device.waitIdle();
+        clean_descriptorsets();
         device.destroyCommandPool(command_pool);
         device.destroy();
         supported_instance_extensions.clear();
