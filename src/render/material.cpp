@@ -1,8 +1,13 @@
 #include "material.h"
 
 #include <render/pipeline_manager.h>
+#include <render/pipeline.h>
+#include <render/material_manager.h>
+#include <unordered_map>
 
 using namespace element;
+
+static std::unordered_map<uuid, render::gpu_material> loaded_gpu_materials;
 
 template<typename T>
 static void write_to_buffer(const T& t, render::material_buffer& buffer, std::uint32_t offset) {
@@ -82,6 +87,7 @@ void render::material::init(bool reset_buffers) {
         push_constants_buffer.needs_sync = true;
         push_constants_buffer.data.resize(data->push_constants.first.size);
         for (const auto& [layout, stage] : data->layouts) {
+            if (layout.set == 0) continue;
             material_buffer buffer;
             buffer.data.resize(layout.size);
             buffer.set = layout.set;
@@ -207,6 +213,103 @@ void render::material::get_property_array(const std::string& name, T* t) const {
         stride /= array2d_size;
     }
     read_array_from_buffer(t, array_size, *buffer, layout->offset, stride);
+}
+
+render::gpu_material::gpu_material(const uuid& id) {
+    cpu_material = material_manager::get(id);
+    if (cpu_material == nullptr) return;
+    forward_pipeline = get_forward_pipeline(cpu_material->pipeline_id);
+    if (forward_pipeline == nullptr) return;
+    descriptorsets.reserve(forward_pipeline->descriptorset_layouts.size());
+    for (const auto& layout : forward_pipeline->descriptorset_layouts) {
+        descriptorsets.push_back(vulkan::allocate_descriptorset(layout));
+    }
+    uniform_buffers.reserve(cpu_material->uniform_buffers.size());
+    for (const auto& buffer : cpu_material->uniform_buffers) {
+        auto& gpu_buffer = uniform_buffers.emplace_back(buffer.data.size(), vk::BufferUsageFlagBits::eUniformBuffer);
+        vk::WriteDescriptorSet write_set;
+        vk::DescriptorBufferInfo buffer_info;
+        buffer_info.buffer = gpu_buffer.get_buffer();
+        buffer_info.offset = 0;
+        buffer_info.range = buffer.data.size();
+        write_set.pBufferInfo = &buffer_info;
+        write_set.dstBinding = buffer.binding;
+        write_set.dstSet = descriptorsets[buffer.set - 1].set;
+        write_set.descriptorCount = 1;
+        write_set.descriptorType = vk::DescriptorType::eUniformBuffer;
+        vulkan::device.updateDescriptorSets(1, &write_set, 0, nullptr);
+    }
+}
+
+render::gpu_material::~gpu_material() {
+    if (cpu_material == nullptr) return;
+    for (auto& descriptorset : descriptorsets) {
+        vulkan::free_descriptorset(descriptorset);
+    }
+}
+
+render::gpu_material::gpu_material(gpu_material&& other)
+    : forward_pipeline(std::move(other.forward_pipeline)), cpu_material(std::move(other.cpu_material)),
+      uniform_buffers(std::move(other.uniform_buffers)), descriptorsets(std::move(descriptorsets)) {
+    other.forward_pipeline = nullptr;
+    other.cpu_material = nullptr;
+}
+
+render::gpu_material& render::gpu_material::operator=(gpu_material&& other) {
+    for (auto& descriptorset : descriptorsets) {
+        vulkan::free_descriptorset(descriptorset);
+    }
+    forward_pipeline = std::move(other.forward_pipeline);
+    cpu_material = std::move(other.cpu_material);
+    uniform_buffers = std::move(other.uniform_buffers);
+    descriptorsets = std::move(other.descriptorsets);
+    other.forward_pipeline = nullptr;
+    other.cpu_material = nullptr;
+    return *this;
+}
+
+bool render::gpu_material::record_sync_if_meeded(vk::CommandBuffer& cmd) {
+    bool synced = false;
+    std::uint32_t index = 0;
+    for (auto& buffer : cpu_material->uniform_buffers) {
+        if (buffer.needs_sync) {
+            synced = true;
+            buffer.needs_sync = false;
+            uniform_buffers[index].set(buffer.data.data());
+            uniform_buffers[index].record_upload(cmd);
+        }
+        ++index;
+    }
+    return synced;
+}
+
+void render::gpu_material::record_bind_descriptorsets(vk::CommandBuffer& cmd) {
+    std::uint32_t index = 1;
+    for (const auto& set : descriptorsets) {
+        cmd.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, forward_pipeline->layout, index++, 1, &set.set, 0, nullptr);
+    }
+}
+
+void render::gpu_material::record_push_constants(vk::CommandBuffer& cmd) {
+    cmd.pushConstants(forward_pipeline->layout, cpu_material->data->push_constants.second, 0, static_cast<std::uint32_t>(cpu_material->push_constants_buffer.data.size()), cpu_material->push_constants_buffer.data.data());
+}
+
+render::gpu_material* render::get_gpu_material(const uuid& id) {
+    auto it = loaded_gpu_materials.find(id);
+    if (it == loaded_gpu_materials.end()) {
+        gpu_material new_mat(id);
+        if (!new_mat.is_valid()) return nullptr;
+        it = loaded_gpu_materials.insert_or_assign(id, std::move(new_mat)).first;
+    }
+    return &it->second;
+}
+
+void render::destroy_material(const uuid& id) {
+    loaded_gpu_materials.erase(id);
+}
+
+void render::destroy_all_materials() {
+    loaded_gpu_materials.clear();
 }
 
 #define MATERIAL_TYPE_ARRAY(...) template void render::material::set_property_array<__VA_ARGS__>(const std::string& name, const __VA_ARGS__* t); \

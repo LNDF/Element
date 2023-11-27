@@ -1,6 +1,8 @@
 #pragma once
 
 #include <render/pipeline.h>
+#include <graphics/vulkan_buffer.h>
+#include <graphics/vulkan_descriptor..h>
 #include <utils/uuid.h>
 #include <glm/glm.hpp>
 #include <cinttypes>
@@ -23,8 +25,12 @@ namespace element {
             std::uint32_t set = 0, binding = 0;
         };
 
+        class gpu_material;
+
         class material {
             private:
+                friend class gpu_material;
+
                 static constexpr std::uint32_t push_constants_index = std::numeric_limits<std::uint32_t>::max();
 
                 std::vector<material_buffer> uniform_buffers;
@@ -69,6 +75,32 @@ namespace element {
                 inline void __set_uniform_buffer(std::vector<material_buffer>&& buffer) {if (data == nullptr) uniform_buffers = std::move(buffer);}
                 inline void __set_push_constants_buffer(material_buffer&& buffer) {if (data == nullptr) push_constants_buffer = std::move(buffer);}
         };
+
+        class gpu_material {
+            private:
+                const pipeline* forward_pipeline = nullptr;
+                material* cpu_material = nullptr;
+                std::vector<vulkan::device_buffer_dynamic> uniform_buffers;
+                std::vector<vulkan::descriptor_set> descriptorsets;
+            public:
+                gpu_material(const uuid& id);
+                ~gpu_material();
+
+                gpu_material(const gpu_material& other) = delete;
+                gpu_material(gpu_material&& other);
+                gpu_material& operator=(const gpu_material& other) = delete;
+                gpu_material& operator=(gpu_material&& other);
+
+                bool record_sync_if_meeded(vk::CommandBuffer& cmd);
+                void record_bind_descriptorsets(vk::CommandBuffer& cmd);
+                void record_push_constants(vk::CommandBuffer& cmd);
+
+                inline bool is_valid() {return cpu_material != nullptr;}
+        };
+
+        gpu_material* get_gpu_material(const uuid& id);
+        void destroy_material(const uuid& id);
+        void destroy_all_materials();
 
     } // namespace render
 } // namespace element
