@@ -16,6 +16,12 @@ namespace element {
             public:
                 device_buffer_dynamic(std::uint32_t size, vk::BufferUsageFlags usage);
                 ~device_buffer_dynamic();
+
+                device_buffer_dynamic(const device_buffer_dynamic& other) = delete;
+                device_buffer_dynamic(device_buffer_dynamic&& other);
+                device_buffer_dynamic& operator=(const device_buffer_dynamic& other) = delete;
+                device_buffer_dynamic& operator=(device_buffer_dynamic&& other);
+
                 void set(const void* buffer);
                 void record_upload(vk::CommandBuffer& cmd);
 

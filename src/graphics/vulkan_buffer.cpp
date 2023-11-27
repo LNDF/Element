@@ -32,7 +32,35 @@ vulkan::device_buffer_dynamic::~device_buffer_dynamic() {
     if (staging_alloc != nullptr) {
         vmaDestroyBuffer(allocator, staging, staging_alloc);
     }
-    vmaDestroyBuffer(allocator, buffer, buffer_alloc);
+    if (buffer_alloc != nullptr) {
+        vmaDestroyBuffer(allocator, buffer, buffer_alloc);
+    }
+}
+
+vulkan::device_buffer_dynamic::device_buffer_dynamic(device_buffer_dynamic&& other)
+    : buffer_alloc(std::move(other.buffer_alloc)), staging_alloc(std::move(staging_alloc)),
+      buffer(std::move(other.buffer)), staging(std::move(other.staging)),
+      size(std::move(other.size)), upload_pending(std::move(other.upload_pending)) {
+    other.buffer_alloc = nullptr;
+    other.staging_alloc = nullptr;
+}
+
+vulkan::device_buffer_dynamic& vulkan::device_buffer_dynamic::operator=(device_buffer_dynamic&& other) {
+    if (staging_alloc != nullptr) {
+        vmaDestroyBuffer(allocator, staging, staging_alloc);
+    }
+    if (buffer_alloc != nullptr) {
+        vmaDestroyBuffer(allocator, buffer, buffer_alloc);
+    }
+    buffer_alloc = std::move(other.buffer_alloc);
+    staging_alloc = std::move(other.staging_alloc);
+    buffer = std::move(other.buffer);
+    staging = std::move(other.staging);
+    size = std::move(other.size);
+    upload_pending = std::move(other.upload_pending);
+    other.buffer_alloc = nullptr;
+    other.staging_alloc = nullptr;
+    return *this;
 }
 
 void vulkan::device_buffer_dynamic::set(const void* data) {
