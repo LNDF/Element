@@ -24,7 +24,7 @@ vk::DescriptorSetLayout vulkan::create_descriptorset_layout_from_bindings(const 
     info.pBindings = bindings.data();
     return device.createDescriptorSetLayout(info);
 }
-vulkan::descriptor_set vulkan::allocate_descriptorset(vk::DescriptorSetLayout& layout) {
+vulkan::descriptor_set vulkan::allocate_descriptorset(const vk::DescriptorSetLayout& layout) {
     vk::DescriptorSetAllocateInfo alloc_info;
     descriptor_set ret;
     alloc_info.pNext = nullptr;
