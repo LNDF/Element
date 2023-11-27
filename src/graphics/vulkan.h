@@ -2,6 +2,8 @@
 
 #define VULKAN_HPP_FLAGS_MASK_TYPE_AS_PUBLIC
 #define VMA_VULKAN_VERSION 1000000
+#define VMA_STATIC_VULKAN_FUNCTIONS 0
+#define VMA_DYNAMIC_VULKAN_FUNCTIONS 1
 
 //See https://github.com/GPUOpen-LibrariesAndSDKs/VulkanMemoryAllocator/commit/383f06b9fd9d36fb54cb3d4ac3363a670104bc62
 #include <cstdio>
@@ -43,6 +45,7 @@ namespace element {
         extern vk::DispatchLoaderDynamic dld;
         extern vk::PhysicalDevice physical_device;
         extern vk::Device device;
+        extern VmaAllocator allocator;
         extern vk::CommandPool command_pool;
         extern vk::Queue graphics_queue;
         extern vk::Queue present_queue;
