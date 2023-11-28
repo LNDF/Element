@@ -306,10 +306,12 @@ render::gpu_material* render::get_gpu_material(const uuid& id) {
 
 void render::destroy_material(const uuid& id) {
     loaded_gpu_materials.erase(id);
+    material_manager::destroy(id);
 }
 
 void render::destroy_all_materials() {
     loaded_gpu_materials.clear();
+    material_manager::destroy_all();
 }
 
 #define MATERIAL_TYPE_ARRAY(...) template void render::material::set_property_array<__VA_ARGS__>(const std::string& name, const __VA_ARGS__* t); \
