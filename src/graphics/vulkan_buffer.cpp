@@ -4,7 +4,7 @@
 
 using namespace element;
 
-vulkan::device_buffer_dynamic::device_buffer_dynamic(std::uint32_t size, vk::BufferUsageFlags usage) : size(size) {
+vulkan::device_buffer::device_buffer(std::uint32_t size, vk::BufferUsageFlags usage) : size(size) {
     vk::BufferCreateInfo buffer_info;
     buffer_info.size = size;
     buffer_info.usage = vk::BufferUsageFlagBits::eTransferDst | usage;
@@ -17,18 +17,12 @@ vulkan::device_buffer_dynamic::device_buffer_dynamic(std::uint32_t size, vk::Buf
     VkMemoryPropertyFlags mem_flags;
     vmaGetAllocationMemoryProperties(allocator, buffer_alloc, &mem_flags);
     if (!(mem_flags & VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT)) {
-        vk::BufferCreateInfo staging_info;
-        staging_info.size = size;
-        staging_info.usage = vk::BufferUsageFlagBits::eTransferSrc;
-        VmaAllocationCreateInfo staging_alloc_create_info = {};
-        staging_alloc_create_info.usage = VMA_MEMORY_USAGE_AUTO;
-        staging_alloc_create_info.flags = VMA_ALLOCATION_CREATE_HOST_ACCESS_SEQUENTIAL_WRITE_BIT;
-        VmaAllocationInfo staging_alloc_info;
-        vmaCreateBuffer(allocator, reinterpret_cast<VkBufferCreateInfo*>(&staging_info), &staging_alloc_create_info, reinterpret_cast<VkBuffer*>(&staging), &staging_alloc, &staging_alloc_info);
+        staging_required = true;
+        create_staging();
     }
 }
 
-vulkan::device_buffer_dynamic::~device_buffer_dynamic() {
+vulkan::device_buffer::~device_buffer() {
     if (staging_alloc != nullptr) {
         vmaDestroyBuffer(allocator, staging, staging_alloc);
     }
@@ -37,7 +31,7 @@ vulkan::device_buffer_dynamic::~device_buffer_dynamic() {
     }
 }
 
-vulkan::device_buffer_dynamic::device_buffer_dynamic(device_buffer_dynamic&& other)
+vulkan::device_buffer::device_buffer(device_buffer&& other)
     : buffer_alloc(std::move(other.buffer_alloc)), staging_alloc(std::move(staging_alloc)),
       buffer(std::move(other.buffer)), staging(std::move(other.staging)),
       size(std::move(other.size)), upload_pending(std::move(other.upload_pending)) {
@@ -45,7 +39,7 @@ vulkan::device_buffer_dynamic::device_buffer_dynamic(device_buffer_dynamic&& oth
     other.staging_alloc = nullptr;
 }
 
-vulkan::device_buffer_dynamic& vulkan::device_buffer_dynamic::operator=(device_buffer_dynamic&& other) {
+vulkan::device_buffer& vulkan::device_buffer::operator=(device_buffer&& other) {
     if (staging_alloc != nullptr) {
         vmaDestroyBuffer(allocator, staging, staging_alloc);
     }
@@ -63,13 +57,25 @@ vulkan::device_buffer_dynamic& vulkan::device_buffer_dynamic::operator=(device_b
     return *this;
 }
 
-void vulkan::device_buffer_dynamic::set(const void* data) {
+void vulkan::device_buffer::create_staging() {
+    vk::BufferCreateInfo staging_info;
+    staging_info.size = size;
+    staging_info.usage = vk::BufferUsageFlagBits::eTransferSrc;
+    VmaAllocationCreateInfo staging_alloc_create_info = {};
+    staging_alloc_create_info.usage = VMA_MEMORY_USAGE_AUTO;
+    staging_alloc_create_info.flags = VMA_ALLOCATION_CREATE_HOST_ACCESS_SEQUENTIAL_WRITE_BIT;
+    VmaAllocationInfo staging_alloc_info;
+    vmaCreateBuffer(allocator, reinterpret_cast<VkBufferCreateInfo*>(&staging_info), &staging_alloc_create_info, reinterpret_cast<VkBuffer*>(&staging), &staging_alloc, &staging_alloc_info);
+}
+
+void vulkan::device_buffer::set(const void* data) {
     void* mapped;
-    if (staging == nullptr) {
+    if (!staging_required) {
         vmaMapMemory(allocator, buffer_alloc, &mapped);
         memcpy(mapped, data, size);
         vmaUnmapMemory(allocator, buffer_alloc);
     } else {
+        if (staging == nullptr) create_staging();
         vmaMapMemory(allocator, staging_alloc, &mapped);
         memcpy(mapped, data, size);
         vmaFlushAllocation(allocator, staging_alloc, 0, VK_WHOLE_SIZE);
@@ -78,7 +84,7 @@ void vulkan::device_buffer_dynamic::set(const void* data) {
     }
 }
 
-void vulkan::device_buffer_dynamic::record_upload(vk::CommandBuffer& cmd) {
+void vulkan::device_buffer::record_upload(vk::CommandBuffer& cmd) {
     if (!upload_pending) return;
     //Submission guarantees the host write being complete, as per
     //See: https://www.khronos.org/registry/vulkan/specs/1.0/html/vkspec.html#synchronization-submission-host-writes
@@ -89,4 +95,11 @@ void vulkan::device_buffer_dynamic::record_upload(vk::CommandBuffer& cmd) {
     regions[0].size = size;
     cmd.copyBuffer(staging, buffer, regions);
     upload_pending = false;
+}
+
+void vulkan::device_buffer::delete_staging() {
+    if (staging != nullptr) {
+        vmaDestroyBuffer(allocator, staging, staging_alloc);
+        staging = nullptr;
+    }
 }
