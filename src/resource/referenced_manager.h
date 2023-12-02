@@ -5,7 +5,7 @@
 #include <utility>
 
 namespace element {
-    namespace render {
+    namespace resource {
         
         template<typename T, T*(*C)(const uuid&), void(*D)(const uuid&), T*(*G)(const uuid&)>
         class referenced_resource_manager {
@@ -41,8 +41,8 @@ namespace element {
                 }
         };
 
-    } //namespace render
+    } //namespace resource
 } // namespace element
 
 template<typename T, T*(*C)(const element::uuid&), void(*D)(const element::uuid&), T*(*G)(const element::uuid&)>
-std::unordered_map<element::uuid, std::uint32_t> element::render::referenced_resource_manager<T, C, D, G>::ref_map;
+std::unordered_map<element::uuid, std::uint32_t> element::resource::referenced_resource_manager<T, C, D, G>::ref_map;
