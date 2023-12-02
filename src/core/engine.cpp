@@ -6,6 +6,7 @@
 #include <graphics/vulkan.h>
 #include <render/render.h>
 #include <utils/uuid.h>
+#include <utils/thread_pool.h>
 
 using namespace element;
 
@@ -22,6 +23,7 @@ void engine::setup() {
     ELM_INFO("Application {0} version {1}", settings.app_name, settings.app_version);
     ELM_INFO("Configuring application...");
     uuid::reseed_generator();
+    thread_pool::init(8);
     vulkan::init_instance();
     fs::load_resources();
     ELM_INFO("Configuration done");
@@ -31,6 +33,7 @@ void engine::cleanup() {
     ELM_INFO("Application will close soon. Cleanning up...");
     render::cleanup_renderer();
     vulkan::cleanup();
+    thread_pool::stop();
 }
 
 void engine::start() {
