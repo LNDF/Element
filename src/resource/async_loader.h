@@ -17,12 +17,5 @@ namespace element {
             });
         }
 
-        template<typename T, void(*F)(const uuid&, const T&)>
-        inline void* async_load_return_nullptr(const uuid& id) {
-            async_load(id);
-            return nullptr;
-        }
-        
-
     } //namespace resource
 } //namespace element
