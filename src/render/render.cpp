@@ -7,6 +7,7 @@
 #include <render/scene_render.h>
 #include <render/pipeline.h>
 #include <render/material.h>
+#include <render/mesh_manager.h>
 
 using namespace element;
 
@@ -55,6 +56,7 @@ void render::cleanup_renderer() {
     scene_renderer::cleanup();
     destroy_all_materials();
     destroy_all_pipelines();
+    gpu_mesh_manager::destroy_all_resources();
     for (std::uint32_t i = 0; i < ELM_MAX_FRAMES_IN_FLIGHT; ++i) {
         vulkan::device.destroyFence(swapchain_frames[i].fence);
         vulkan::device.destroySemaphore(swapchain_frames[i].image_acquired);
