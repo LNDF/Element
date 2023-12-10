@@ -1,6 +1,7 @@
 #pragma once
 
 #include <scenegraph/node_ref.h>
+#include <scenegraph/transform.h>
 #include <scenegraph/node_type_info.h>
 #include <scenegraph/node_storage.h>
 #include <utils/uuid.h>
@@ -30,6 +31,7 @@ namespace element {
             private:
                 std::string name;
                 uuid id;
+                transform transf;
                 node_ref parent;
                 std::vector<node_ref> children;
                 scene* owner_scene = nullptr;
@@ -68,6 +70,8 @@ namespace element {
                 inline const node_ref& get_parent() const {return parent;}
                 inline const std::vector<node_ref>& get_children() const {return children;}
                 inline scene* get_owner_scene() const {return owner_scene;}
+                inline transform& get_transform() {return transf;}
+                inline const transform& get_transform() const {return transf;}
                 inline void set_name(const std::string& new_name) {name = new_name;}
                 inline void set_name(std::string&& new_name) {name = std::move(new_name);}
 

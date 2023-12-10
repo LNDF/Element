@@ -6,21 +6,21 @@
 
 using namespace element::scenegraph;
 
-node::node() : id(uuid::null()) {}
+node::node() : id(uuid::null()), transf(node_ref(nullptr)) {}
 
 node::~node() {}
 
 node::node(const uuid& id, const std::string& name, const node_ref& parent) 
-    : name(name), id(id), parent(parent), owner_scene(parent->get_owner_scene()) {}
+    : name(name), id(id), transf(node_ref(id)), parent(parent), owner_scene(parent->get_owner_scene()) {}
 
 node::node(const uuid& id, std::string&& name, const node_ref& parent) 
-    : name(std::move(name)), id(id), parent(parent), owner_scene(parent->get_owner_scene()) {}
+    : name(std::move(name)), id(id), transf(node_ref(id)), parent(parent), owner_scene(parent->get_owner_scene()) {}
 
 node::node(const uuid& id, const std::string& name, scene* owner_scene) 
-    : name(name), id(id), parent(id), owner_scene(owner_scene) {}
+    : name(name), id(id), transf(node_ref(id)), parent(uuid::null()), owner_scene(owner_scene) {}
 
 node::node(const uuid& id, std::string&& name, scene* owner_scene) 
-    : name(std::move(name)), id(id), parent(id), owner_scene(owner_scene) {}
+    : name(std::move(name)), id(id), transf(node_ref(id)), parent(uuid::null()), owner_scene(owner_scene) {}
 
 void node::destroy() {
     for (const node_ref& child : children) {
