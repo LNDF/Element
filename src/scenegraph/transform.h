@@ -10,8 +10,12 @@
 namespace element {
     namespace scenegraph {
         
+        class transform_watcher;
+
         class transform {
             private:
+                friend class transform_watcher;
+
                 mutable std::optional<glm::mat4> cache_local_matrix;
                 mutable std::optional<glm::mat4> cache_parent_matrix;
                 mutable std::optional<glm::mat4> cache_parent_matrix_inv;
@@ -33,6 +37,8 @@ namespace element {
                 const glm::mat4& get_world_matrix_inv() const;
             public:
                 transform(const node_ref& owner);
+
+                inline const node_ref& get_owner() const {return owner;}
 
                 const glm::mat4& get_matrix() const;
                 const glm::mat4& get_world_matrix() const;
@@ -66,6 +72,17 @@ namespace element {
                 void world_look_at(const glm::vec3& front, const glm::vec3& up);
                 void rotate_euler(const glm::vec3& angles);
                 void world_rotate_euler(const glm::vec3& angles);
+        };
+
+        class transform_watcher {
+            private:
+                node_ref node;
+                mutable std::uint32_t cache_number;
+            public:
+                transform_watcher(const transform& trans);
+                transform& get_transform();
+                const transform& get_transform() const;
+                bool has_updated() const;
         };
 
     } // namespace scenegraph

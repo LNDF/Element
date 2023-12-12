@@ -216,3 +216,22 @@ void scenegraph::transform::rotate_euler(const glm::vec3& angles) {
 void scenegraph::transform::world_rotate_euler(const glm::vec3& angles) {
     set_world_rotation(glm::quat(angles) * get_world_rotation());
 }
+
+scenegraph::transform_watcher::transform_watcher(const transform& trans)
+    : node(trans.get_owner()) {}
+
+scenegraph::transform& scenegraph::transform_watcher::get_transform() {
+    return node->get_transform();
+}
+
+const scenegraph::transform& scenegraph::transform_watcher::get_transform() const {
+    return node->get_transform();
+}
+
+bool scenegraph::transform_watcher::has_updated() const {
+    if (cache_number != get_transform().cache_number) {
+        cache_number = get_transform().cache_number;
+        return true;
+    }
+    return false;
+}
