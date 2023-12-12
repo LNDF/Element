@@ -30,7 +30,7 @@ bool node_ref::exists() const {
     return true;
 }
 
-node* node_ref::get_node() const {
+const node* node_ref::get_node() const {
     if (exists()) return cache;
     return nullptr;
 }
@@ -39,4 +39,3 @@ node* node_ref::get_node() {
     if (exists()) return cache;
     return nullptr;
 }
-

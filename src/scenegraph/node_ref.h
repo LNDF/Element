@@ -22,14 +22,22 @@ namespace element {
                 node_ref(node* node);
                 node_ref(std::nullptr_t);
                 bool exists() const;
-                node* get_node() const;
+                const node* get_node() const;
                 node* get_node();
 
-                inline node* operator->() const noexcept {
+                inline const node* operator->() const noexcept {
                     return get_node();
                 }
 
-                inline node& operator*() const noexcept {
+                inline const node& operator*() const noexcept {
+                    return *get_node();
+                }
+
+                inline node* operator->() noexcept {
+                    return get_node();
+                }
+
+                inline node& operator*() noexcept {
                     return *get_node();
                 }
 
@@ -47,6 +55,31 @@ namespace element {
                     this->cache = nullptr;
                     this->storage = nullptr;
                 }
+        };
+
+        template<typename T, typename = std::enable_if<std::is_base_of_v<scenegraph::node, T>>>
+        class node_ref_derived {
+            private:
+                node_ref ref;
+            public:
+                node_ref_derived() {}
+                node_ref_derived(const uuid& id) : ref(id) {}
+                node_ref_derived(T* node) : ref(node) {}
+                node_ref_derived(std::nullptr_t) : ref(nullptr) {}
+                inline bool exists() const {return ref.exists();}
+                inline const T* get_node() const {return static_cast<const T*>(ref.get_node());}
+                inline T* get_node() {return static_cast<T*>(ref.get_node());}
+                
+                inline const T* operator->() const noexcept {return static_cast<const T*>(ref.operator->());}
+                inline const T& operator*() const noexcept {return static_cast<const T&>(ref.operator*());}
+                inline T* operator->() noexcept {return static_cast<T*>(ref.operator->());}
+                inline T& operator*() noexcept {return static_cast<T&>(ref.operator*());}
+
+                inline bool operator==(const node_ref_derived& other) const noexcept {return ref.operator==(other.ref);}
+                inline bool operator==(const std::nullptr_t other) const noexcept {return ref.operator==(nullptr);}
+
+                inline const uuid& get_id() const {return ref.get_id();}
+                inline void set_id(const uuid& id) {ref.set_id(id);}
         };
     } // namespace scenegraph
 } // namespace element
