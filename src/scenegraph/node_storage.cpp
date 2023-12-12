@@ -13,11 +13,13 @@ scenegraph::node_storage_base::node_storage_base(scenegraph::scene* owner_scene)
     : storage_id(next_storage_id++), owner_scene(owner_scene) {}
 
 void scenegraph::node_storage_base::setup_node(node& n) {
-    n.node_setup();
+    n.setup();
+    if (n.enabled) n.enable();
 }
 
 void scenegraph::node_storage_base::cleanup_node(node& n) {
-    n.node_cleanup();
+    if (n.enabled) n.disable();
+    n.cleanup();
 }
 
 void scenegraph::node_storage_base::set_owner_scene_node(node& n) {

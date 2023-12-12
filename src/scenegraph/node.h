@@ -32,12 +32,15 @@ namespace element {
                 std::string name;
                 uuid id;
                 transform transf;
+                bool enabled;
                 node_ref parent;
                 std::vector<node_ref> children;
                 scene* owner_scene = nullptr;
                 
-                virtual void node_setup();
-                virtual void node_cleanup();
+                virtual void setup();
+                virtual void cleanup();
+                virtual void enable();
+                virtual void disable();
 
                 inline void set_owner_scene(scene* owner_scene) {this->owner_scene = owner_scene;}
 
@@ -67,13 +70,14 @@ namespace element {
 
                 inline const std::string& get_name() const {return name;}
                 inline const uuid& get_id() const {return id;}
+                inline bool is_enabled() const {return enabled;}
                 inline const node_ref& get_parent() const {return parent;}
                 inline const std::vector<node_ref>& get_children() const {return children;}
-                inline scene* get_owner_scene() {return owner_scene;}
-                inline const scene* get_owner_scene() const {return owner_scene;}
+                inline scene* get_owner_scene() const {return owner_scene;}
                 inline transform& get_transform() {return transf;}
                 inline const transform& get_transform() const {return transf;}
                 inline void set_name(const std::string& new_name) {name = new_name;}
+                void set_enabled(bool enabled);
                 inline void set_name(std::string&& new_name) {name = std::move(new_name);}
 
                 inline void __set_id(const uuid& id) {if (owner_scene == nullptr) this->id = id;}
