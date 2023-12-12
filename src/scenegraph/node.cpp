@@ -63,10 +63,10 @@ node_ref node::add_child(std::type_index type, std::string&& name) {
 void node::set_enabled(bool enabled) {
     if (enabled && !this->enabled) {
         enable();
-    } else (!enabled && this->enabled) {
+    } else if (!enabled && this->enabled) {
         disable();
     }
-    this->enable = enable;
+    this->enabled = enabled;
 }
 
 void node::setup() {}
