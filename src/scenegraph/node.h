@@ -45,8 +45,8 @@ namespace element {
             public:
                 node();
                 virtual ~node();
-                node(const uuid& id, const std::string& name, const node_ref& parent);
-                node(const uuid& id, std::string&& name, const node_ref& parent);
+                node(const uuid& id, const std::string& name, node_ref& parent);
+                node(const uuid& id, std::string&& name, node_ref& parent);
                 node(const uuid& id, const std::string& name, scene* owner_scene);
                 node(const uuid& id, std::string&& name, scene* owner_scene);
 
@@ -69,7 +69,8 @@ namespace element {
                 inline const uuid& get_id() const {return id;}
                 inline const node_ref& get_parent() const {return parent;}
                 inline const std::vector<node_ref>& get_children() const {return children;}
-                inline scene* get_owner_scene() const {return owner_scene;}
+                inline scene* get_owner_scene() {return owner_scene;}
+                inline const scene* get_owner_scene() const {return owner_scene;}
                 inline transform& get_transform() {return transf;}
                 inline const transform& get_transform() const {return transf;}
                 inline void set_name(const std::string& new_name) {name = new_name;}

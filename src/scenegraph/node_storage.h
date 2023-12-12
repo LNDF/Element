@@ -3,7 +3,6 @@
 #include <utils/packed_map.h>
 #include <utils/uuid.h>
 #include <scenegraph/node_manager.h>
-#include <scenegraph/node_ref.h>
 #include <cinttypes>
 #include <typeindex>
 #include <type_traits>
@@ -12,6 +11,7 @@ namespace element {
     namespace scenegraph {
         class scene;
         class node;
+        class node_ref;
 
         class node_storage_base {
             private:
@@ -35,8 +35,8 @@ namespace element {
                 inline scenegraph::scene* get_owner_scene() const {return owner_scene;}
 
                 virtual void delete_node(const uuid& id) = 0;
-                virtual void emplace_node(const uuid& id, const std::string& name, const node_ref& parent) = 0;
-                virtual void emplace_node(const uuid& id, std::string&& name, const node_ref& parent) = 0;
+                virtual void emplace_node(const uuid& id, const std::string& name, node_ref& parent) = 0;
+                virtual void emplace_node(const uuid& id, std::string&& name, node_ref& parent) = 0;
                 virtual void emplace_root(const uuid& id) = 0;
                 virtual scenegraph::node* get_node_ptr(const uuid& id) = 0;
                 virtual std::type_index get_type_index() = 0;
@@ -73,7 +73,7 @@ namespace element {
                     this->cache_number++;
                 }
 
-                void emplace_node(const uuid& id, const std::string& name, const node_ref& parent) final override {
+                void emplace_node(const uuid& id, const std::string& name, node_ref& parent) final override {
                     if (owner_scene != nullptr) {
                         scenegraph::update_node_storage_mapping(id, this);
                     }
@@ -84,7 +84,7 @@ namespace element {
                     }
                 }
 
-                void emplace_node(const uuid& id, std::string&& name, const node_ref& parent) final override {
+                void emplace_node(const uuid& id, std::string&& name, node_ref& parent) final override {
                     if (owner_scene != nullptr) {
                         scenegraph::update_node_storage_mapping(id, this);
                     }
