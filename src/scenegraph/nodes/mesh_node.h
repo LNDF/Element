@@ -6,7 +6,7 @@
 namespace element {
     namespace scenegraph {
         
-        class mesh_node : node {
+        class mesh_node : public node {
             private:
                 uuid mesh;
                 uuid material;
