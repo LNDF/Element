@@ -8,14 +8,14 @@
 namespace cereal {
     template<typename Archive>
     void save(Archive& ar, const element::scenegraph::mesh_node& mesh_node) {
-        ar(make_nvp("node", cereal::base_class<element::scenegraph::node>(mesh_node)));
+        ar(make_nvp("node", cereal::base_class<element::scenegraph::node>(&mesh_node)));
         ar(make_nvp("mesh", mesh_node.get_mesh()));
         ar(make_nvp("material", mesh_node.get_material()));
     }
 
     template<typename Archive>
     void load(Archive& ar, element::scenegraph::mesh_node& mesh_node) {
-        ar(make_nvp("node", cereal::base_class<element::scenegraph::node>(mesh_node)));
+        ar(make_nvp("node", cereal::base_class<element::scenegraph::node>(&mesh_node)));
         element::uuid mesh;
         element::uuid material;
         ar(make_nvp("mesh", mesh));
