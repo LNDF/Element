@@ -52,6 +52,20 @@ namespace element {
                     }
                     ref_map.clear();
                 }
+
+                static void reload_resource(const uuid& id) {
+                    auto it = ref_map.find(id);
+                    if (it == ref_map.end()) return;
+                    D(id);
+                    C(id);
+                }
+
+                static void reload_all_resources() {
+                    for (auto& [id, count] : ref_map) {
+                        D(id);
+                        C(id);
+                    }
+                }
         };
 
     } //namespace resource
