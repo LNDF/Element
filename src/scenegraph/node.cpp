@@ -61,10 +61,12 @@ node_ref node::add_child(std::type_index type, std::string&& name) {
 }
 
 void node::set_enabled(bool enabled) {
-    if (enabled && !this->enabled) {
-        enable();
-    } else if (!enabled && this->enabled) {
-        disable();
+    if (owner_scene != nullptr) {
+        if (enabled && !this->enabled) {
+            enable();
+        } else if (!enabled && this->enabled) {
+            disable();
+        }
     }
     this->enabled = enabled;
 }
