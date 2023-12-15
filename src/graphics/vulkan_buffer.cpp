@@ -4,9 +4,53 @@
 
 using namespace element;
 
-vulkan::device_buffer::device_buffer(std::uint32_t size, vk::BufferUsageFlags usage) : size(size) {
+vulkan::device_buffer::device_buffer(std::uint32_t size, vk::BufferUsageFlags usage) : usage(usage), size(size), capacity(size) {
+    reset_buffers();
+}
+
+vulkan::device_buffer::~device_buffer() {
+    destroy_buffers();
+}
+
+vulkan::device_buffer::device_buffer(device_buffer&& other)
+    : buffer_alloc(std::move(other.buffer_alloc)), usage(std::move(other.usage)), staging_alloc(std::move(staging_alloc)),
+      buffer(std::move(other.buffer)), staging(std::move(other.staging)),
+      size(std::move(other.size)), capacity(std::move(other.capacity)), upload_pending(std::move(other.upload_pending)) {
+    other.buffer_alloc = nullptr;
+    other.staging_alloc = nullptr;
+}
+
+vulkan::device_buffer& vulkan::device_buffer::operator=(device_buffer&& other) {
+    destroy_buffers();
+    buffer_alloc = std::move(other.buffer_alloc);
+    staging_alloc = std::move(other.staging_alloc);
+    usage = std::move(other.usage);
+    buffer = std::move(other.buffer);
+    staging = std::move(other.staging);
+    size = std::move(other.size);
+    capacity = std::move(other.capacity);
+    upload_pending = std::move(other.upload_pending);
+    other.buffer_alloc = nullptr;
+    other.staging_alloc = nullptr;
+    return *this;
+}
+
+void vulkan::device_buffer::create_staging() {
+    vk::BufferCreateInfo staging_info;
+    staging_info.size = capacity;
+    staging_info.usage = vk::BufferUsageFlagBits::eTransferSrc;
+    VmaAllocationCreateInfo staging_alloc_create_info = {};
+    staging_alloc_create_info.usage = VMA_MEMORY_USAGE_AUTO;
+    staging_alloc_create_info.flags = VMA_ALLOCATION_CREATE_HOST_ACCESS_SEQUENTIAL_WRITE_BIT;
+    VmaAllocationInfo staging_alloc_info;
+    vmaCreateBuffer(allocator, reinterpret_cast<VkBufferCreateInfo*>(&staging_info), &staging_alloc_create_info, reinterpret_cast<VkBuffer*>(&staging), &staging_alloc, &staging_alloc_info);
+}
+
+void vulkan::device_buffer::reset_buffers() {
+    destroy_buffers();
+    upload_pending = true;
     vk::BufferCreateInfo buffer_info;
-    buffer_info.size = size;
+    buffer_info.size = capacity;
     buffer_info.usage = vk::BufferUsageFlagBits::eTransferDst | usage;
     VmaAllocationCreateInfo buffer_alloc_create_info = {};
     buffer_alloc_create_info.usage = VMA_MEMORY_USAGE_AUTO;
@@ -18,11 +62,10 @@ vulkan::device_buffer::device_buffer(std::uint32_t size, vk::BufferUsageFlags us
     vmaGetAllocationMemoryProperties(allocator, buffer_alloc, &mem_flags);
     if (!(mem_flags & VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT)) {
         staging_required = true;
-        create_staging();
     }
 }
 
-vulkan::device_buffer::~device_buffer() {
+void vulkan::device_buffer::destroy_buffers() {
     if (staging_alloc != nullptr) {
         vmaDestroyBuffer(allocator, staging, staging_alloc);
     }
@@ -31,41 +74,16 @@ vulkan::device_buffer::~device_buffer() {
     }
 }
 
-vulkan::device_buffer::device_buffer(device_buffer&& other)
-    : buffer_alloc(std::move(other.buffer_alloc)), staging_alloc(std::move(staging_alloc)),
-      buffer(std::move(other.buffer)), staging(std::move(other.staging)),
-      size(std::move(other.size)), upload_pending(std::move(other.upload_pending)) {
-    other.buffer_alloc = nullptr;
-    other.staging_alloc = nullptr;
+void vulkan::device_buffer::reserve(std::uint32_t capacity) {
+    this->capacity = capacity;
+    reset_buffers();
 }
 
-vulkan::device_buffer& vulkan::device_buffer::operator=(device_buffer&& other) {
-    if (staging_alloc != nullptr) {
-        vmaDestroyBuffer(allocator, staging, staging_alloc);
+void vulkan::device_buffer::resize(std::uint32_t size) {
+    this->size = size;
+    if (this->size > this->capacity) {
+        reserve(size);
     }
-    if (buffer_alloc != nullptr) {
-        vmaDestroyBuffer(allocator, buffer, buffer_alloc);
-    }
-    buffer_alloc = std::move(other.buffer_alloc);
-    staging_alloc = std::move(other.staging_alloc);
-    buffer = std::move(other.buffer);
-    staging = std::move(other.staging);
-    size = std::move(other.size);
-    upload_pending = std::move(other.upload_pending);
-    other.buffer_alloc = nullptr;
-    other.staging_alloc = nullptr;
-    return *this;
-}
-
-void vulkan::device_buffer::create_staging() {
-    vk::BufferCreateInfo staging_info;
-    staging_info.size = size;
-    staging_info.usage = vk::BufferUsageFlagBits::eTransferSrc;
-    VmaAllocationCreateInfo staging_alloc_create_info = {};
-    staging_alloc_create_info.usage = VMA_MEMORY_USAGE_AUTO;
-    staging_alloc_create_info.flags = VMA_ALLOCATION_CREATE_HOST_ACCESS_SEQUENTIAL_WRITE_BIT;
-    VmaAllocationInfo staging_alloc_info;
-    vmaCreateBuffer(allocator, reinterpret_cast<VkBufferCreateInfo*>(&staging_info), &staging_alloc_create_info, reinterpret_cast<VkBuffer*>(&staging), &staging_alloc, &staging_alloc_info);
 }
 
 void vulkan::device_buffer::set(const void* data) {
