@@ -4,6 +4,10 @@
 #include <utils/uuid.h>
 
 namespace element {
+    namespace render {
+        class scene_render_data;
+    } //namespcae render
+
     namespace scenegraph {
         
         class mesh_node : public node {
@@ -11,6 +15,7 @@ namespace element {
                 uuid mesh;
                 uuid material;
 
+                render::scene_render_data* render_data;
                 bool registered = false;
 
                 void setup() final override;
