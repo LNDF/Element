@@ -80,7 +80,6 @@ namespace element {
                 mutable std::uint32_t cache_number;
             public:
                 transform_watcher(const transform& trans);
-                transform& get_transform();
                 const transform& get_transform() const;
                 bool has_updated() const;
         };

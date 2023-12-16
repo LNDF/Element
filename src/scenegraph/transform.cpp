@@ -220,10 +220,6 @@ void scenegraph::transform::world_rotate_euler(const glm::vec3& angles) {
 scenegraph::transform_watcher::transform_watcher(const transform& trans)
     : node(trans.get_owner()) {}
 
-scenegraph::transform& scenegraph::transform_watcher::get_transform() {
-    return node->get_transform();
-}
-
 const scenegraph::transform& scenegraph::transform_watcher::get_transform() const {
     return node->get_transform();
 }
