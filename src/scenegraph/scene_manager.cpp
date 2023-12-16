@@ -3,6 +3,7 @@
 #include <unordered_map>
 #include <utility>
 #include <core/fs.h>
+#include <render/scene_data_manager.h>
 #include <serialization/serializers.h>
 #include <serialization/scenegraph.h>
 
@@ -20,6 +21,7 @@ void scenegraph::load_scene(const uuid& id) {
 }
 
 void scenegraph::import_scene(const uuid& id, scene&& s) {
+    render::create_scene_render_data(id);
     scene_map.insert(std::make_pair(id, std::move(s))).first->second.init_scene(id);
 }
 
@@ -33,8 +35,10 @@ scenegraph::scene* scenegraph::get_scene(const uuid& id) {
 
 void scenegraph::destroy_scene(const uuid& id) {
     scene_map.erase(id);
+    render::destroy_scene_render_data(id);
 }
 
 void scenegraph::destroy_all_scenes() {
     scene_map.clear();
+    render::destroy_all_scene_render_data();
 }
