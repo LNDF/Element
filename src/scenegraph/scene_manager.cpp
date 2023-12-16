@@ -34,3 +34,7 @@ scenegraph::scene* scenegraph::get_scene(const uuid& id) {
 void scenegraph::destroy_scene(const uuid& id) {
     scene_map.erase(id);
 }
+
+void scenegraph::destroy_all_scenes() {
+    scene_map.clear();
+}

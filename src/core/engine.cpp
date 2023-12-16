@@ -5,6 +5,7 @@
 #include <event/event.h>
 #include <graphics/vulkan.h>
 #include <render/render.h>
+#include <scenegraph/scene_manager.h>
 #include <utils/uuid.h>
 #include <utils/thread_pool.h>
 
@@ -31,6 +32,7 @@ void engine::setup() {
 
 void engine::cleanup() {
     ELM_INFO("Application will close soon. Cleanning up...");
+    scenegraph::destroy_all_scenes();
     render::cleanup_renderer();
     vulkan::cleanup();
     thread_pool::stop();
