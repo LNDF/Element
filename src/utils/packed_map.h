@@ -297,13 +297,13 @@ namespace element {
             template<typename I>
             packed_map(I first, I last, size_type bucket_count, const H& hash, const A& alloc)
              : packed_map(first, last, bucket_count, hash, key_equal(), alloc) {}
-
+            
             packed_map(const packed_map& other) = default;
             
             packed_map(const packed_map& other, A& alloc) noexcept (std::is_nothrow_copy_constructible<H>() && std::is_nothrow_copy_constructible<E>())
              : data(other.data), index(other.index), hashf(other.hashf), eqf(other.eqf), alloc(alloc), lfactor(other.lfactor) {}
 
-            packed_map(packed_map&& other) = default;
+            packed_map(packed_map&& other) noexcept = default;
             
             packed_map(packed_map&& other, A& alloc) noexcept (std::is_nothrow_move_constructible<H>() && std::is_nothrow_move_constructible<E>())
              : data(std::move(other.data)), index(std::move(other.index)), hashf(std::move(other.hashf)), eqf(std::move(other.eqf)), alloc(alloc), lfactor(other.lfactor) {}
@@ -321,7 +321,7 @@ namespace element {
 
             packed_map& operator=(const packed_map& other) = default;
 
-            packed_map& operator=(packed_map&& other) = default;
+            packed_map& operator=(packed_map&& other) noexcept = default;
 
             packed_map& operator=(std::initializer_list<value_type> i) {
                 clear();
