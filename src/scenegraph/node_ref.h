@@ -57,7 +57,7 @@ namespace element {
                 }
         };
 
-        template<typename T, typename = std::enable_if<std::is_base_of_v<scenegraph::node, T>>>
+        template<typename T>
         class node_ref_derived {
             private:
                 node_ref ref;
