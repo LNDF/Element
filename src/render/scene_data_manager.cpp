@@ -11,11 +11,10 @@ static std::unordered_map<uuid, render::scene_render_data> redner_data_scenes;
 
 render::render_graph_mesh_instance_data::render_graph_mesh_instance_data() : model_matrices_gpu(vk::BufferUsageFlagBits::eVertexBuffer) {}
 
-void render::render_graph_mesh_instance_data::add_instance(const scenegraph::mesh_node_ref& ref) {
-    if (ref == nullptr) return;
+void render::render_graph_mesh_instance_data::add_instance(const scenegraph::mesh_node& instance) {
     recreate = true;
-    scenegraph::transform_watcher watcher(ref->get_transform());
-    instances_watchers.try_emplace(ref.get_id(), 0, watcher);
+    scenegraph::transform_watcher watcher(instance.get_transform());
+    instances_watchers.try_emplace(instance.get_id(), 0, watcher);
 }
 
 void render::render_graph_mesh_instance_data::remove_instance(const uuid& id) {
@@ -60,21 +59,21 @@ render::scene_render_data::~scene_render_data() {
 
 }
 
-void render::scene_render_data::register_node(const scenegraph::mesh_node_ref& node) {
+void render::scene_render_data::register_node(const scenegraph::mesh_node& node) {
     render_graph_mesh_data data;
-    data.material = node->get_material();
-    data.mesh = node->get_mesh();
+    data.material = node.get_material();
+    data.mesh = node.get_mesh();
     data.enabled = false;
-    auto it = mesh_data.find(node->get_id());
+    auto it = mesh_data.find(node.get_id());
     bool was_enabled = false;
     if (it != mesh_data.end() || !it->second.enabled) {
         was_enabled = true;
     }
     if (was_enabled) {
-        disable_node(node->get_id());
-        unregister_node(node->get_id());
+        disable_node(node.get_id());
+        unregister_node(node.get_id());
     }
-    mesh_data.insert_or_assign(node->get_id(), data);
+    mesh_data.insert_or_assign(node.get_id(), data);
     gpu_mesh_manager::claim_resource(data.mesh);
     if (was_enabled) enable_node(node);
 }
@@ -88,8 +87,8 @@ void render::scene_render_data::unregister_node(const uuid& id) {
     }
 }
 
-void render::scene_render_data::enable_node(const scenegraph::mesh_node_ref& node) {
-    auto it = mesh_data.find(node->get_id());
+void render::scene_render_data::enable_node(const scenegraph::mesh_node& node) {
+    auto it = mesh_data.find(node.get_id());
     if (it != mesh_data.end()) {
         if (it->second.enabled) return;
         it->second.enabled = true;

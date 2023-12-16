@@ -2,7 +2,6 @@
 
 #include <graphics/vulkan_buffer.h>
 #include <scenegraph/transform.h>
-#include <scenegraph/nodes/mesh_node_ref.h>
 #include <utils/packed_map.h>
 #include <utils/uuid.h>
 #include <glm/glm.hpp>
@@ -11,6 +10,10 @@
 #include <unordered_map>
 
 namespace element {
+    namespace scenegraph {
+        class mesh_node;
+    }
+
     namespace render {
         
         class render_graph_mesh_instance_data {
@@ -29,7 +32,7 @@ namespace element {
                 inline std::uint32_t get_mesh_count() const {return model_matrices.size();}
                 inline vk::Buffer get_model_matrix_buffer() const {return model_matrices_gpu.get_buffer();}
 
-                void add_instance(const scenegraph::mesh_node_ref& ref);
+                void add_instance(const scenegraph::mesh_node& instance);
                 void remove_instance(const uuid& id);
 
                 void sync(vk::CommandBuffer& cmd);
@@ -58,9 +61,9 @@ namespace element {
                 scene_render_data();
                 ~scene_render_data();
 
-                void register_node(const scenegraph::mesh_node_ref& node);
+                void register_node(const scenegraph::mesh_node& node);
                 void unregister_node(const uuid& id);
-                void enable_node(const scenegraph::mesh_node_ref& node);
+                void enable_node(const scenegraph::mesh_node& node);
                 void disable_node(const uuid& id);
                 void gpu_sync(vk::CommandBuffer& cmd);
                 const render_graph* get_render_graph(const uuid& id);
