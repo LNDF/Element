@@ -4,6 +4,8 @@
 
 using namespace element;
 
+vulkan::device_buffer::device_buffer(vk::BufferUsageFlags usage) : device_buffer(0, usage) {}
+
 vulkan::device_buffer::device_buffer(std::uint32_t size, vk::BufferUsageFlags usage) : usage(usage), size(size), capacity(size) {
     reset_buffers();
 }
@@ -47,8 +49,8 @@ void vulkan::device_buffer::create_staging() {
 }
 
 void vulkan::device_buffer::reset_buffers() {
+    if (capacity == 0) return;
     destroy_buffers();
-    upload_pending = true;
     vk::BufferCreateInfo buffer_info;
     buffer_info.size = capacity;
     buffer_info.usage = vk::BufferUsageFlagBits::eTransferDst | usage;
@@ -87,6 +89,7 @@ void vulkan::device_buffer::resize(std::uint32_t size) {
 }
 
 void vulkan::device_buffer::set(const void* data) {
+    if (capacity == 0) return;
     void* mapped;
     if (!staging_required) {
         vmaMapMemory(allocator, buffer_alloc, &mapped);

@@ -21,6 +21,7 @@ namespace element {
                 void reset_buffers();
                 void destroy_buffers();
             public:
+                device_buffer(vk::BufferUsageFlags usage);
                 device_buffer(std::uint32_t size, vk::BufferUsageFlags usage);
                 ~device_buffer();
 
