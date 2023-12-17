@@ -14,8 +14,8 @@ vulkan::upload_buffer::~upload_buffer() {
     destroy_buffers();
 }
 
-    : buffer_alloc(std::move(other.buffer_alloc)), usage(std::move(other.usage)), staging_alloc(std::move(staging_alloc)),
 vulkan::upload_buffer::upload_buffer(upload_buffer&& other)
+    : buffer_alloc(std::move(other.buffer_alloc)), staging_alloc(std::move(staging_alloc)), usage(std::move(other.usage)),
       buffer(std::move(other.buffer)), staging(std::move(other.staging)),
       size(std::move(other.size)), capacity(std::move(other.capacity)), upload_pending(std::move(other.upload_pending)) {
     other.buffer_alloc = nullptr;
