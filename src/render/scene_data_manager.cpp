@@ -7,7 +7,7 @@
 
 using namespace element;
 
-static std::unordered_map<uuid, render::scene_render_data> redner_data_scenes;
+static std::unordered_map<uuid, render::scene_render_data> render_data_scenes;
 
 render::render_graph_mesh_instance_data::render_graph_mesh_instance_data() : model_matrices_gpu(vk::BufferUsageFlagBits::eVertexBuffer) {}
 
@@ -126,18 +126,18 @@ const render::render_graph* render::scene_render_data::get_render_graph(const uu
 }
 
 void render::create_scene_render_data(const uuid& id) {
-    redner_data_scenes[id];
+    render_data_scenes[id];
 }
 
 
 render::scene_render_data* render::get_scene_render_data(const uuid& id) {
-    auto it = redner_data_scenes.find(id);
-    if (it == redner_data_scenes.end()) return nullptr;
+    auto it = render_data_scenes.find(id);
+    if (it == render_data_scenes.end()) return nullptr;
     return &it->second;
 }
 
 void render::destroy_scene_render_data(const uuid& id) {
-    redner_data_scenes.erase(id);
+    render_data_scenes.erase(id);
 }
 
 void render::destroy_all_scene_render_data() {
