@@ -2,6 +2,7 @@
 
 #include <graphics/vulkan_shader.h>
 #include <graphics/vulkan_descriptor..h>
+#include <render/global_data.h>
 #include <render/shader.h>
 #include <render/scene_render.h>
 #include <render/mesh.h>
@@ -33,7 +34,7 @@ static void populate_descriptorset_layouts(std::vector<vk::DescriptorSetLayout>&
         bindings[resource.set - 1].push_back(create_descriptorset_layout_binding_from_resource(resource, stages));
     }
     out.reserve(bindings.size() + 1);
-    out.push_back(render::scene_renderer::global_descriptorset_layout);
+    out.push_back(render::global_data::get_descriptorset_layout());
     for (const std::vector<vk::DescriptorSetLayoutBinding>& set : bindings) {
         if (set.empty()) {
             out.push_back(vulkan::create_empty_descriptorset_layout());
