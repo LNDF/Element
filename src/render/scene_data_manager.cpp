@@ -145,5 +145,11 @@ void render::destroy_scene_render_data(const uuid& id) {
 }
 
 void render::destroy_all_scene_render_data() {
-    redner_data_scenes.clear();
+    render_data_scenes.clear();
+}
+
+void render::record_sync_scene_render_data(vk::CommandBuffer& cmd) {
+    for (auto& [id, scene_data] : render_data_scenes) {
+        scene_data.gpu_sync(cmd);
+    }
 }

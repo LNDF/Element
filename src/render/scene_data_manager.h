@@ -73,6 +73,7 @@ namespace element {
         scene_render_data* get_scene_render_data(const uuid& id);
         void destroy_scene_render_data(const uuid& id);
         void destroy_all_scene_render_data();
+        void record_sync_scene_render_data(vk::CommandBuffer& cmd);
 
     } // namespace render
 } // namespace element
