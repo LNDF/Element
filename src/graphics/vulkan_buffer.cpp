@@ -4,25 +4,25 @@
 
 using namespace element;
 
-vulkan::device_buffer::device_buffer(vk::BufferUsageFlags usage) : device_buffer(0, usage) {}
+vulkan::upload_buffer::upload_buffer(vk::BufferUsageFlags usage) : upload_buffer(0, usage) {}
 
-vulkan::device_buffer::device_buffer(std::uint32_t size, vk::BufferUsageFlags usage) : usage(usage), size(size), capacity(size) {
+vulkan::upload_buffer::upload_buffer(std::uint32_t size, vk::BufferUsageFlags usage) : usage(usage), size(size), capacity(size) {
     reset_buffers();
 }
 
-vulkan::device_buffer::~device_buffer() {
+vulkan::upload_buffer::~upload_buffer() {
     destroy_buffers();
 }
 
-vulkan::device_buffer::device_buffer(device_buffer&& other)
     : buffer_alloc(std::move(other.buffer_alloc)), usage(std::move(other.usage)), staging_alloc(std::move(staging_alloc)),
+vulkan::upload_buffer::upload_buffer(upload_buffer&& other)
       buffer(std::move(other.buffer)), staging(std::move(other.staging)),
       size(std::move(other.size)), capacity(std::move(other.capacity)), upload_pending(std::move(other.upload_pending)) {
     other.buffer_alloc = nullptr;
     other.staging_alloc = nullptr;
 }
 
-vulkan::device_buffer& vulkan::device_buffer::operator=(device_buffer&& other) {
+vulkan::upload_buffer& vulkan::upload_buffer::operator=(upload_buffer&& other) {
     destroy_buffers();
     buffer_alloc = std::move(other.buffer_alloc);
     staging_alloc = std::move(other.staging_alloc);
@@ -37,7 +37,7 @@ vulkan::device_buffer& vulkan::device_buffer::operator=(device_buffer&& other) {
     return *this;
 }
 
-void vulkan::device_buffer::create_staging() {
+void vulkan::upload_buffer::create_staging() {
     vk::BufferCreateInfo staging_info;
     staging_info.size = capacity;
     staging_info.usage = vk::BufferUsageFlagBits::eTransferSrc;
@@ -48,7 +48,7 @@ void vulkan::device_buffer::create_staging() {
     vmaCreateBuffer(allocator, reinterpret_cast<VkBufferCreateInfo*>(&staging_info), &staging_alloc_create_info, reinterpret_cast<VkBuffer*>(&staging), &staging_alloc, &staging_alloc_info);
 }
 
-void vulkan::device_buffer::reset_buffers() {
+void vulkan::upload_buffer::reset_buffers() {
     if (capacity == 0) return;
     destroy_buffers();
     vk::BufferCreateInfo buffer_info;
@@ -67,28 +67,30 @@ void vulkan::device_buffer::reset_buffers() {
     }
 }
 
-void vulkan::device_buffer::destroy_buffers() {
+void vulkan::upload_buffer::destroy_buffers() {
     if (staging_alloc != nullptr) {
         vmaDestroyBuffer(allocator, staging, staging_alloc);
+        staging_alloc = nullptr;
     }
     if (buffer_alloc != nullptr) {
         vmaDestroyBuffer(allocator, buffer, buffer_alloc);
+        buffer_alloc = nullptr;
     }
 }
 
-void vulkan::device_buffer::reserve(std::uint32_t capacity) {
+void vulkan::upload_buffer::reserve(std::uint32_t capacity) {
     this->capacity = capacity;
     reset_buffers();
 }
 
-void vulkan::device_buffer::resize(std::uint32_t size) {
+void vulkan::upload_buffer::resize(std::uint32_t size) {
     this->size = size;
     if (this->size > this->capacity) {
         reserve(size);
     }
 }
 
-void vulkan::device_buffer::set(const void* data) {
+void vulkan::upload_buffer::set(const void* data) {
     if (capacity == 0) return;
     void* mapped;
     if (!staging_required) {
@@ -105,7 +107,7 @@ void vulkan::device_buffer::set(const void* data) {
     }
 }
 
-void vulkan::device_buffer::record_upload(vk::CommandBuffer& cmd) {
+void vulkan::upload_buffer::record_upload(vk::CommandBuffer& cmd) {
     if (!upload_pending) return;
     //Submission guarantees the host write being complete, as per
     //See: https://www.khronos.org/registry/vulkan/specs/1.0/html/vkspec.html#synchronization-submission-host-writes
@@ -118,7 +120,7 @@ void vulkan::device_buffer::record_upload(vk::CommandBuffer& cmd) {
     upload_pending = false;
 }
 
-void vulkan::device_buffer::delete_staging() {
+void vulkan::upload_buffer::destroy_staging() {
     if (staging != nullptr) {
         vmaDestroyBuffer(allocator, staging, staging_alloc);
         staging = nullptr;
