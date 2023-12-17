@@ -322,6 +322,12 @@ void render::destroy_all_materials() {
     material_manager::destroy_all();
 }
 
+void render::record_sync_materials(vk::CommandBuffer& cmd) {
+    for (auto& [id, mat] : loaded_gpu_materials) {
+        if (mat.is_being_used()) mat.record_sync_if_meeded(cmd);
+    }
+}
+
 #define MATERIAL_TYPE_ARRAY(...) template void render::material::set_property_array<__VA_ARGS__>(const std::string& name, const __VA_ARGS__* t); \
                                  template void render::material::get_property_array<__VA_ARGS__>(const std::string& name, __VA_ARGS__* t) const;
 

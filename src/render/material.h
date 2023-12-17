@@ -100,11 +100,13 @@ namespace element {
                 void release() const;
 
                 inline bool is_valid() const {return cpu_material != nullptr;}
+                inline bool is_being_used() const {return references > 0;}
         };
 
         gpu_material* get_gpu_material(const uuid& id);
         void destroy_material(const uuid& id);
         void destroy_all_materials();
+        void record_sync_materials(vk::CommandBuffer& cmd);
 
     } // namespace render
 } // namespace element
