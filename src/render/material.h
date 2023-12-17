@@ -80,7 +80,7 @@ namespace element {
             private:
                 const pipeline* forward_pipeline = nullptr;
                 material* cpu_material = nullptr;
-                std::vector<vulkan::device_buffer> uniform_buffers;
+                std::vector<vulkan::upload_buffer> uniform_buffers;
                 std::vector<vulkan::descriptor_set> descriptorsets;
             public:
                 gpu_material(const uuid& id);
