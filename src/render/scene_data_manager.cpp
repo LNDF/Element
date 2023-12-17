@@ -75,6 +75,8 @@ void render::scene_render_data::register_node(const scenegraph::mesh_node& node)
     }
     mesh_data.insert_or_assign(node.get_id(), data);
     gpu_mesh_manager::claim_resource(data.mesh);
+    gpu_material* gpu_mat = get_gpu_material(data.material);
+    if (gpu_mat != nullptr) gpu_mat->claim();
     if (was_enabled) enable_node(node);
 }
 
@@ -82,6 +84,8 @@ void render::scene_render_data::unregister_node(const uuid& id) {
     auto it = mesh_data.find(id);
     if (it != mesh_data.end()) {
         if (it->second.enabled) disable_node(id);
+        gpu_material* gpu_mat = get_gpu_material(it->second.material);
+        if (gpu_mat != nullptr) gpu_mat->release();
         gpu_mesh_manager::release_resource(it->second.mesh);
         mesh_data.erase(it);
     }
