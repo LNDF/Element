@@ -304,6 +304,14 @@ render::gpu_material* render::get_gpu_material(const uuid& id) {
     return &it->second;
 }
 
+void render::gpu_material::claim() const {
+    ++references;
+}
+
+void render::gpu_material::release() const {
+    --references;
+}
+
 void render::destroy_material(const uuid& id) {
     loaded_gpu_materials.erase(id);
     material_manager::destroy(id);
