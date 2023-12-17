@@ -19,7 +19,7 @@ namespace element {
         class render_graph_mesh_instance_data {
             private:
                 std::vector<glm::mat4> model_matrices;
-                vulkan::device_buffer model_matrices_gpu;
+                vulkan::upload_buffer model_matrices_gpu;
                 bool recreate = false;
                 packed_map<uuid, std::pair<std::uint32_t, scenegraph::transform_watcher>> instances_watchers;
             public:
