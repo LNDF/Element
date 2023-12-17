@@ -47,9 +47,9 @@ void render::record_mesh_buffer_uploads(vk::CommandBuffer& cmd) {
     upload_pending_gpu_meshes.clear();
 }
 
-void render::delete_staging_mesh_buffers() {
+void render::destroy_staging_mesh_buffers() {
     for (auto& [id, mesh] : staging_delete_pending_gpu_meshes) {
-        mesh->delete_staging_buffers();
+        mesh->destroy_staging_buffers();
     }
     staging_delete_pending_gpu_meshes.clear();
 }

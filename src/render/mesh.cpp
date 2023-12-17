@@ -2,7 +2,7 @@
 
 using namespace element;
 
-render::gpu_mesh::gpu_mesh(vulkan::device_buffer&& vertex_buffer, vulkan::device_buffer&& index_buffer)
+render::gpu_mesh::gpu_mesh(vulkan::upload_buffer&& vertex_buffer, vulkan::upload_buffer&& index_buffer)
     : vertex_buffer(std::move(vertex_buffer)), index_buffer(std::move(index_buffer)) {}
 
 void render::gpu_mesh::record_bind_buffer(vk::CommandBuffer& cmd) {
@@ -17,7 +17,7 @@ void render::gpu_mesh::record_mesh_upload(vk::CommandBuffer& cmd) {
     index_buffer.record_upload(cmd);
 }
 
-void render::gpu_mesh::delete_staging_buffers() {
-    vertex_buffer.delete_staging();
-    index_buffer.delete_staging();
+void render::gpu_mesh::destroy_staging_buffers() {
+    vertex_buffer.destroy_staging();
+    index_buffer.destroy_staging();
 }

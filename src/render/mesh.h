@@ -20,10 +20,10 @@ namespace element {
 
         class gpu_mesh {
             private:
-                vulkan::device_buffer vertex_buffer;
-                vulkan::device_buffer index_buffer;
+                vulkan::upload_buffer vertex_buffer;
+                vulkan::upload_buffer index_buffer;
             public:
-                gpu_mesh(vulkan::device_buffer&& vertex_buffer, vulkan::device_buffer&& index_buffer);
+                gpu_mesh(vulkan::upload_buffer&& vertex_buffer, vulkan::upload_buffer&& index_buffer);
 
                 gpu_mesh(const gpu_mesh& other) = delete;
                 gpu_mesh& operator=(const gpu_mesh& other) = delete;
@@ -32,7 +32,7 @@ namespace element {
 
                 void record_bind_buffer(vk::CommandBuffer& cmd);
                 void record_mesh_upload(vk::CommandBuffer& cmd);
-                void delete_staging_buffers();
+                void destroy_staging_buffers();
         };
     } // namespace render
 } // namespace element

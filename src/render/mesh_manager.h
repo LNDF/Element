@@ -17,6 +17,6 @@ namespace element {
         using gpu_mesh_manager = resource::referenced_resource_manager<gpu_mesh, resource::async_load<mesh, __detail::__render_gpu_mesh_resource_loaded>, __detail::__render_gpu_mesh_destroy, __detail::__render_gpu_mesh_get>;
 
         void record_mesh_buffer_uploads(vk::CommandBuffer& cmd);
-        void delete_staging_mesh_buffers();
+        void destroy_staging_mesh_buffers();
     } //namespace render
 } //namespace element
