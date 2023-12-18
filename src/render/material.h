@@ -101,6 +101,8 @@ namespace element {
 
                 inline bool is_valid() const {return cpu_material != nullptr;}
                 inline bool is_being_used() const {return references > 0;}
+                inline std::uint32_t get_references() const {return references;}
+                inline void __set_references(std::uint32_t references) {this->references = references;}
         };
         
         gpu_material* get_gpu_material(const uuid& id);
