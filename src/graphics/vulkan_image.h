@@ -15,6 +15,7 @@ namespace element {
             public:
                 image(VmaAllocationCreateFlags alloc_flags);
                 image(const vk::ImageCreateInfo& info, VmaAllocationCreateFlags alloc_flags);
+                ~image();
 
                 void create_image(const vk::ImageCreateInfo& info);
 

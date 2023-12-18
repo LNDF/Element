@@ -8,6 +8,10 @@ vulkan::image::image(const vk::ImageCreateInfo& info, VmaAllocationCreateFlags a
     create_image(info);
 }
 
+vulkan::image::~image() {
+    destroy_image();
+}
+
 void vulkan::image::destroy_image() {
     if (image_alloc != nullptr) {
         vmaDestroyImage(allocator, vk_image, image_alloc);
@@ -16,6 +20,7 @@ void vulkan::image::destroy_image() {
 }
 
 void vulkan::image::create_image(const vk::ImageCreateInfo& info) {
+    destroy_image();
     VmaAllocationCreateInfo alloc_create_info = {};
     VmaAllocationInfo alloc_info;
     alloc_create_info.usage = VMA_MEMORY_USAGE_AUTO;
