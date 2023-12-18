@@ -296,6 +296,12 @@ void render::gpu_material::record_push_constants(vk::CommandBuffer& cmd) {
 
 render::gpu_material* render::get_gpu_material(const uuid& id) {
     auto it = loaded_gpu_materials.find(id);
+    if (it == loaded_gpu_materials.end()) return nullptr;
+    return &it->second;
+}
+
+render::gpu_material* render::get_or_create_gpu_material(const uuid& id) {
+    auto it = loaded_gpu_materials.find(id);
     if (it == loaded_gpu_materials.end()) {
         gpu_material new_mat(id);
         if (!new_mat.is_valid()) return nullptr;
