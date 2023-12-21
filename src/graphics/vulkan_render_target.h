@@ -7,7 +7,7 @@
 namespace element {
     namespace vulkan {
         
-        template<vk::Format F, vk::ImageUsageFlags U, vk::ImageAspectFlags A>
+        template<vk::Format F, vk::ImageUsageFlagBits U, vk::ImageAspectFlagBits A>
         class render_target {
             private:
                 image target;
@@ -51,8 +51,8 @@ namespace element {
                 inline vk::ImageView get_view() const {return view;}
         };
 
-        using color_attachment = render_target<vk::Format::eR8G8B8A8Unorm, vk::ImageUsageFlagBits::eTransferSrc | vk::ImageUsageFlagBits::eColorAttachment, vk::ImageAspectFlagBits::eColor>;
-        using depth_attachment = render_target<vk::Format::eD32Sfloat, vk::ImageUsageFlagBits::eDepthStencilAttachment, vk::ImageAspectFlagBits::eDepth>;
+        using color_attachment = render_target<vk::Format::eR8G8B8A8Unorm, vk::ImageUsageFlagBits{VK_IMAGE_USAGE_TRANSFER_SRC_BIT | VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT}, vk::ImageAspectFlagBits::eColor>;
+        using depth_attachment = render_target<vk::Format::eD32Sfloat, vk::ImageUsageFlagBits{VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT}, vk::ImageAspectFlagBits::eDepth>;
 
     } // namespace vulkan 
 } // namespace element

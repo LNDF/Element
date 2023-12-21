@@ -2,7 +2,7 @@
 
 using namespace element;
 
-vk::ImageView vulkan::create_image_view(vk::Image& image, vk::ImageViewType type, vk::Format format, vk::ImageAspectFlags aspect, std::uint32_t levels, std::uint32_t layers) {
+vk::ImageView vulkan::create_image_view(vk::Image image, vk::ImageViewType type, vk::Format format, vk::ImageAspectFlags aspect, std::uint32_t levels, std::uint32_t layers) {
     vk::ImageViewCreateInfo info;
     info.flags = vk::ImageViewCreateFlags();
     info.image = image;
