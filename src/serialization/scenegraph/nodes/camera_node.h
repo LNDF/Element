@@ -9,9 +9,9 @@ namespace cereal {
     template<typename Archive>
     void save(Archive& ar, const element::scenegraph::camera_node& camera_node) {
         ar(make_nvp("node", cereal::base_class<element::scenegraph::node>(&camera_node)));
-        ar("near_plane", camera_node.get_near_plane());
-        ar("far_plane", camera_node.get_far_plane());
-        ar("fov", camera_node.get_fov());
+        ar(make_nvp("near_plane", camera_node.get_near_plane()));
+        ar(make_nvp("far_plane", camera_node.get_far_plane()));
+        ar(make_nvp("fov", camera_node.get_fov()));
     }
 
     template<typename Archive>
@@ -20,9 +20,9 @@ namespace cereal {
         float near_plane;
         float far_plane;
         float fov;
-        ar("near_plane", near_plane);
-        ar("far_plane", far_plane);
-        ar("fov", fov);
+        ar(make_nvp("near_plane", near_plane));
+        ar(make_nvp("far_plane", far_plane));
+        ar(make_nvp("fov", fov));
         camera_node.set_near_plane(near_plane);
         camera_node.set_far_plane(far_plane);
         camera_node.set_fov(fov);
