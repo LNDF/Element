@@ -98,8 +98,13 @@ void render::scene_render_data::enable_node(const scenegraph::mesh_node& node) {
         it->second.enabled = true;
         const material* material = material_manager::get(it->second.material);
         const uuid& pipeline = material->get_pipeline_id();
-        render_graph_mesh_instance_data& instance_data = graph[pipeline][it->second.material][it->second.mesh];
-        instance_data.add_instance(node);
+        const pipeline_data* p_data = get_pipeline_data(pipeline);
+        if (p_data->transparent) {
+            //TODO: handle transparency
+        } else {
+            render_graph_mesh_instance_data& instance_data = graph[pipeline][it->second.material][it->second.mesh];
+            instance_data.add_instance(node);
+        }
     }
 }
 
@@ -110,8 +115,13 @@ void render::scene_render_data::disable_node(const uuid& id) {
         it->second.enabled = false;
         const material* material = material_manager::get(it->second.material);
         const uuid& pipeline = material->get_pipeline_id();
-        render_graph_mesh_instance_data& instance_data = graph[pipeline][it->second.material][it->second.mesh];
-        instance_data.remove_instance(id);
+        const pipeline_data* p_data = get_pipeline_data(pipeline);
+        if (p_data->transparent) {
+            //TODO: handle transparency
+        } else {
+            render_graph_mesh_instance_data& instance_data = graph[pipeline][it->second.material][it->second.mesh];
+            instance_data.remove_instance(id);
+        }
     }
 }
 
