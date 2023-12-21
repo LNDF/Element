@@ -22,5 +22,7 @@ namespace element {
                 inline vk::Image get_image() const {return vk_image;}
         };
 
+        void transition_image_layout(vk::CommandBuffer& cmd, vk::Image image, vk::Format format, vk::ImageLayout old_layout, vk::ImageLayout new_layout, vk::ImageAspectFlags aspect_mask, std::uint32_t levels, std::uint32_t layers);
+
     } // namespace vulkan 
 } // namespace element
