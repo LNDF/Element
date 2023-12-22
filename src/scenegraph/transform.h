@@ -83,6 +83,8 @@ namespace element {
                 transform_watcher(const transform& trans);
                 const transform& get_transform() const;
                 bool has_updated() const;
+
+                inline bool has_node() const {return node.exists();}
         };
 
     } // namespace scenegraph
