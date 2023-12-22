@@ -217,6 +217,8 @@ void scenegraph::transform::world_rotate_euler(const glm::vec3& angles) {
     set_world_rotation(glm::quat(angles) * get_world_rotation());
 }
 
+scenegraph::transform_watcher::transform_watcher() : node(nullptr) {}
+
 scenegraph::transform_watcher::transform_watcher(const transform& trans)
     : node(trans.get_owner()) {}
 

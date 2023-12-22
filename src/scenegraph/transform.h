@@ -79,6 +79,7 @@ namespace element {
                 node_ref node;
                 mutable std::uint32_t cache_number;
             public:
+                transform_watcher();
                 transform_watcher(const transform& trans);
                 const transform& get_transform() const;
                 bool has_updated() const;
