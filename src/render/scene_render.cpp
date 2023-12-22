@@ -1,5 +1,10 @@
 #include "scene_render.h"
 
+#include <graphics/vulkan_framebuffer.h>
+#include <render/global_data.h>
+#include <scenegraph/nodes/camera_node.h>
+#include <scenegraph/scene_manager.h>
+
 using namespace element;
 
 vk::RenderPass render::scene_renderer::forward_renderpass;
@@ -69,4 +74,88 @@ void render::scene_renderer::init() {
 
 void render::scene_renderer::cleanup() {
     vulkan::device.destroyRenderPass(forward_renderpass);
+}
+
+render::scene_renderer::scene_renderer(std::uint32_t width, std::uint32_t height)
+    : width(width), height(height), cam_gpu_data(sizeof(camera_data), vk::BufferUsageFlagBits::eUniformBuffer), color(width, height),  depth(width, height) {
+    create_framebuffer();
+}
+
+render::scene_renderer::~scene_renderer() {
+    vulkan::device.destroyFramebuffer(framebuffer);
+}
+
+void render::scene_renderer::create_framebuffer() {
+    vk::ImageView attachments[] = {color.get_view(), depth.get_view()};
+    framebuffer = vulkan::create_framebuffer(forward_renderpass, attachments, 2, width, height);
+}
+
+void render::scene_renderer::create_descriptorset() {
+    global_descriptorset = vulkan::allocate_descriptorset(global_data::get_descriptorset_layout());
+    //Global data write
+    vk::WriteDescriptorSet write_sets[2];
+    vk::WriteDescriptorSet& global_write_set = write_sets[0];
+    vk::DescriptorBufferInfo global_buffer_info;
+    global_buffer_info.buffer = global_data::get_data_buffer();
+    global_buffer_info.offset = 0;
+    global_buffer_info.range = sizeof(global_data::data);
+    global_write_set.pBufferInfo = &global_buffer_info;
+    global_write_set.dstBinding = 0;
+    global_write_set.dstSet = global_descriptorset.set;
+    global_write_set.descriptorCount = 1;
+    global_write_set.descriptorType = vk::DescriptorType::eUniformBuffer;
+    //Camera data write
+    vk::WriteDescriptorSet& camera_write_set = write_sets[1];
+    vk::DescriptorBufferInfo camera_buffer_info;
+    camera_buffer_info.buffer = cam_gpu_data.get_buffer();
+    camera_buffer_info.offset = 0;
+    camera_buffer_info.range = sizeof(camera_data);
+    camera_write_set.pBufferInfo = &camera_buffer_info;
+    camera_write_set.dstBinding = 1;
+    camera_write_set.dstSet = global_descriptorset.set;
+    camera_write_set.descriptorCount = 1;
+    camera_write_set.descriptorType = vk::DescriptorType::eUniformBuffer;
+    vulkan::device.updateDescriptorSets(2, write_sets, 0, nullptr);
+}
+
+void render::scene_renderer::resize(std::uint32_t width, std::uint32_t height) {
+    this->width = width;
+    this->height = height;
+    vulkan::device.destroyFramebuffer(framebuffer);
+    color.resize(width, height);
+    depth.resize(width, height);
+    create_framebuffer();
+}
+
+void render::scene_renderer::record_render(vk::CommandBuffer& cmd) {
+    //TODO
+}
+
+void render::scene_renderer::record_sync_camera(vk::CommandBuffer& cmd) {
+    if (camera == nullptr) return;
+    glm::mat4 proj = camera->get_projection_matrix(width, height);
+    if (proj == cam_data.projection && !cam_watcher.has_updated()) return;
+    cam_data.projection = proj;
+    cam_data.view = camera->get_view_matrix();
+    cam_data.view_projection = camera->get_view_projection_matrix(width, height);
+    cam_gpu_data.set(&cam_data);
+    cam_gpu_data.record_upload(cmd);
+}
+
+void render::scene_renderer::select_scene(const uuid& id, const scenegraph::camera_node_ref& camera) {
+    if (scene_data != nullptr) vulkan::free_descriptorset(global_descriptorset);
+    scene_data = get_scene_render_data(id);;
+    if (scene_data != nullptr) create_descriptorset();
+    select_camera(this->camera);
+}
+
+void render::scene_renderer::select_scene(const uuid& id) {
+    scenegraph::scene* s = scenegraph::get_scene(id);
+    if (s == nullptr) return;
+    select_scene(id, s->get_default_camera());
+}
+
+void render::scene_renderer::select_camera(const scenegraph::camera_node_ref& camera) {
+    cam_watcher = scenegraph::transform_watcher(camera->get_transform());
+    this->camera = camera;
 }
