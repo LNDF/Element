@@ -17,7 +17,7 @@ static std::uint64_t epoch_tim_to_millis() {
 
 void render::global_data::init() {
     std::vector<vk::DescriptorSetLayoutBinding> bindings;
-    bindings.reserve(1);
+    bindings.reserve(2);
     vk::DescriptorSetLayoutBinding global_data_binding;
     global_data_binding.binding = 0;
     global_data_binding.descriptorType = vk::DescriptorType::eUniformBuffer;
@@ -25,6 +25,13 @@ void render::global_data::init() {
     global_data_binding.stageFlags = vk::ShaderStageFlagBits::eAllGraphics;
     global_data_binding.pImmutableSamplers = nullptr;
     bindings.push_back(global_data_binding);
+    vk::DescriptorSetLayoutBinding camera_data_binding;
+    camera_data_binding.binding = 1;
+    camera_data_binding.descriptorType = vk::DescriptorType::eUniformBuffer;
+    camera_data_binding.descriptorCount = 1;
+    camera_data_binding.stageFlags = vk::ShaderStageFlagBits::eAllGraphics;
+    camera_data_binding.pImmutableSamplers = nullptr;
+    bindings.push_back(camera_data_binding);
     global_descriptorset_layout = vulkan::create_descriptorset_layout_from_bindings(bindings);
     global_buffer = new vulkan::upload_buffer(sizeof(global_data::data), vk::BufferUsageFlagBits::eUniformBuffer);
 }
