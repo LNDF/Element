@@ -2,7 +2,7 @@
 
 #include <render/pipeline.h>
 #include <graphics/vulkan_buffer.h>
-#include <graphics/vulkan_descriptor..h>
+#include <graphics/vulkan_descriptor.h>
 #include <utils/uuid.h>
 #include <glm/glm.hpp>
 #include <cinttypes>

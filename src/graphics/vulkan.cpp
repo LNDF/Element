@@ -5,7 +5,7 @@
 
 #include <core/engine.h>
 #include <core/log.h>
-#include <graphics/vulkan_descriptor..h>
+#include <graphics/vulkan_descriptor.h>
 
 using namespace element;
 
