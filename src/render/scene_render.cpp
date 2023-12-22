@@ -83,6 +83,7 @@ render::scene_renderer::scene_renderer(std::uint32_t width, std::uint32_t height
 
 render::scene_renderer::~scene_renderer() {
     vulkan::device.destroyFramebuffer(framebuffer);
+    if (scene_data != nullptr) vulkan::free_descriptorset(global_descriptorset);
 }
 
 void render::scene_renderer::create_framebuffer() {
