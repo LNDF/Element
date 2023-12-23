@@ -33,6 +33,9 @@ namespace element {
                 void record_bind_buffer(vk::CommandBuffer& cmd) const;
                 void record_mesh_upload(vk::CommandBuffer& cmd);
                 void destroy_staging_buffers();
+
+                inline std::uint32_t get_vertex_count() const {return vertex_buffer.get_size() / sizeof(vertex);}
+                inline std::uint32_t get_index_count() const {return index_buffer.get_size() / sizeof(std::uint32_t);}
         };
     } // namespace render
 } // namespace element
