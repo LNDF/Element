@@ -66,7 +66,8 @@ namespace element {
                 void enable_node(const scenegraph::mesh_node& node);
                 void disable_node(const uuid& id);
                 void gpu_sync(vk::CommandBuffer& cmd);
-                const render_graph* get_render_graph(const uuid& id);
+
+                inline const render_graph& get_render_graph() const {return graph;}
         };
 
         void create_scene_render_data(const uuid& id);

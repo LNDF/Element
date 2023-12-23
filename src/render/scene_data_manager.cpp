@@ -135,10 +135,6 @@ void render::scene_render_data::gpu_sync(vk::CommandBuffer& cmd) {
     }
 }
 
-const render::render_graph* render::scene_render_data::get_render_graph(const uuid& id) {
-    return &graph;
-}
-
 void render::create_scene_render_data(const uuid& id) {
     render_data_scenes[id];
 }
