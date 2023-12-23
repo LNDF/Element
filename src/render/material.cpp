@@ -283,14 +283,14 @@ bool render::gpu_material::record_sync_if_meeded(vk::CommandBuffer& cmd) {
     return synced;
 }
 
-void render::gpu_material::record_bind_descriptorsets(vk::CommandBuffer& cmd) {
+void render::gpu_material::record_bind_descriptorsets(vk::CommandBuffer& cmd) const {
     std::uint32_t index = 1;
     for (const auto& set : descriptorsets) {
         cmd.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, forward_pipeline->layout, index++, 1, &set.set, 0, nullptr);
     }
 }
 
-void render::gpu_material::record_push_constants(vk::CommandBuffer& cmd) {
+void render::gpu_material::record_push_constants(vk::CommandBuffer& cmd) const {
     cmd.pushConstants(forward_pipeline->layout, cpu_material->data->push_constants.second, 0, static_cast<std::uint32_t>(cpu_material->push_constants_buffer.data.size()), cpu_material->push_constants_buffer.data.data());
 }
 

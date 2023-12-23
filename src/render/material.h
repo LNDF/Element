@@ -93,8 +93,8 @@ namespace element {
                 gpu_material& operator=(gpu_material&& other);
 
                 bool record_sync_if_meeded(vk::CommandBuffer& cmd);
-                void record_bind_descriptorsets(vk::CommandBuffer& cmd);
-                void record_push_constants(vk::CommandBuffer& cmd);
+                void record_bind_descriptorsets(vk::CommandBuffer& cmd) const;
+                void record_push_constants(vk::CommandBuffer& cmd) const;
 
                 void claim() const;
                 void release() const;
