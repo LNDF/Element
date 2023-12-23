@@ -2,6 +2,9 @@
 
 #include <graphics/vulkan_framebuffer.h>
 #include <render/global_data.h>
+#include <render/pipeline.h>
+#include <render/material.h>
+#include <render/mesh_manager.h>
 #include <scenegraph/nodes/camera_node.h>
 #include <scenegraph/scene_manager.h>
 
@@ -129,7 +132,61 @@ void render::scene_renderer::resize(std::uint32_t width, std::uint32_t height) {
 }
 
 void render::scene_renderer::record_render(vk::CommandBuffer& cmd) {
-    //TODO
+    vk::RenderPassBeginInfo renderpass_begin;
+    renderpass_begin.renderPass = forward_renderpass;
+    renderpass_begin.framebuffer = framebuffer;
+    renderpass_begin.renderArea.offset.x = 0;
+    renderpass_begin.renderArea.offset.y = 0;
+    renderpass_begin.renderArea.extent.width = width;
+    renderpass_begin.renderArea.extent.height = height;
+    vk::ClearValue clear_values[2];
+    clear_values[0].color = {0.0f, 0.0f, 0.0f, 0.0f};
+    clear_values[1].depthStencil.depth = 1.0f;
+    clear_values[1].depthStencil.stencil = 0;
+    renderpass_begin.pClearValues = clear_values;
+    renderpass_begin.clearValueCount = 2;
+    cmd.beginRenderPass(renderpass_begin, vk::SubpassContents::eInline);
+    bool first_time = true;
+    if (scene_data != nullptr && camera != nullptr) {
+        for (auto& [pipeline_id, materials] : scene_data->get_render_graph()) {
+            const pipeline* forward_pipeline = get_forward_pipeline(pipeline_id);
+            if (forward_pipeline == nullptr) continue;
+            if (first_time) {
+                first_time = false;
+                vk::Viewport viewport;
+                viewport.x = 0.0f;
+                viewport.y = 0.0f;
+                viewport.width = static_cast<float>(width);
+                viewport.height = static_cast<float>(height);
+                viewport.minDepth = 0.0f;
+                viewport.maxDepth = 1.0f;
+                vk::Rect2D scissor;
+                scissor.offset.x = 0;
+                scissor.offset.y = 0;
+                scissor.extent.width = width;
+                scissor.extent.height = height;
+                cmd.setViewport(0, 1, &viewport);
+                cmd.setScissor(0, 1, &scissor);
+                cmd.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, forward_pipeline->layout, 0, 1, &global_descriptorset.set, 0, nullptr);
+            }
+            for (const auto& [material_id, meshes] : materials) {
+                const gpu_material* gpu_mat = get_or_create_gpu_material(material_id);
+                if (gpu_mat == nullptr) continue; //TODO: check if is ready
+                gpu_mat->record_bind_descriptorsets(cmd);
+                gpu_mat->record_push_constants(cmd);
+                for (const auto& [mesh_id, instance_data] : meshes) {
+                    const gpu_mesh* mesh = gpu_mesh_manager::get_resource(mesh_id).first;
+                    vk::DeviceSize offsets[1] = {0};
+                    if (mesh == nullptr) continue;
+                    mesh->record_bind_buffer(cmd);
+                    vk::Buffer model_matrix_buffer = instance_data.get_model_matrix_buffer();
+                    cmd.bindVertexBuffers(1, 1, &model_matrix_buffer, offsets);
+                    cmd.drawIndexed(mesh->get_index_count(), instance_data.get_instance_count(), 0, 0, 0);
+                }
+            }
+        }
+    }
+    cmd.endRenderPass();
 }
 
 void render::scene_renderer::record_sync_camera(vk::CommandBuffer& cmd) {
