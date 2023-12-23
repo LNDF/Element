@@ -39,6 +39,7 @@ namespace element {
 
                 inline vk::Buffer get_buffer() const {return buffer;}
                 inline bool uses_staging() const {return staging_required;}
+                inline std::uint32_t get_size() const {return size;}
         };
 
     } //namespace vulkan
