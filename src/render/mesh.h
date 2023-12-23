@@ -30,7 +30,7 @@ namespace element {
                 gpu_mesh(gpu_mesh&& other) = default;
                 gpu_mesh& operator=(gpu_mesh&& other) = default;
 
-                void record_bind_buffer(vk::CommandBuffer& cmd);
+                void record_bind_buffer(vk::CommandBuffer& cmd) const;
                 void record_mesh_upload(vk::CommandBuffer& cmd);
                 void destroy_staging_buffers();
         };

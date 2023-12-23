@@ -5,7 +5,7 @@ using namespace element;
 render::gpu_mesh::gpu_mesh(vulkan::upload_buffer&& vertex_buffer, vulkan::upload_buffer&& index_buffer)
     : vertex_buffer(std::move(vertex_buffer)), index_buffer(std::move(index_buffer)) {}
 
-void render::gpu_mesh::record_bind_buffer(vk::CommandBuffer& cmd) {
+void render::gpu_mesh::record_bind_buffer(vk::CommandBuffer& cmd) const {
     vk::DeviceSize offsets[1] = {0};
     vk::Buffer vertex = vertex_buffer.get_buffer(), index = index_buffer.get_buffer();
     cmd.bindVertexBuffers(0, 1, &vertex, offsets);
