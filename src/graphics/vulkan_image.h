@@ -13,7 +13,7 @@ namespace element {
 
                 void destroy_image();
             public:
-                image(VmaAllocationCreateFlags alloc_flags);
+                explicit image(VmaAllocationCreateFlags alloc_flags);
                 image(const vk::ImageCreateInfo& info, VmaAllocationCreateFlags alloc_flags);
                 ~image();
 

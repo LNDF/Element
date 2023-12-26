@@ -84,7 +84,7 @@ namespace element {
                 std::vector<vulkan::descriptor_set> descriptorsets;
                 mutable std::uint32_t references = 0;
             public:
-                gpu_material(const uuid& id);
+                explicit gpu_material(const uuid& id);
                 ~gpu_material();
 
                 gpu_material(const gpu_material& other) = delete;

@@ -21,7 +21,7 @@ namespace element {
                 void reset_buffers();
                 void destroy_buffers();
             public:
-                upload_buffer(vk::BufferUsageFlags usage);
+                explicit upload_buffer(vk::BufferUsageFlags usage);
                 upload_buffer(std::uint32_t size, vk::BufferUsageFlags usage);
                 ~upload_buffer();
 
