@@ -7,7 +7,7 @@
 
 namespace cereal {
     template <class Archive, typename K, typename V, typename H, typename E, typename A>
-    inline void save(Archive& ar, const element::packed_map<K, V, H, E, A>& map) {
+    void save(Archive& ar, const element::packed_map<K, V, H, E, A>& map) {
         ar(make_size_tag(static_cast<size_type>(map.size())));
         for (const auto& i : map) {
             ar(make_map_item(i.first, i.second));
@@ -15,7 +15,7 @@ namespace cereal {
     }
 
     template <class Archive, typename K, typename V, typename H, typename E, typename A>
-    inline void load(Archive& ar, element::packed_map<K, V, H, E, A>& map) {
+    void load(Archive& ar, element::packed_map<K, V, H, E, A>& map) {
         size_type size;
         ar(make_size_tag(size));
         map.clear();

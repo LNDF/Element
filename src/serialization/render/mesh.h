@@ -8,7 +8,7 @@ namespace cereal {
     template <class Archive,
         cereal::traits::DisableIf<cereal::traits::is_text_archive<Archive>::value>
         = cereal::traits::sfinae>
-    inline void save(Archive& ar, const element::render::mesh& mesh) {
+    void save(Archive& ar, const element::render::mesh& mesh) {
         std::size_t vert_count = mesh.vertices.size();
         std::size_t ind_count = mesh.vertices.size();
         ar(vert_count);
@@ -20,7 +20,7 @@ namespace cereal {
     template <class Archive,
         cereal::traits::DisableIf<cereal::traits::is_text_archive<Archive>::value>
         = cereal::traits::sfinae>
-    inline void load(Archive& ar, element::render::mesh& mesh) {
+    void load(Archive& ar, element::render::mesh& mesh) {
         std::size_t vert_count;
         std::size_t ind_count;
         mesh.vertices.clear();

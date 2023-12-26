@@ -7,7 +7,7 @@
 
 namespace cereal {
     template <class Archive, typename K, typename H, typename E, typename A>
-    inline void save(Archive& ar, const element::packed_set<K, H, E, A>& set) {
+    void save(Archive& ar, const element::packed_set<K, H, E, A>& set) {
         ar(make_size_tag(static_cast<size_type>(set.size())));
         for (const auto& i : set) {
             ar(i);
@@ -15,7 +15,7 @@ namespace cereal {
     }
 
     template <class Archive, typename K, typename H, typename E, typename A>
-    inline void load(Archive& ar, element::packed_set<K, H, E, A>& set) {
+    void load(Archive& ar, element::packed_set<K, H, E, A>& set) {
         size_type size;
         ar(make_size_tag(size));
         set.clear();
