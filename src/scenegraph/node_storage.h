@@ -104,7 +104,7 @@ namespace element {
                 }
 
                 T& at(const uuid& id) {
-                    return storage.at(at);
+                    return storage.at(id);
                 }
 
                 scenegraph::node* get_node_ptr(const uuid& id) final override {
