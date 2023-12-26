@@ -250,7 +250,7 @@ render::gpu_material::~gpu_material() {
 
 render::gpu_material::gpu_material(gpu_material&& other)
     : forward_pipeline(std::move(other.forward_pipeline)), cpu_material(std::move(other.cpu_material)),
-      uniform_buffers(std::move(other.uniform_buffers)), descriptorsets(std::move(descriptorsets)) {
+      uniform_buffers(std::move(other.uniform_buffers)), descriptorsets(std::move(other.descriptorsets)) {
     other.forward_pipeline = nullptr;
     other.cpu_material = nullptr;
 }
