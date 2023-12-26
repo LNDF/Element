@@ -9,3 +9,7 @@ vk::CommandBuffer vulkan::create_command_buffer() {
     info.commandBufferCount = 1;
     return device.allocateCommandBuffers(info)[0];
 }
+
+void vulkan::free_command_buffer(vk::CommandBuffer& cmd) {
+    device.freeCommandBuffers(command_pool, cmd);
+}
