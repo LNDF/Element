@@ -6,6 +6,7 @@
 #include <scenegraph/node_ref.h>
 #include <scenegraph/node_storage.h>
 #include <serialization/scenegraph/node_ref.h>
+#include <serialization/scenegraph/transform.h>
 #include <serialization/vector.h>
 #include <serialization/string.h>
 
@@ -27,6 +28,7 @@ namespace cereal {
     void save(Archive& ar, const element::scenegraph::node& node) {
         ar(make_nvp("id", node.get_id()));
         ar(make_nvp("name", node.get_name()));
+        ar(make_nvp("transform", node.get_transform()));
         ar(make_nvp("enabled", node.is_enabled()));
         ar(make_nvp("parent", node.get_parent()));
         ar(make_nvp("children", node.get_children()));
@@ -36,16 +38,19 @@ namespace cereal {
     void load(Archive& ar, element::scenegraph::node& node) {
         element::uuid id;
         std::string name;
+        element::scenegraph::transform transform;
         bool enabled;
         element::scenegraph::node_ref parent;
         std::vector<element::scenegraph::node_ref> children;
         ar(make_nvp("id", id));
         ar(make_nvp("name", name));
+        ar(make_nvp("transform", transform));
         ar(make_nvp("enabled", enabled));
         ar(make_nvp("parent", parent));
         ar(make_nvp("children", children));
         node.__set_id(id);
         node.set_name(std::move(name));
+        node.set_transform(transform);
         node.set_enabled(enabled);
         node.__set_parent(parent);
         node.__set_children(std::move(children));
