@@ -27,7 +27,7 @@ void render::render_graph_mesh_instance_data::remove_instance(const uuid& id) {
 void render::render_graph_mesh_instance_data::sync(vk::CommandBuffer& cmd) {
     if (recreate) {
         recreate = false;
-        std::uint32_t i;
+        std::uint32_t i = 0;
         model_matrices.clear();
         model_matrices.reserve(instances_watchers.size());
         model_matrices_gpu.reserve(sizeof(glm::mat4) * model_matrices.capacity());
