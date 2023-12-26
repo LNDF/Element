@@ -52,6 +52,11 @@ namespace element {
                 void select_scene(const uuid& id, const scenegraph::camera_node_ref& camera);
                 void select_scene(const uuid& id);
                 void select_camera(const scenegraph::camera_node_ref& camera);
+
+                inline std::uint32_t get_width() const {return width;}
+                inline std::uint32_t get_height() const {return height;}
+                inline vk::Image get_color_image() const {return color.get_target();}
+                inline vk::Image get_depth_image() const {return depth.get_target();}
         };
 
     } // namespace render
