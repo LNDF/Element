@@ -4,105 +4,110 @@
 #include <core/log.h>
 #include <graphics/vulkan_command_buffer.h>
 #include <graphics/vulkan_sync.h>
+#include <graphics/vulkan_image.h>
+#include <graphics/vulkan_render_target.h>
 #include <render/global_data.h>
 #include <render/scene_render.h>
 #include <render/pipeline.h>
 #include <render/material.h>
 #include <render/mesh_manager.h>
+#include <render/render_sync.h>
+#include <render/scene_render.h>
 
 using namespace element;
 
 bool render::renderer_initialized = false;
-std::uint32_t render::frames_in_flight = ELM_MAX_FRAMES_IN_FLIGHT;
-std::uint32_t render::current_frame = 0;
-render::swapchain_frame_info render::swapchain_frames[ELM_MAX_FRAMES_IN_FLIGHT];
-const vulkan::swapchain_info* render::current_swapchain = nullptr;
-vk::CommandBuffer render::main_command_buffer;
 
-void render::select_swapchain(const vulkan::swapchain_info& info) {
-    current_swapchain = &info;
-    if (info.images.size() < ELM_MAX_FRAMES_IN_FLIGHT) {
-        frames_in_flight = info.images.size();
-    }
-    current_frame = 0;
-    ELM_DEBUG("Using {} frames in flight", frames_in_flight);
-}
+static const vulkan::swapchain_info* current_swapchain = nullptr;
+static render::scene_renderer* screen_scene_renderer = nullptr;
+static vk::Semaphore image_acquired, render_done;
+static vk::Fence render_submitted;
+static vk::CommandBuffer render_command_buffer;
 
-void render::unselect_swapchain() {
-    vulkan::device.waitIdle();
-    current_swapchain = nullptr;
-    frames_in_flight = ELM_MAX_FRAMES_IN_FLIGHT;
-    current_frame = 0;
-}
+static vk::Semaphore sync_done;
+static vk::Fence sync_submitted;
+static vk::CommandBuffer sync_command_buffer;
 
-void render::init_renderer() {
-    if (renderer_initialized) return;
-    ELM_INFO("Initializing renderer...");
-    main_command_buffer = vulkan::create_command_buffer();
-    ELM_DEBUG("Creating sync structures...");
-    for (std::uint32_t i = 0; i < ELM_MAX_FRAMES_IN_FLIGHT; ++i) {
-        swapchain_frames[i].command_buffer = vulkan::create_command_buffer();
-        swapchain_frames[i].fence = vulkan::create_fence();
-        swapchain_frames[i].image_acquired = vulkan::create_semaphore();
-        swapchain_frames[i].render_done = vulkan::create_semaphore();
-    }
-    global_data::init();
-    scene_renderer::init();
-    renderer_initialized = true;
-}
-
-void render::cleanup_renderer() {
-    if (!renderer_initialized) return;
-    ELM_INFO("Cleanning up renderer...");
-    vulkan::device.waitIdle();
-    scene_renderer::cleanup();
-    destroy_all_materials();
-    destroy_all_pipelines();
-    gpu_mesh_manager::destroy_all_resources();
-    global_data::cleanup();
-    for (std::uint32_t i = 0; i < ELM_MAX_FRAMES_IN_FLIGHT; ++i) {
-        vulkan::device.destroyFence(swapchain_frames[i].fence);
-        vulkan::device.destroySemaphore(swapchain_frames[i].image_acquired);
-        vulkan::device.destroySemaphore(swapchain_frames[i].render_done);
-    }
-    renderer_initialized = false;
-}
-
-void render::render() { //Handle VK_ERROR_OUT_OF_DATE_KHR on acquireNextImageKHR
-    swapchain_frame_info& frame = swapchain_frames[current_frame];
-    if (vulkan::device.waitForFences(1, &frame.fence, VK_TRUE, UINT64_MAX) == vk::Result::eTimeout) {
+static void sync_resources() {
+    if (vulkan::device.waitForFences(sync_submitted, VK_TRUE, UINT64_MAX) == vk::Result::eTimeout) {
         throw std::runtime_error("Timeout when waiting for fence.");
     }
+    vulkan::device.resetFences(sync_submitted);
+    sync_command_buffer.reset();
+    vk::CommandBufferBeginInfo begin_info;
+    begin_info.flags = vk::CommandBufferUsageFlagBits::eOneTimeSubmit;
+    sync_command_buffer.begin(begin_info);
+    render::record_renderer_sync(sync_command_buffer);
+    screen_scene_renderer->record_sync_camera(sync_command_buffer);
+    sync_command_buffer.end();
+    vk::SubmitInfo submit_info;
+    submit_info.commandBufferCount = 1;
+    submit_info.pCommandBuffers = &sync_command_buffer;
+    submit_info.signalSemaphoreCount = 1;
+    submit_info.pSignalSemaphores = &sync_done;
+    vulkan::graphics_queue.submit(submit_info, sync_submitted);
+}
+
+static void render_present() { //Handle VK_ERROR_OUT_OF_DATE_KHR on acquireNextImageKHR
     std::uint32_t image_index;
     try {
-        image_index = vulkan::device.acquireNextImageKHR(current_swapchain->swapchain, UINT64_MAX, frame.image_acquired, nullptr).value;
+        image_index = vulkan::device.acquireNextImageKHR(current_swapchain->swapchain, UINT64_MAX, image_acquired, nullptr).value;
     } catch (vk::OutOfDateKHRError& err) {
         ELM_DEBUG("Skipping frame");
         return;
     }
-    frame.command_buffer.reset();
-    if (vulkan::device.resetFences(1, &frame.fence) != vk::Result::eSuccess) {
-        throw std::runtime_error("Couldn't reset fence");
+    if (vulkan::device.waitForFences(render_submitted, VK_TRUE, UINT64_MAX) == vk::Result::eTimeout) {
+        throw std::runtime_error("Timeout when waiting for fence.");
     }
-    //TODO: record command buffer
-
-    vk::PipelineStageFlags wait_mask = vk::PipelineStageFlagBits::eColorAttachmentOutput;
+    vulkan::device.resetFences(render_submitted);
+    render_command_buffer.reset();
+    vk::CommandBufferBeginInfo begin_info;
+    begin_info.flags = vk::CommandBufferUsageFlagBits::eOneTimeSubmit;
+    render_command_buffer.begin(begin_info);
+    screen_scene_renderer->record_render(render_command_buffer);
+    vulkan::transition_image_layout(render_command_buffer, current_swapchain->images[image_index], current_swapchain->format.format, vk::ImageLayout::eUndefined, vk::ImageLayout::eTransferDstOptimal, vk::ImageAspectFlagBits::eColor, 1, 1);
+    vulkan::transition_image_layout(render_command_buffer, screen_scene_renderer->get_color_image(), vulkan::color_attachment::format, vk::ImageLayout::eColorAttachmentOptimal, vk::ImageLayout::eTransferSrcOptimal, vulkan::color_attachment::aspect, 1, 1);
+    vk::ImageBlit image_blit;
+    image_blit.srcSubresource.aspectMask = vulkan::color_attachment::aspect;
+    image_blit.srcSubresource.mipLevel = 0;
+    image_blit.srcSubresource.baseArrayLayer = 0;
+    image_blit.srcSubresource.layerCount = 1;
+    image_blit.srcOffsets[0].x = 0;
+    image_blit.srcOffsets[0].y = 0;
+    image_blit.srcOffsets[0].z = 0;
+    image_blit.srcOffsets[0].x = screen_scene_renderer->get_width();
+    image_blit.srcOffsets[0].y = screen_scene_renderer->get_height();
+    image_blit.srcOffsets[0].z = 1;
+    image_blit.dstSubresource.aspectMask = vk::ImageAspectFlagBits::eColor;
+    image_blit.dstSubresource.mipLevel = 0;
+    image_blit.dstSubresource.baseArrayLayer = 0;
+    image_blit.dstSubresource.layerCount = 1;
+    image_blit.dstOffsets[0].x = 0;
+    image_blit.dstOffsets[0].y = 0;
+    image_blit.dstOffsets[0].z = 0;
+    image_blit.dstOffsets[0].x = current_swapchain->width;
+    image_blit.dstOffsets[0].y = current_swapchain->height;
+    image_blit.dstOffsets[0].z = 1;
+    render_command_buffer.blitImage(screen_scene_renderer->get_color_image(), vk::ImageLayout::eTransferSrcOptimal, current_swapchain->images[image_index], vk::ImageLayout::eTransferDstOptimal, image_blit, vk::Filter::eLinear);
+    vulkan::transition_image_layout(render_command_buffer, current_swapchain->images[image_index], current_swapchain->format.format, vk::ImageLayout::eTransferDstOptimal, vk::ImageLayout::ePresentSrcKHR, vk::ImageAspectFlagBits::eColor, 1, 1);
+    render_command_buffer.end();
+    vk::PipelineStageFlags wait_mask = vk::PipelineStageFlagBits::eTransfer;
+    vk::Semaphore submit_wait_semaphores[2] = {sync_done, image_acquired};
     vk::SubmitInfo submit_info;
-    submit_info.waitSemaphoreCount = 1;
-    submit_info.pWaitSemaphores = &frame.image_acquired;
+    submit_info.waitSemaphoreCount = 2;
+    submit_info.pWaitSemaphores = submit_wait_semaphores;
     submit_info.pWaitDstStageMask = &wait_mask;
-    submit_info.commandBufferCount = 1;
-    submit_info.pCommandBuffers = &frame.command_buffer;
     submit_info.signalSemaphoreCount = 1;
-    submit_info.pSignalSemaphores = &frame.render_done;
-    vulkan::graphics_queue.submit(submit_info, frame.fence);
+    submit_info.pSignalSemaphores = &render_done;
+    submit_info.commandBufferCount = 1;
+    submit_info.pCommandBuffers = &render_command_buffer;
+    vulkan::graphics_queue.submit(submit_info, render_submitted);
     vk::PresentInfoKHR present_info;
     present_info.waitSemaphoreCount = 1;
-    present_info.pWaitSemaphores = &frame.render_done;
+    present_info.pWaitSemaphores = &render_done;
     present_info.swapchainCount = 1;
     present_info.pSwapchains = &current_swapchain->swapchain;
     present_info.pImageIndices = &image_index;
-    current_frame = (current_frame + 1) % frames_in_flight;
     vk::Result present_result;
     try {
         present_result = vulkan::present_queue.presentKHR(present_info);
@@ -112,4 +117,61 @@ void render::render() { //Handle VK_ERROR_OUT_OF_DATE_KHR on acquireNextImageKHR
     if (present_result == vk::Result::eErrorOutOfDateKHR || present_result == vk::Result::eSuboptimalKHR) {
         ELM_DEBUG("Subotimal or outdated frame");
     }
+}
+
+void render::select_swapchain(const vulkan::swapchain_info& info) {
+    vulkan::device.waitIdle();
+    current_swapchain = &info;
+    if (screen_scene_renderer == nullptr) {
+        screen_scene_renderer = new scene_renderer(info.width, info.height);
+    } else {
+        screen_scene_renderer->resize(info.width, info.height);
+    }
+}
+
+void render::unselect_swapchain() {
+    vulkan::device.waitIdle();
+    current_swapchain = nullptr;
+}
+
+void render::init_renderer() {
+    if (renderer_initialized) return;
+    ELM_INFO("Initializing renderer...");
+    render_command_buffer = vulkan::create_command_buffer();
+    sync_command_buffer = vulkan::create_command_buffer();
+    ELM_DEBUG("Creating sync structures...");
+    image_acquired = vulkan::create_semaphore();
+    render_done = vulkan::create_semaphore();
+    render_submitted = vulkan::create_fence();
+    sync_done = vulkan::create_semaphore();
+    sync_submitted = vulkan::create_fence();
+    global_data::init();
+    scene_renderer::init();
+    renderer_initialized = true;
+}
+
+void render::cleanup_renderer() {
+    if (!renderer_initialized) return;
+    ELM_INFO("Cleanning up renderer...");
+    vulkan::device.waitIdle();
+    delete screen_scene_renderer;
+    screen_scene_renderer = nullptr;
+    scene_renderer::cleanup();
+    destroy_all_materials();
+    destroy_all_pipelines();
+    gpu_mesh_manager::destroy_all_resources();
+    global_data::cleanup();
+    vulkan::device.destroySemaphore(image_acquired);
+    vulkan::device.destroySemaphore(render_done);
+    vulkan::device.destroyFence(render_submitted);
+    vulkan::device.destroySemaphore(sync_done);
+    vulkan::device.destroyFence(sync_submitted);
+    vulkan::free_command_buffer(sync_command_buffer);
+    vulkan::free_command_buffer(render_command_buffer);
+    renderer_initialized = false;
+}
+
+void render::render_screen() {
+    sync_resources();
+    render_present();
 }
