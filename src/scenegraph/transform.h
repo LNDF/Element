@@ -36,6 +36,7 @@ namespace element {
                 const glm::mat4& get_parent_matrix_inv() const;
                 const glm::mat4& get_world_matrix_inv() const;
             public:
+                transform();
                 transform(const node_ref& owner);
 
                 inline const node_ref& get_owner() const {return owner;}

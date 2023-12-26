@@ -25,6 +25,8 @@ static glm::quat rotation_from_mat4(const glm::mat4& matrix, const glm::vec3& sc
     return glm::quat_cast(tmp);
 }
 
+scenegraph::transform::transform() : owner(nullptr) {}
+
 scenegraph::transform::transform(const node_ref& owner) : owner(owner) {}
 
 void scenegraph::transform::clear_cache() const {
@@ -43,6 +45,7 @@ void scenegraph::transform::clear_cache() const {
         cache_world_scale = std::nullopt;
         cache_world_rotation = std::nullopt;
         ++cache_number;
+        if (!owner.exists()) return;
         for (const node_ref& child : owner->get_children()) {
             child->get_transform().clear_cache();
         }
@@ -63,6 +66,7 @@ void scenegraph::transform::clear_local_cache() const {
         cache_world_scale = std::nullopt;
         cache_world_rotation = std::nullopt;
         ++cache_number;
+        if (!owner.exists()) return;
         for (const node_ref& child : owner->get_children()) {
             child->get_transform().clear_cache();
         }
@@ -71,14 +75,18 @@ void scenegraph::transform::clear_local_cache() const {
 
 const glm::mat4& scenegraph::transform::get_parent_matrix() const {
     if (!cache_parent_matrix.has_value()) {
-        const node_ref& parent = owner->get_parent();
-        if (parent == nullptr) {
-            const transform& parent_trans = parent->get_transform();
-            const glm::mat4& parent_parent = parent_trans.get_parent_matrix();
-            const glm::mat4& parent_local = parent_trans.get_matrix();
-            cache_parent_matrix = parent_parent * parent_local;
-        } else {
+        if (!owner.exists()) {
             cache_parent_matrix = glm::identity<glm::mat4>();
+        } else {
+            const node_ref& parent = owner->get_parent();
+            if (parent == nullptr) {
+                const transform& parent_trans = parent->get_transform();
+                const glm::mat4& parent_parent = parent_trans.get_parent_matrix();
+                const glm::mat4& parent_local = parent_trans.get_matrix();
+                cache_parent_matrix = parent_parent * parent_local;
+            } else {
+                cache_parent_matrix = glm::identity<glm::mat4>();
+            }
         }
     }
     return cache_parent_matrix.value();
