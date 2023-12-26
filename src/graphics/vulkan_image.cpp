@@ -8,6 +8,10 @@ static std::pair<vk::AccessFlags, vk::PipelineStageFlags> get_access_and_stage(v
     switch (layout) {
         case vk::ImageLayout::eUndefined:
             return std::make_pair(vk::AccessFlagBits::eNone, vk::PipelineStageFlagBits::eTopOfPipe);
+        case vk::ImageLayout::eGeneral:
+            return std::make_pair(vk::AccessFlagBits::eNone, vk::PipelineStageFlagBits::eHost);
+        case vk::ImageLayout::ePreinitialized:
+            return std::make_pair(vk::AccessFlagBits::eHostWrite, vk::PipelineStageFlagBits::eHost);
         case vk::ImageLayout::eTransferSrcOptimal:
             return std::make_pair(vk::AccessFlagBits::eTransferRead, vk::PipelineStageFlagBits::eTransfer);
         case vk::ImageLayout::eTransferDstOptimal:
@@ -16,6 +20,10 @@ static std::pair<vk::AccessFlags, vk::PipelineStageFlags> get_access_and_stage(v
             return std::make_pair(vk::AccessFlagBits::eShaderRead, vk::PipelineStageFlagBits::eFragmentShader);
         case vk::ImageLayout::eColorAttachmentOptimal:
             return std::make_pair(vk::AccessFlagBits::eColorAttachmentWrite, vk::PipelineStageFlagBits::eColorAttachmentOutput);
+        case vk::ImageLayout::eDepthStencilAttachmentOptimal:
+            return std::make_pair(vk::AccessFlagBits::eDepthStencilAttachmentWrite, vk::PipelineStageFlagBits::eEarlyFragmentTests);
+        case vk::ImageLayout::ePresentSrcKHR:
+            return std::make_pair(vk::AccessFlagBits::eNone, vk::PipelineStageFlagBits::eBottomOfPipe);
         default:
             return std::make_pair(vk::AccessFlagBits::eNone, is_dest ? vk::PipelineStageFlagBits::eTopOfPipe : vk::PipelineStageFlagBits::eBottomOfPipe);
     }
