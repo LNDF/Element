@@ -12,8 +12,6 @@ namespace element {
             private:
                 image target;
                 vk::ImageView view;
-                vk::Format format;
-                vk::ImageUsageFlags usage_flags;
 
                 void create_target(std::uint32_t width, std::uint32_t height){
                     vk::ImageCreateInfo info;
@@ -33,6 +31,10 @@ namespace element {
                     view = create_image_view(target.get_image(), vk::ImageViewType::e2D, F, A, 1, 1);
                 }
             public:
+                static constexpr inline vk::Format format = F;
+                static constexpr inline vk::ImageUsageFlagBits usage = U;
+                static constexpr inline vk::ImageAspectFlagBits aspect = A;
+
                 render_target(std::uint32_t width, std::uint32_t height)
                     : target(VMA_ALLOCATION_CREATE_DEDICATED_MEMORY_BIT) {
                     create_target(width, height);
