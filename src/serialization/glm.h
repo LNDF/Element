@@ -12,6 +12,13 @@ namespace element {
 
 namespace cereal {
 
+    template<class Archive, typename T, glm::qualifier Q>
+    void serialize(Archive& ar, glm::qua<T, Q>& qua) {
+        for (glm::length_t i = 0; i < 4; ++i) {
+            ar(make_nvp(element::__detail::__serialization_glm_member_names[i], qua[i]));
+        }
+    }
+
     template<class Archive, glm::length_t L, typename T, glm::qualifier Q>
     void serialize(Archive& ar, glm::vec<L, T, Q>& vec) {
         for (glm::length_t i = 0; i < L; ++i) {
