@@ -13,6 +13,10 @@ namespace element {
             union {
                 std::uint8_t bytes[16];
                 struct {
+                    std::uint64_t low;
+                    std::uint64_t high;
+                };
+                struct {
                     std::uint32_t time_low;
                     std::uint16_t time_mid;
                     std::uint16_t time_hi_and_version;
