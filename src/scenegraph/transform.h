@@ -48,6 +48,7 @@ namespace element {
                 void set_position(const glm::vec3& position);
                 void set_scale(const glm::vec3& scale);
                 void set_rotation(const glm::quat& rotation);
+                void set(const transform& other);
                 const glm::vec3& get_world_position() const;
                 const glm::vec3& get_world_scale() const;
                 const glm::quat& get_world_rotation() const;

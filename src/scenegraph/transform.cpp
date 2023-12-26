@@ -132,6 +132,13 @@ void scenegraph::transform::set_rotation(const glm::quat& rotation) {
     clear_local_cache();
 }
 
+void scenegraph::transform::set(const transform& other) {
+    this->position = other.position;
+    this->rotation = other.rotation;
+    this->scale = other.scale;
+    clear_local_cache();
+}
+
 const glm::vec3& scenegraph::transform::get_world_position() const {
     if (!cache_world_position.has_value()) {
         cache_world_position = position_from_mat4(get_world_matrix());

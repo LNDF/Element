@@ -77,8 +77,9 @@ namespace element {
                 inline transform& get_transform() {return transf;}
                 inline const transform& get_transform() const {return transf;}
                 inline void set_name(const std::string& new_name) {name = new_name;}
-                void set_enabled(bool enabled);
                 inline void set_name(std::string&& new_name) {name = std::move(new_name);}
+                inline void set_transform(const transform& other) {transf.set(other);}
+                void set_enabled(bool enabled);
 
                 inline void __set_id(const uuid& id) {if (owner_scene == nullptr) this->id = id;}
                 inline void __set_parent(const node_ref& parent) {if (owner_scene == nullptr) this->parent = parent;}
