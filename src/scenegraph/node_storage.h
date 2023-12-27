@@ -39,7 +39,7 @@ namespace element {
                 virtual void emplace_node(const uuid& id, std::string&& name, node_ref& parent) = 0;
                 virtual void emplace_root(const uuid& id) = 0;
                 virtual scenegraph::node* get_node_ptr(const uuid& id) = 0;
-                virtual std::type_index get_type_index() = 0;
+                virtual std::type_index get_type_index() const = 0;
                 virtual void init_scene(scenegraph::scene* owner_scene) = 0;
 
         };
@@ -113,7 +113,7 @@ namespace element {
                     return (scenegraph::node*) std::addressof(it->second);
                 }
 
-                std::type_index get_type_index() final override {
+                std::type_index get_type_index() const final override {
                     return std::type_index(typeid(T));
                 }
 
