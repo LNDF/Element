@@ -211,7 +211,11 @@ void render::scene_renderer::select_scene(const uuid& id, const scenegraph::came
 
 void render::scene_renderer::select_scene(const uuid& id) {
     scenegraph::scene* s = scenegraph::get_scene(id);
-    if (s == nullptr) return;
+    if (s == nullptr) {
+        if (scene_data != nullptr) vulkan::free_descriptorset(global_descriptorset);
+        scene_data = nullptr;
+        return;
+    }
     select_scene(id, s->get_default_camera());
 }
 
