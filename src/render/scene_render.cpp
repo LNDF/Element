@@ -72,10 +72,12 @@ void render::scene_renderer::create_forward_renderpass() {
 }
 
 void render::scene_renderer::init() {
+    ELM_DEBUG("Initialize scene renderer");
     create_forward_renderpass();
 }
 
 void render::scene_renderer::cleanup() {
+    ELM_DEBUG("Cleanning up scene renderer");
     vulkan::device.destroyRenderPass(forward_renderpass);
 }
 

@@ -223,7 +223,7 @@ void render::destroy_pipeline(const uuid& id) {
 }
 
 void render::destroy_all_pipelines() {
-    ELM_INFO("Destroying all loaded pipelines");
+    ELM_DEBUG("Destroying all loaded pipelines");
     for (auto& [id, pipeline] : loaded_forward_pipelines) {
         ::destroy_pipeline(pipeline);
     }

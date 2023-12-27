@@ -324,6 +324,7 @@ void render::destroy_material(const uuid& id) {
 }
 
 void render::destroy_all_materials() {
+    ELM_DEBUG("Destroying all loaded materials");
     loaded_gpu_materials.clear();
     material_manager::destroy_all();
 }
