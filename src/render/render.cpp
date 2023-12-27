@@ -7,7 +7,6 @@
 #include <graphics/vulkan_image.h>
 #include <graphics/vulkan_render_target.h>
 #include <render/global_data.h>
-#include <render/scene_render.h>
 #include <render/pipeline.h>
 #include <render/material.h>
 #include <render/mesh_manager.h>
@@ -174,4 +173,8 @@ void render::cleanup_renderer() {
 void render::render_screen() {
     sync_resources();
     render_present();
+}
+
+render::scene_renderer* render::get_screen_scene_renderer() {
+    return screen_scene_renderer;
 }

@@ -2,6 +2,7 @@
 
 #include <graphics/vulkan_swapchain.h>
 #include <graphics/vulkan.h>
+#include <render/scene_render.h>
 
 #define ELM_MAX_FRAMES_IN_FLIGHT 3
 
@@ -16,5 +17,7 @@ namespace element {
         void cleanup_renderer();
 
         void render_screen();
+
+        scene_renderer* get_screen_scene_renderer();        
     } // namespace render
 } // namespace element
