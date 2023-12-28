@@ -175,6 +175,10 @@ void render::render_screen() {
     render_present();
 }
 
+void render::render_screen_safe() {
+    if (screen_scene_renderer != nullptr) render_screen();
+}
+
 render::scene_renderer* render::get_screen_scene_renderer() {
     return screen_scene_renderer;
 }

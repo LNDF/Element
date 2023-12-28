@@ -17,6 +17,7 @@ namespace element {
         void cleanup_renderer();
 
         void render_screen();
+        void render_screen_safe();
 
         scene_renderer* get_screen_scene_renderer();        
     } // namespace render
