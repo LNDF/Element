@@ -60,6 +60,7 @@ void vulkan::transition_image_layout(vk::CommandBuffer& cmd, vk::Image image, vk
     vk::ImageMemoryBarrier barrier;
     auto [src_access_mask, src_stage] = get_access_and_stage(old_layout, false);
     auto [dst_access_mask, dst_stage] = get_access_and_stage(new_layout, true);
+    barrier.image = image;
     barrier.oldLayout = old_layout;
     barrier.newLayout = new_layout;
     barrier.srcQueueFamilyIndex = vk::QueueFamilyIgnored;
