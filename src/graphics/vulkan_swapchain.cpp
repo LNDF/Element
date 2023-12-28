@@ -105,6 +105,8 @@ vulkan::swapchain_info vulkan::create_swapchain(vulkan::swapchain_creation_info&
     sinfo.swapchain = swapchain;
     sinfo.format = info.format;
     sinfo.images = device.getSwapchainImagesKHR(swapchain);
+    sinfo.width = info.width;
+    sinfo.height = info.height;
     return sinfo;
 }
 
