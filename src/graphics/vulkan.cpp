@@ -253,6 +253,7 @@ void vulkan::init_device(vk::SurfaceKHR& surface) {
         ELM_DEBUG("    {}", layer);
     }
     vk::PhysicalDeviceFeatures physical_device_feautres;
+    physical_device_feautres.shaderInt64 = vk::True;
     vk::DeviceCreateInfo device_create_info{vk::DeviceCreateFlags(), static_cast<std::uint32_t>(queue_create_infos.size()), queue_create_infos.data(), static_cast<std::uint32_t>(device_layers.size()), device_layers.data(), static_cast<std::uint32_t>(device_extensions.size()), device_extensions.data(), &physical_device_feautres};
     device = physical_device.createDevice(device_create_info);
     graphics_queue = device.getQueue(physical_device_info.graphics_queue_index, 0);
