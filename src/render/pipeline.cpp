@@ -59,6 +59,7 @@ static vk::PipelineRasterizationStateCreateInfo create_pipeline_rasterization_st
     vk::PipelineRasterizationStateCreateInfo info;
     info.flags = vk::PipelineRasterizationStateCreateFlags();
     info.depthClampEnable = vk::False;
+    info.lineWidth = 1.0f;
     info.rasterizerDiscardEnable = vk::False;
     info.polygonMode = vk::PolygonMode::eFill;
     info.cullMode = backface_culling ? vk::CullModeFlagBits::eBack : vk::CullModeFlagBits::eNone;
@@ -130,7 +131,7 @@ static render::pipeline create_forward_pipeline(const render::pipeline_data& dat
     vk::PipelineInputAssemblyStateCreateInfo input_assembly_info;
     input_assembly_info.flags = vk::PipelineInputAssemblyStateCreateFlags();
     input_assembly_info.topology = vk::PrimitiveTopology::eTriangleList;
-    input_assembly_info.primitiveRestartEnable = vk::True;
+    input_assembly_info.primitiveRestartEnable = vk::False;
     info.pInputAssemblyState = &input_assembly_info;
     vk::PipelineViewportStateCreateInfo viewport_state_info;
     viewport_state_info.flags = vk::PipelineViewportStateCreateFlags();
