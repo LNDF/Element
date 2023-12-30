@@ -282,9 +282,9 @@ namespace cereal {
     template <class Archive>
     void serialize(Archive& ar, element::render::material_buffer& buffer) {
         ar(make_nvp("data", buffer.data));
-        ar(make_nvp("needs_sync", buffer.needs_sync));
         ar(make_nvp("set", buffer.set));
         ar(make_nvp("binding", buffer.binding));
+        buffer.needs_sync = true;
     }
 
     template <class Archive,
