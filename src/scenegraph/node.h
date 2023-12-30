@@ -81,7 +81,7 @@ namespace element {
                 inline void set_transform(const transform& other) {transf.set(other);}
                 void set_enabled(bool enabled);
 
-                inline void __set_id(const uuid& id) {if (owner_scene == nullptr) this->id = id;}
+                inline void __set_id(const uuid& id) {if (owner_scene == nullptr) this->id = id; transf.owner = node_ref(id);}
                 inline void __set_parent(const node_ref& parent) {if (owner_scene == nullptr) this->parent = parent;}
                 inline void __set_children(std::vector<node_ref>&& children) {if (owner_scene == nullptr) this->children = std::move(children);}
         };

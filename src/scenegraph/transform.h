@@ -10,11 +10,13 @@
 namespace element {
     namespace scenegraph {
         
+        class node;
         class transform_watcher;
 
         class transform {
             private:
                 friend class transform_watcher;
+                friend class node;
 
                 mutable std::optional<glm::mat4> cache_local_matrix;
                 mutable std::optional<glm::mat4> cache_parent_matrix;
