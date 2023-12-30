@@ -66,7 +66,7 @@ void render::scene_render_data::register_node(const scenegraph::mesh_node& node)
     data.enabled = false;
     auto it = mesh_data.find(node.get_id());
     bool was_enabled = false;
-    if (it != mesh_data.end() || !it->second.enabled) {
+    if (it != mesh_data.end() && it->second.enabled) {
         was_enabled = true;
     }
     if (was_enabled) {
@@ -97,6 +97,7 @@ void render::scene_render_data::enable_node(const scenegraph::mesh_node& node) {
         if (it->second.enabled) return;
         it->second.enabled = true;
         const material* material = material_manager::get(it->second.material);
+        if (material == nullptr) return;
         const uuid& pipeline = material->get_pipeline_id();
         const pipeline_data* p_data = get_pipeline_data(pipeline);
         if (p_data->transparent) {
@@ -114,6 +115,7 @@ void render::scene_render_data::disable_node(const uuid& id) {
         if (!it->second.enabled) return;
         it->second.enabled = false;
         const material* material = material_manager::get(it->second.material);
+        if (material == nullptr) return;
         const uuid& pipeline = material->get_pipeline_id();
         const pipeline_data* p_data = get_pipeline_data(pipeline);
         if (p_data->transparent) {
