@@ -38,4 +38,4 @@ void scenegraph::mesh_node::set_material(const uuid& material) {
     }
 }
 
-ELM_REGISTER_NODE_TYPE(element::scenegraph::node, "Mesh node")
+ELM_REGISTER_NODE_TYPE(element::scenegraph::mesh_node, "Mesh")

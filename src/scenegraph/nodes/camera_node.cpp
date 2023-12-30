@@ -21,3 +21,5 @@ glm::mat4 scenegraph::camera_node::get_projection_matrix(std::uint32_t width, st
 glm::mat4 scenegraph::camera_node::get_view_projection_matrix(std::uint32_t width, std::uint32_t height) const {
     return get_projection_matrix(width, height) * get_view_matrix();
 }
+
+ELM_REGISTER_NODE_TYPE(element::scenegraph::camera_node, "Camera")
