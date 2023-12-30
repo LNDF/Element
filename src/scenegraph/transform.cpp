@@ -79,7 +79,7 @@ const glm::mat4& scenegraph::transform::get_parent_matrix() const {
             cache_parent_matrix = glm::identity<glm::mat4>();
         } else {
             const node_ref& parent = owner->get_parent();
-            if (parent == nullptr) {
+            if (parent != nullptr) {
                 const transform& parent_trans = parent->get_transform();
                 const glm::mat4& parent_parent = parent_trans.get_parent_matrix();
                 const glm::mat4& parent_local = parent_trans.get_matrix();
