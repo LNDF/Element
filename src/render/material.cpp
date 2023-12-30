@@ -291,6 +291,7 @@ void render::gpu_material::record_bind_descriptorsets(vk::CommandBuffer& cmd) co
 }
 
 void render::gpu_material::record_push_constants(vk::CommandBuffer& cmd) const {
+    if (cpu_material->push_constants_buffer.data.size() == 0) return;
     cmd.pushConstants(forward_pipeline->layout, cpu_material->data->push_constants.second, 0, static_cast<std::uint32_t>(cpu_material->push_constants_buffer.data.size()), cpu_material->push_constants_buffer.data.data());
 }
 
