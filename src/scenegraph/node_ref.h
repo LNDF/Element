@@ -66,6 +66,7 @@ namespace element {
                 node_ref_derived(const uuid& id) : ref(id) {}
                 node_ref_derived(T* node) : ref(node) {}
                 node_ref_derived(std::nullptr_t) : ref(nullptr) {}
+                node_ref_derived(const node_ref& ref) : ref(ref) {}
                 inline bool exists() const {return ref.exists();}
                 inline const T* get_node() const {return static_cast<const T*>(ref.get_node());}
                 inline T* get_node() {return static_cast<T*>(ref.get_node());}
