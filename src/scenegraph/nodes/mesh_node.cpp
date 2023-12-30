@@ -5,36 +5,53 @@
 
 using namespace element;
 
+void scenegraph::mesh_node::render_register() {
+    if (render_data == nullptr) return;
+    if (!mesh.is_null() && !material.is_null()) {
+        render_data->register_node(*this);
+        registered = true;
+    } else if (registered) {
+        render_unregister();
+    }
+}
+
+void scenegraph::mesh_node::render_unregister() {
+    if (registered) {
+        render_data->unregister_node(get_id());
+        registered = false;
+    }
+}
+
 void scenegraph::mesh_node::setup() {
     render_data = render::get_scene_render_data(get_owner_scene()->get_id());
-    render_data->register_node(*this);
-    registered = true;
+    render_register();
 }
 
 void scenegraph::mesh_node::cleanup() {
-    render_data->unregister_node(get_id());
-    registered = false;
+    render_unregister();
 }
 
 void scenegraph::mesh_node::enable() {
-    render_data->enable_node(*this);
+    if (registered) render_data->enable_node(*this);
 }
 
 void scenegraph::mesh_node::disable() {
-    render_data->disable_node(get_id());
+    if (registered) render_data->disable_node(get_id());
 }
 
 void scenegraph::mesh_node::set_mesh(const uuid& mesh) {
     this->mesh = mesh;
-    if (registered) {
-        render_data->register_node(*this);
+    if (is_enabled()) {
+        render_register();
+        enable();
     }
 }
 
 void scenegraph::mesh_node::set_material(const uuid& material) {
     this->material = material;
-    if (registered) {
-        render_data->register_node(*this);
+    if (is_enabled()) {
+        render_register();
+        enable();
     }
 }
 

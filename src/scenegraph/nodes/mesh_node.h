@@ -12,11 +12,14 @@ namespace element {
         
         class mesh_node : public node {
             private:
-                uuid mesh;
-                uuid material;
+                uuid mesh = uuid::null();
+                uuid material = uuid::null();
 
-                render::scene_render_data* render_data;
+                render::scene_render_data* render_data = nullptr;
                 bool registered = false;
+
+                void render_register();
+                void render_unregister();
 
                 void setup() final override;
                 void cleanup() final override;
