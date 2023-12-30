@@ -25,9 +25,9 @@ static glm::quat rotation_from_mat4(const glm::mat4& matrix, const glm::vec3& sc
     return glm::quat_cast(tmp);
 }
 
-scenegraph::transform::transform() : owner(nullptr) {}
+scenegraph::transform::transform() : owner(nullptr), position(0.0f), scale(0.0f), rotation(glm::vec3(0.0f, 0.0f, 0.0f)) {}
 
-scenegraph::transform::transform(const node_ref& owner) : owner(owner) {}
+scenegraph::transform::transform(const node_ref& owner) : owner(owner), position(0.0f), scale(0.0f), rotation(glm::vec3(0.0f, 0.0f, 0.0f)) {}
 
 void scenegraph::transform::clear_cache() const {
     if (cache_parent_matrix.has_value() ||
