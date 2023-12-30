@@ -81,7 +81,7 @@ namespace element {
         class transform_watcher {
             private:
                 node_ref node;
-                mutable std::uint32_t cache_number;
+                mutable std::uint32_t cache_number = 0;
             public:
                 transform_watcher();
                 transform_watcher(const transform& trans);
