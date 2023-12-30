@@ -206,6 +206,7 @@ void render::scene_renderer::select_scene(const uuid& id, const scenegraph::came
     if (scene_data != nullptr) vulkan::free_descriptorset(global_descriptorset);
     scene_data = get_scene_render_data(id);;
     if (scene_data != nullptr) create_descriptorset();
+    this->camera = camera;
     select_camera(this->camera);
 }
 
