@@ -187,6 +187,8 @@ static render::pipeline create_forward_pipeline(const render::pipeline_data& dat
     info.subpass = 0;
     info.basePipelineHandle = nullptr;
     result.pipeline = vulkan::device.createGraphicsPipeline(nullptr, info).value;
+    vulkan::device.destroyShaderModule(vert_mod);
+    vulkan::device.destroyShaderModule(frag_mod);
     return result;
 }
 
