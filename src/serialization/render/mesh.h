@@ -10,7 +10,7 @@ namespace cereal {
         = cereal::traits::sfinae>
     void save(Archive& ar, const element::render::mesh& mesh) {
         std::size_t vert_count = mesh.vertices.size();
-        std::size_t ind_count = mesh.vertices.size();
+        std::size_t ind_count = mesh.indices.size();
         ar(vert_count);
         ar(ind_count);
         ar.saveBinary(&mesh.vertices[0], vert_count * sizeof(element::render::vertex));
