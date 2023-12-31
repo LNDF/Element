@@ -15,7 +15,7 @@ using namespace element;
 
 void __detail::__render_gpu_mesh_resource_loaded(const uuid& id, const render::mesh& mesh) {
     std::lock_guard<std::mutex> lk(sync_mutex);
-    if (render::gpu_mesh_manager::get_resource(id).second == 0) return;
+    if (render::gpu_mesh_manager::get_resource_references(id) == 0) return;
     vulkan::upload_buffer vertex_buffer(mesh.vertices.size() * sizeof(render::vertex), vk::BufferUsageFlagBits::eVertexBuffer);
     vulkan::upload_buffer index_buffer(mesh.indices.size() * sizeof(std::uint32_t), vk::BufferUsageFlagBits::eIndexBuffer);
     vertex_buffer.set(mesh.vertices.data());
