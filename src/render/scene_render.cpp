@@ -153,6 +153,7 @@ void render::scene_renderer::record_render(vk::CommandBuffer& cmd) {
         for (auto& [pipeline_id, materials] : scene_data->get_render_graph()) {
             const pipeline* forward_pipeline = get_forward_pipeline(pipeline_id);
             if (forward_pipeline == nullptr) continue;
+            cmd.bindPipeline(vk::PipelineBindPoint::eGraphics, forward_pipeline->pipeline);
             if (first_time) {
                 first_time = false;
                 vk::Viewport viewport;
