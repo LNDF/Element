@@ -19,7 +19,7 @@ static void run_task(element::thread_pool::task_type& task) {
 
 static void worker() {
     std::unique_lock<std::mutex> lk(sync_mutex);
-    while (stop_worker) {
+    while (!stop_worker) {
         if (tasks.empty()) {
             cv.wait(lk);
             continue;
