@@ -170,6 +170,13 @@ void render::cleanup_renderer() {
     renderer_initialized = false;
 }
 
+void render::reset_renderer() {
+    if (!renderer_initialized) return;
+    vulkan::device.waitIdle();
+    sync_command_buffer.reset();
+    render_command_buffer.reset();
+}
+
 void render::render_screen() {
     sync_resources();
     render_present();

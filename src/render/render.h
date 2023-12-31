@@ -15,6 +15,7 @@ namespace element {
 
         void init_renderer();
         void cleanup_renderer();
+        void reset_renderer();
 
         void render_screen();
         void render_screen_safe();

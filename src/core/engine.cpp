@@ -32,6 +32,7 @@ void engine::setup() {
 
 void engine::cleanup() {
     ELM_INFO("Application will close soon. Cleanning up...");
+    render::reset_renderer();
     scenegraph::destroy_all_scenes();
     render::cleanup_renderer();
     vulkan::cleanup();
