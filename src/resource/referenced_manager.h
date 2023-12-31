@@ -12,6 +12,14 @@ namespace element {
             private:
                 static std::unordered_map<uuid, std::uint32_t> ref_map;
             public:
+                static std::uint32_t get_resource_references(const uuid& id) {
+                    auto it = ref_map.find(id);
+                    if (it == ref_map.end()) {
+                        return 0;
+                    }
+                    return it->second;
+                }
+
                 static std::pair<T*, std::uint32_t> get_resource(const uuid& id) {
                     auto it = ref_map.find(id);
                     if (it == ref_map.end()) {
@@ -25,7 +33,7 @@ namespace element {
                     if (it == ref_map.end()) {
                         it = ref_map.insert_or_assign(id, 0).first;
                     }
-                    if (it->second == 0) {
+                    if (it->second++ == 0) {
                         C(id);
                     }
                 }
