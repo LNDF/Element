@@ -15,7 +15,9 @@ glm::mat4 scenegraph::camera_node::get_view_matrix() const {
 }
 
 glm::mat4 scenegraph::camera_node::get_projection_matrix(std::uint32_t width, std::uint32_t height) const {
-    return glm::perspectiveRH_ZO(fov, (float) width / (float) height, near_plane, far_plane);
+    glm::mat4 proj = glm::perspectiveRH_ZO(fov, (float) width / (float) height, near_plane, far_plane);
+    proj[1][1] *= -1;
+    return proj;
 }
 
 glm::mat4 scenegraph::camera_node::get_view_projection_matrix(std::uint32_t width, std::uint32_t height) const {
