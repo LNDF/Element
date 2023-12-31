@@ -94,10 +94,10 @@ static void create_pipeline_vertex_input_state(std::vector<vk::VertexInputAttrib
     attributes.emplace_back(2, 0, vk::Format::eR32G32B32Sfloat, offsetof(render::vertex, tangent)); //tangent
     attributes.emplace_back(3, 0, vk::Format::eR32G32Sfloat, offsetof(render::vertex, tex_coords)); //tex coords
     //Per instance
-    attributes.emplace_back(4, 0, vk::Format::eR32G32B32A32Sfloat, 0); //model matrix (col 1)
-    attributes.emplace_back(6, 0, vk::Format::eR32G32B32A32Sfloat, 0); //model matrix (col 3)
-    attributes.emplace_back(5, 0, vk::Format::eR32G32B32A32Sfloat, 0); //model matrix (col 2)
-    attributes.emplace_back(7, 0, vk::Format::eR32G32B32A32Sfloat, 0); //model matrix (col 4)
+    attributes.emplace_back(4, 1, vk::Format::eR32G32B32A32Sfloat, sizeof(glm::mat4::col_type) * 0); //model matrix (col 1)
+    attributes.emplace_back(5, 1, vk::Format::eR32G32B32A32Sfloat, sizeof(glm::mat4::col_type) * 1); //model matrix (col 2)
+    attributes.emplace_back(6, 1, vk::Format::eR32G32B32A32Sfloat, sizeof(glm::mat4::col_type) * 2); //model matrix (col 3)
+    attributes.emplace_back(7, 1, vk::Format::eR32G32B32A32Sfloat, sizeof(glm::mat4::col_type) * 3); //model matrix (col 4)
     //Bindings
     bindings.reserve(2);
     bindings.emplace_back(0, sizeof(render::vertex), vk::VertexInputRate::eVertex); //vertex data
