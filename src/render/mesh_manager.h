@@ -1,7 +1,7 @@
 #pragma once
 
 #include <render/mesh.h>
-#include <graphics/vulkan_command_buffer.h>
+#include <render/vulkan_command_buffer.h>
 #include <resource/async_loader.h>
 #include <resource/referenced_manager.h>
 #include <serialization/render/mesh.h>

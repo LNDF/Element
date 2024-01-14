@@ -1,7 +1,7 @@
 #include "pipeline.h"
 
-#include <graphics/vulkan_shader.h>
-#include <graphics/vulkan_descriptor.h>
+#include <render/vulkan_shader.h>
+#include <render/vulkan_descriptor.h>
 #include <render/global_data.h>
 #include <render/shader.h>
 #include <render/scene_render.h>

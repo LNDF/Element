@@ -3,7 +3,7 @@
 #include <core/log.h>
 #include <core/fs.h>
 #include <event/event.h>
-#include <graphics/vulkan.h>
+#include <render/vulkan.h>
 #include <render/render.h>
 #include <scenegraph/scene_manager.h>
 #include <utils/uuid.h>

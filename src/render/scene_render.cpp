@@ -1,6 +1,6 @@
 #include "scene_render.h"
 
-#include <graphics/vulkan_framebuffer.h>
+#include <render/vulkan_framebuffer.h>
 #include <render/global_data.h>
 #include <render/pipeline.h>
 #include <render/material.h>

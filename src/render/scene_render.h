@@ -1,9 +1,9 @@
 #pragma once
 
-#include <graphics/vulkan.h>
-#include <graphics/vulkan_render_target.h>
-#include <graphics/vulkan_buffer.h>
-#include <graphics/vulkan_descriptor.h>
+#include <render/vulkan.h>
+#include <render/vulkan_render_target.h>
+#include <render/vulkan_buffer.h>
+#include <render/vulkan_descriptor.h>
 #include <render/scene_data_manager.h>
 #include <scenegraph/nodes/camera_node_ref.h>
 #include <scenegraph/transform.h>

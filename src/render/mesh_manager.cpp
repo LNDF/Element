@@ -1,6 +1,6 @@
 #include "mesh_manager.h"
 
-#include <graphics/vulkan_buffer.h>
+#include <render/vulkan_buffer.h>
 #include <utils/packed_map.h>
 #include <unordered_map>
 #include <vector>

@@ -1,7 +1,7 @@
 #pragma once
 
 #include <utils/uuid.h>
-#include <graphics/vulkan.h>
+#include <render/vulkan.h>
 #include <render/shader.h>
 #include <vector>
 #include <utility>

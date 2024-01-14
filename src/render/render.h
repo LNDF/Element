@@ -1,7 +1,7 @@
 #pragma once
 
-#include <graphics/vulkan_swapchain.h>
-#include <graphics/vulkan.h>
+#include <render/vulkan_swapchain.h>
+#include <render/vulkan.h>
 #include <render/scene_render.h>
 
 #define ELM_MAX_FRAMES_IN_FLIGHT 3

@@ -1,8 +1,8 @@
 #pragma once
 
-#include <graphics/vulkan.h>
-#include <graphics/vulkan_image_view.h>
-#include <graphics/vulkan_image.h>
+#include <render/vulkan.h>
+#include <render/vulkan_image_view.h>
+#include <render/vulkan_image.h>
 
 namespace element {
     namespace vulkan {

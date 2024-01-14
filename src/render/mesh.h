@@ -1,6 +1,6 @@
 #pragma once
 
-#include <graphics/vulkan_buffer.h>
+#include <render/vulkan_buffer.h>
 #include <glm/glm.hpp>
 #include <vector>
 

@@ -1,6 +1,6 @@
 #pragma once
 
-#include <graphics/vulkan_buffer.h>
+#include <render/vulkan_buffer.h>
 #include <scenegraph/transform.h>
 #include <utils/packed_map.h>
 #include <utils/uuid.h>

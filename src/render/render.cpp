@@ -2,10 +2,10 @@
 
 #include <stdexcept>
 #include <core/log.h>
-#include <graphics/vulkan_command_buffer.h>
-#include <graphics/vulkan_sync.h>
-#include <graphics/vulkan_image.h>
-#include <graphics/vulkan_render_target.h>
+#include <render/vulkan_command_buffer.h>
+#include <render/vulkan_sync.h>
+#include <render/vulkan_image.h>
+#include <render/vulkan_render_target.h>
 #include <render/global_data.h>
 #include <render/pipeline.h>
 #include <render/material.h>
