@@ -2,6 +2,8 @@
 
 #include <stdexcept>
 #include <core/log.h>
+#include <event/event.h>
+#include <render/render_events.h>
 #include <render/vulkan_command_buffer.h>
 #include <render/vulkan_sync.h>
 #include <render/vulkan_image.h>
@@ -26,6 +28,8 @@ static vk::CommandBuffer render_command_buffer;
 static vk::Semaphore sync_done;
 static vk::Fence sync_submitted;
 static vk::CommandBuffer sync_command_buffer;
+
+static bool reset_later = false;
 
 static void sync_resources() {
     if (vulkan::device.waitForFences(sync_submitted, VK_TRUE, UINT64_MAX) == vk::Result::eTimeout) {
@@ -160,6 +164,7 @@ void render::cleanup_renderer() {
     destroy_all_pipelines();
     gpu_mesh_manager::destroy_all_resources();
     global_data::cleanup();
+    reset_renderer();
     vulkan::device.destroySemaphore(image_acquired);
     vulkan::device.destroySemaphore(render_done);
     vulkan::device.destroyFence(render_submitted);
@@ -171,13 +176,23 @@ void render::cleanup_renderer() {
 }
 
 void render::reset_renderer() {
+    reset_later = false;
     if (!renderer_initialized) return;
-    vulkan::device.waitIdle();
+    vulkan::graphics_queue.waitIdle();
     sync_command_buffer.reset();
     render_command_buffer.reset();
+    events::render_idle event;
+    event_manager::send_event(event);
+}
+
+void render::reset_renderer_later() {
+    reset_later = true;
 }
 
 void render::render_screen() {
+    if (reset_later) {
+        reset_renderer();
+    }
     sync_resources();
     render_present();
 }
