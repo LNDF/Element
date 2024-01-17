@@ -65,6 +65,9 @@ namespace element {
                 void unregister_node(const uuid& id);
                 void enable_node(const scenegraph::mesh_node& node);
                 void disable_node(const uuid& id);
+                void enable_material(const uuid& material, const uuid& pipeline);
+                void disable_material(const uuid& material, const uuid& pipeline);
+                void update_material(const uuid& material, const uuid& old_pipeline, const uuid& new_pipeline);
                 void gpu_sync(vk::CommandBuffer& cmd);
 
                 inline const render_graph& get_render_graph() const {return graph;}
@@ -75,6 +78,7 @@ namespace element {
         void destroy_scene_render_data(const uuid& id);
         void destroy_all_scene_render_data();
         void record_sync_scene_render_data(vk::CommandBuffer& cmd);
+        std::unordered_map<element::uuid, element::render::scene_render_data>& get_scene_render_data_map();
 
     } // namespace render
 } // namespace element
