@@ -5,11 +5,11 @@
 namespace element {
     namespace events {
         
-        struct start_loading {
+        struct resource_start_loading {
             uuid id;
         };
 
-        struct end_loading {
+        struct resource_end_loading {
             uuid id;
         };
 
