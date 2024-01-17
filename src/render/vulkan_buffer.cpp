@@ -1,8 +1,16 @@
 #include "vulkan_buffer.h"
 
+#include <event/event.h>
+#include <render/render_events.h>
+#include <render/render.h>
 #include <cstring>
+#include <utility>
+#include <vector>
 
 using namespace element;
+
+static std::vector<std::pair<VmaAllocation, vk::Buffer>> queued_deletions;
+
 
 vulkan::upload_buffer::upload_buffer(vk::BufferUsageFlags usage) : upload_buffer(0, usage) {}
 
@@ -69,11 +77,13 @@ void vulkan::upload_buffer::reset_buffers() {
 
 void vulkan::upload_buffer::destroy_buffers() {
     if (staging_alloc != nullptr) {
-        vmaDestroyBuffer(allocator, staging, staging_alloc);
+        queued_deletions.emplace_back(staging_alloc, staging);
+        render::reset_renderer_later();
         staging_alloc = nullptr;
     }
     if (buffer_alloc != nullptr) {
-        vmaDestroyBuffer(allocator, buffer, buffer_alloc);
+        queued_deletions.emplace_back(buffer_alloc, buffer);
+        render::reset_renderer_later();
         buffer_alloc = nullptr;
     }
 }
@@ -126,3 +136,13 @@ void vulkan::upload_buffer::destroy_staging() {
         staging = nullptr;
     }
 }
+
+static bool buffer_delete(events::render_idle& event) {
+    for (auto& [allocation, buffer] : queued_deletions) {
+        vmaDestroyBuffer(vulkan::allocator, buffer, allocation);
+    }
+    queued_deletions.clear();
+    return true;
+}
+
+ELM_REGISTER_EVENT_CALLBACK(events::render_idle, buffer_delete, event_callback_priority::highest)

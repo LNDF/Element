@@ -1,5 +1,7 @@
 #include "pipeline.h"
 
+#include <event/event.h>
+#include <render/render_events.h>
 #include <render/vulkan_shader.h>
 #include <render/vulkan_descriptor.h>
 #include <render/global_data.h>
@@ -7,12 +9,15 @@
 #include <render/scene_render.h>
 #include <render/mesh.h>
 #include <render/pipeline_manager.h>
+#include <render/render.h>
 #include <glm/glm.hpp>
 #include <unordered_map>
+#include <vector>
 
 using namespace element;
 
 static std::unordered_map<uuid, render::pipeline> loaded_forward_pipelines;
+static std::vector<render::pipeline> queued_deletions;
 
 static vk::DescriptorSetLayoutBinding create_descriptorset_layout_binding_from_resource(const render::shader_resource_layout& res, const vk::ShaderStageFlags& stage) {
     vk::DescriptorSetLayoutBinding binding;
@@ -195,12 +200,10 @@ static render::pipeline create_forward_pipeline(const render::pipeline_data& dat
     return result;
 }
 
-static void destroy_pipeline(const render::pipeline& pipeline) {
-    if (pipeline.pipeline != nullptr) vulkan::device.destroyPipeline(pipeline.pipeline);
-    if (pipeline.layout != nullptr) vulkan::device.destroyPipelineLayout(pipeline.layout);
-    for (const vk::DescriptorSetLayout& layout : pipeline.descriptorset_layouts) {
-        vulkan::device.destroyDescriptorSetLayout(layout);
-    }
+static void destroy_pipeline(render::pipeline&& pipeline) {
+    if (pipeline.pipeline == nullptr) return;
+    queued_deletions.push_back(std::move(pipeline));
+    render::reset_renderer_later();
 }
 
 const render::pipeline* render::get_forward_pipeline(const uuid& id) {
@@ -223,7 +226,8 @@ render::pipeline_data* render::get_pipeline_data(const uuid& id) {
 void render::destroy_pipeline(const uuid& id) {
     auto it = loaded_forward_pipelines.find(id);
     if (it != loaded_forward_pipelines.end()) {
-        ::destroy_pipeline(it->second);
+        ::destroy_pipeline(std::move(it->second));
+        loaded_forward_pipelines.erase(it);
     }
     pipeline_data_manager::destroy(id);
 }
@@ -231,8 +235,22 @@ void render::destroy_pipeline(const uuid& id) {
 void render::destroy_all_pipelines() {
     ELM_DEBUG("Destroying all loaded pipelines");
     for (auto& [id, pipeline] : loaded_forward_pipelines) {
-        ::destroy_pipeline(pipeline);
+        ::destroy_pipeline(std::move(pipeline));
     }
+    loaded_forward_pipelines.clear();
     pipeline_data_manager::destroy_all();
 }
 
+static bool pipeline_delete(events::render_idle& events) {
+    for (auto& pipeline : queued_deletions) {
+        if (pipeline.pipeline != nullptr) vulkan::device.destroyPipeline(pipeline.pipeline);
+        if (pipeline.layout != nullptr) vulkan::device.destroyPipelineLayout(pipeline.layout);
+        for (const vk::DescriptorSetLayout& layout : pipeline.descriptorset_layouts) {
+            vulkan::device.destroyDescriptorSetLayout(layout);
+        }
+    }
+    queued_deletions.clear();
+    return true;
+}
+
+ELM_REGISTER_EVENT_CALLBACK(events::render_idle, pipeline_delete, event_callback_priority::highest)

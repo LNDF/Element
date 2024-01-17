@@ -1,4 +1,8 @@
 #include "vulkan_descriptor.h"
+
+#include <event/event.h>
+#include <render/render_events.h>
+#include <render/render.h>
 #include <vector>
 
 static std::vector<vk::DescriptorPool> descriptor_pools;
@@ -8,6 +12,8 @@ static vk::DescriptorPoolSize pool_sizes[] = {
 };
 
 using namespace element;
+
+static std::vector<vulkan::descriptor_set> queued_deletions;
 
 vk::DescriptorSetLayout vulkan::create_empty_descriptorset_layout() {
     vk::DescriptorSetLayoutCreateInfo info;
@@ -56,8 +62,8 @@ vulkan::descriptor_set vulkan::allocate_descriptorset(const vk::DescriptorSetLay
 }
 
 void vulkan::free_descriptorset(descriptor_set& set) {
-    std::array<vk::DescriptorSet, 1> sets = {set.set};
-    device.freeDescriptorSets(set.pool, sets);
+    queued_deletions.push_back(set);
+    render::reset_renderer_later();
 }
 
 void vulkan::clean_descriptorsets() {
@@ -66,3 +72,13 @@ void vulkan::clean_descriptorsets() {
     }
     descriptor_pools.clear();
 }
+
+static bool descriptorset_delete(events::render_idle& event) {
+    for (auto& set : queued_deletions) {
+        vulkan::device.freeDescriptorSets(set.pool, set.set);
+    }
+    queued_deletions.clear();
+    return true;
+}
+
+ELM_REGISTER_EVENT_CALLBACK(events::render_idle, descriptorset_delete, event_callback_priority::highest)

@@ -1,8 +1,14 @@
 #include "vulkan_image.h"
 
+#include <event/event.h>
+#include <render/render_events.h>
+#include <render/render.h>
+#include <vector>
 #include <utility>
 
 using namespace element;
+
+static std::vector<std::pair<VmaAllocation, vk::Image>> queued_deletions;
 
 static std::pair<vk::AccessFlags, vk::PipelineStageFlags> get_access_and_stage(vk::ImageLayout layout, bool is_dest) {
     switch (layout) {
@@ -41,7 +47,8 @@ vulkan::image::~image() {
 
 void vulkan::image::destroy_image() {
     if (image_alloc != nullptr) {
-        vmaDestroyImage(allocator, vk_image, image_alloc);
+        queued_deletions.emplace_back(image_alloc, vk_image);
+        render::reset_renderer_later();
         image_alloc = nullptr;
     }
 }
@@ -74,3 +81,13 @@ void vulkan::transition_image_layout(vk::CommandBuffer& cmd, vk::Image image, vk
     barrier.dstAccessMask = dst_access_mask;
     cmd.pipelineBarrier(src_stage, dst_stage, vk::DependencyFlagBits::eByRegion, 0, nullptr, 0, nullptr, 1, &barrier);
 }
+
+static bool image_delete(events::render_idle& event) {
+    for (auto& [allocation, image] : queued_deletions) {
+        vmaDestroyImage(vulkan::allocator, image, allocation);
+    }
+    queued_deletions.clear();
+    return true;
+}
+
+ELM_REGISTER_EVENT_CALLBACK(events::render_idle, image_delete, event_callback_priority::highest)
