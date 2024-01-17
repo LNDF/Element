@@ -41,6 +41,7 @@ render::gpu_mesh* __detail::__render_gpu_mesh_get(const uuid& id) {
 
 void render::record_mesh_buffer_uploads(vk::CommandBuffer& cmd) {
     std::lock_guard<std::mutex> lk(sync_mutex);
+    destroy_staging_mesh_buffers();
     for (auto& [id, mesh] : upload_pending_gpu_meshes) {
         mesh->record_mesh_upload(cmd);
     }

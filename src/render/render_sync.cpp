@@ -13,7 +13,3 @@ void render::record_renderer_sync(vk::CommandBuffer cmd) {
     record_sync_materials(cmd);
     record_mesh_buffer_uploads(cmd);
 }
-
-void render::destroy_staging_buffers() {
-    destroy_staging_mesh_buffers();
-}
