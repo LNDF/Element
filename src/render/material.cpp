@@ -311,14 +311,6 @@ render::gpu_material* render::get_or_create_gpu_material(const uuid& id) {
     return &it->second;
 }
 
-void render::gpu_material::claim() const {
-    ++references;
-}
-
-void render::gpu_material::release() const {
-    --references;
-}
-
 void render::destroy_material(const uuid& id) {
     loaded_gpu_materials.erase(id);
     material_manager::destroy(id);
@@ -332,7 +324,7 @@ void render::destroy_all_materials() {
 
 void render::record_sync_materials(vk::CommandBuffer& cmd) {
     for (auto& [id, mat] : loaded_gpu_materials) {
-        if (mat.is_being_used()) mat.record_sync_if_meeded(cmd);
+        mat.record_sync_if_meeded(cmd);
     }
 }
 

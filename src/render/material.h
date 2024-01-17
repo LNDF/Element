@@ -82,7 +82,6 @@ namespace element {
                 material* cpu_material = nullptr;
                 std::vector<vulkan::upload_buffer> uniform_buffers;
                 std::vector<vulkan::descriptor_set> descriptorsets;
-                mutable std::uint32_t references = 0;
             public:
                 explicit gpu_material(const uuid& id);
                 ~gpu_material();
@@ -96,13 +95,7 @@ namespace element {
                 void record_bind_descriptorsets(vk::CommandBuffer& cmd) const;
                 void record_push_constants(vk::CommandBuffer& cmd) const;
 
-                void claim() const;
-                void release() const;
-
                 inline bool is_valid() const {return cpu_material != nullptr;}
-                inline bool is_being_used() const {return references > 0;}
-                inline std::uint32_t get_references() const {return references;}
-                inline void __set_references(std::uint32_t references) {this->references = references;}
         };
         
         gpu_material* get_gpu_material(const uuid& id);
