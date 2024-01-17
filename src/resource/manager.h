@@ -14,15 +14,18 @@ namespace element {
             public:
                 static ELM_MAKE_RESOURCE_LOADER(load, T)
 
-                static T* get(const uuid& id) {
+                static T* get(const uuid& id, bool create) {
                     auto it = loaded.find(id);
                     if (it == loaded.end()) {
+                        if (!create) return nullptr;
                         auto res = load(id);
                         if (res == std::nullopt) return nullptr;
                         it = loaded.insert_or_assign(id, std::move(res.value())).first;
                     }
                     return &it->second;
                 }
+
+                inline static T* get(const uuid& id) {return get(id, true);}
 
                 static void destroy(const uuid& id) {
                     loaded.erase(id);
