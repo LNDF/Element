@@ -75,8 +75,7 @@ namespace element {
             for (auto& [handle, callback] : __detail::__event__manager_get_callbacks<T>(event_callback_priority::low)) {
                 if (!callback(event)) return false;
             }
-            for (auto& [handle, callback]
-             : __detail::__event__manager_get_callbacks<T>(event_callback_priority::lowest)) {
+            for (auto& [handle, callback] : __detail::__event__manager_get_callbacks<T>(event_callback_priority::lowest)) {
                 if (!callback(event)) return false;
             }
             return true;

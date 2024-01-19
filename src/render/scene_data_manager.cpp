@@ -98,6 +98,7 @@ void render::scene_render_data::enable_node(const scenegraph::mesh_node& node) {
         const uuid& pipeline = material->get_pipeline_id();
         render_graph_mesh_instance_data& instance_data = graph[pipeline][it->second.material][it->second.mesh];
         instance_data.add_instance(node);
+        //TODO: probably force the creation of the GPU material data
     }
 }
 
