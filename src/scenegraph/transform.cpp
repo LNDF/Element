@@ -228,8 +228,24 @@ void scenegraph::transform::rotate_euler(const glm::vec3& angles) {
     set_rotation(glm::quat(angles) * get_rotation());
 }
 
+void scenegraph::transform::set_euler_rotation(const glm::vec3& angles) {
+    set_rotation(glm::quat(angles));
+}
+
+glm::vec3 scenegraph::transform::get_euler_angles() const {
+    return glm::eulerAngles(get_rotation());
+}
+
 void scenegraph::transform::world_rotate_euler(const glm::vec3& angles) {
     set_world_rotation(glm::quat(angles) * get_world_rotation());
+}
+
+void scenegraph::transform::set_world_euler_rotation(const glm::vec3& angles) {
+    set_world_rotation(glm::quat(angles));
+}
+
+glm::vec3 scenegraph::transform::get_world_euler_angles() const {
+    return glm::eulerAngles(get_world_rotation());
 }
 
 scenegraph::transform_watcher::transform_watcher() : node(nullptr) {}

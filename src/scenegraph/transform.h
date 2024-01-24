@@ -75,7 +75,11 @@ namespace element {
                 void look_at(const glm::vec3& front, const glm::vec3& up);
                 void world_look_at(const glm::vec3& front, const glm::vec3& up);
                 void rotate_euler(const glm::vec3& angles);
+                void set_euler_rotation(const glm::vec3& angles);
+                glm::vec3 get_euler_angles() const;
                 void world_rotate_euler(const glm::vec3& angles);
+                void set_world_euler_rotation(const glm::vec3& angles);
+                glm::vec3 get_world_euler_angles() const;
         };
 
         class transform_watcher {
