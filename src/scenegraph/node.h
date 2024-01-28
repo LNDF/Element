@@ -44,6 +44,8 @@ namespace element {
 
                 inline void set_owner_scene(scene* owner_scene) {this->owner_scene = owner_scene;}
 
+                void __destroy();
+
                 friend node_storage_base;
             public:
                 node();
@@ -54,19 +56,35 @@ namespace element {
                 node(const uuid& id, std::string&& name, scene* owner_scene);
 
                 void destroy();
-                void add_child(const node_ref& child);
-                node_ref add_child(std::type_index type, const std::string& name);
-                node_ref add_child(std::type_index type, std::string&& name);
+                void add_child(const node_ref& child, std::uint32_t index);
+                node_ref add_child(std::type_index type, const std::string& name, std::uint32_t index);
+                node_ref add_child(std::type_index type, std::string&& name, std::uint32_t index);
                 
                 template<typename T, typename = std::enable_if<std::is_base_of_v<node, T>>>
+                node_ref add_child(const std::string& name, std::uint32_t index) {
+                    return add_child(std::type_index(typeid(T)), name, index);
+                }
+
+                template<typename T, typename = std::enable_if<std::is_base_of_v<node, T>>>
+                node_ref add_child(std::string&& name, std::uint32_t index) {
+                    return add_child(std::type_index(typeid(T)), std::move(name), index);
+                }
+
+                inline void add_child(const node_ref& child) {add_child(child, children.size());}
+                inline node_ref add_child(std::type_index type, std::string&& name) {return add_child(type, std::move(name), children.size());}
+                inline node_ref add_child(std::type_index type, const std::string& name) {return add_child(type, name, children.size());}
+
+                template<typename T, typename = std::enable_if<std::is_base_of_v<node, T>>>
                 node_ref add_child(const std::string& name) {
-                    return add_child(std::type_index(typeid(T)), name);
+                    return add_child(std::type_index(typeid(T)), name, children.size());
                 }
 
                 template<typename T, typename = std::enable_if<std::is_base_of_v<node, T>>>
                 node_ref add_child(std::string&& name) {
-                    return add_child(std::type_index(typeid(T)), std::move(name));
+                    return add_child(std::type_index(typeid(T)), std::move(name), children.size());
                 }
+
+                void move_child(std::uint32_t old_index, std::uint32_t new_index);
 
                 inline const std::string& get_name() const {return name;}
                 inline const uuid& get_id() const {return id;}

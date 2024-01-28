@@ -11,18 +11,20 @@ static std::unordered_map<element::uuid, element::scenegraph::scene> scene_map;
 
 using namespace element;
 
-void scenegraph::load_scene(const uuid& id) {
+scenegraph::scene* scenegraph::load_scene(const uuid& id) {
     auto input = fs::get_resource(id);
     scene s;
     binary_deserializer deserialize = create_binary_deserializer(*input);
     deserialize(s);
-    import_scene(id, std::move(s));
+    return import_scene(id, std::move(s));
     
 }
 
-void scenegraph::import_scene(const uuid& id, scene&& s) {
+scenegraph::scene* scenegraph::import_scene(const uuid& id, scene&& s) {
     render::create_scene_render_data(id);
-    scene_map.insert(std::make_pair(id, std::move(s))).first->second.init_scene(id);
+    scene* inserted = &scene_map.insert(std::make_pair(id, std::move(s))).first->second;
+    inserted->init_scene(id);
+    return inserted;
 }
 
 scenegraph::scene* scenegraph::get_scene(const uuid& id) {
