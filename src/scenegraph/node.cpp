@@ -27,18 +27,18 @@ void node::__destroy() {
     for (node_ref& child : children) {
         child->__destroy();
     }
-    node_storage_base* storage = owner_scene->get_storage(std::type_index(typeid(this)));
+    node_storage_base* storage = owner_scene->get_storage(std::type_index(typeid(*this)));
     storage->delete_node(this->id);
 }
 
 void node::destroy() {
     if (owner_scene != nullptr) {
-        __destroy();
         if (parent != nullptr) {
             auto& parent_children = parent->children;
             node_ref this_ref = this;
             parent_children.erase(std::remove(parent_children.begin(), parent_children.end(), this_ref), parent_children.end());
         }
+        __destroy();
     }
 }
 
