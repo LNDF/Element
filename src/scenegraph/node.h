@@ -56,7 +56,7 @@ namespace element {
                 node(const uuid& id, std::string&& name, scene* owner_scene);
 
                 void destroy();
-                void add_child(const node_ref& child, std::uint32_t index);
+                node_ref add_child(const node_ref& child, std::uint32_t index);
                 node_ref add_child(std::type_index type, const std::string& name, std::uint32_t index);
                 node_ref add_child(std::type_index type, std::string&& name, std::uint32_t index);
                 
@@ -70,17 +70,17 @@ namespace element {
                     return add_child(std::type_index(typeid(T)), std::move(name), index);
                 }
 
-                inline void add_child(const node_ref& child) {add_child(child, children.size());}
+                inline node_ref add_child(const node_ref& child) {return add_child(child, children.size());}
                 inline node_ref add_child(std::type_index type, std::string&& name) {return add_child(type, std::move(name), children.size());}
                 inline node_ref add_child(std::type_index type, const std::string& name) {return add_child(type, name, children.size());}
 
                 template<typename T, typename = std::enable_if<std::is_base_of_v<node, T>>>
-                node_ref add_child(const std::string& name) {
+                const node_ref add_child(const std::string& name) {
                     return add_child(std::type_index(typeid(T)), name, children.size());
                 }
 
                 template<typename T, typename = std::enable_if<std::is_base_of_v<node, T>>>
-                node_ref add_child(std::string&& name) {
+                const node_ref add_child(std::string&& name) {
                     return add_child(std::type_index(typeid(T)), std::move(name), children.size());
                 }
 

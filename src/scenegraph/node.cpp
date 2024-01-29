@@ -42,7 +42,7 @@ void node::destroy() {
     }
 }
 
-void node::add_child(const node_ref& child, std::uint32_t index) {
+node_ref node::add_child(const node_ref& child, std::uint32_t index) {
     if (owner_scene != nullptr && owner_scene == child->owner_scene) {
         glm::vec3 pos = child->transf.get_world_position();
         glm::vec3 scl = child->transf.get_world_scale();
@@ -56,7 +56,9 @@ void node::add_child(const node_ref& child, std::uint32_t index) {
         inserted->transf.set_world_position(pos);
         inserted->transf.set_world_scale(scl);
         inserted->transf.set_world_rotation(rot);
+        return inserted;
     }
+    return nullptr;
 }
 
 node_ref node::add_child(std::type_index type, const std::string& name, std::uint32_t index) {
