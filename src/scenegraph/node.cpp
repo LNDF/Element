@@ -44,12 +44,18 @@ void node::destroy() {
 
 void node::add_child(const node_ref& child, std::uint32_t index) {
     if (owner_scene != nullptr && owner_scene == child->owner_scene) {
-        children.insert(children.begin() + index, child);
-        if (child->parent != nullptr) {
-            auto& parent_children = child->parent->children;
-            parent_children.erase(std::remove(parent_children.begin(), parent_children.end(), child), parent_children.end());
+        glm::vec3 pos = child->transf.get_world_position();
+        glm::vec3 scl = child->transf.get_world_scale();
+        glm::quat rot = child->transf.get_world_rotation();
+        node_ref& inserted = *(children.insert(children.begin() + index, child));
+        if (inserted->parent != nullptr) {
+            auto& parent_children = inserted->parent->children;
+            parent_children.erase(std::remove(parent_children.begin(), parent_children.end(), inserted), parent_children.end());
         }
-        child->parent = this;
+        inserted->parent = this;
+        inserted->transf.set_world_position(pos);
+        inserted->transf.set_world_scale(scl);
+        inserted->transf.set_world_rotation(rot);
     }
 }
 
@@ -78,11 +84,11 @@ node_ref node::add_child(std::type_index type, std::string&& name, std::uint32_t
 }
 
 void node::move_child(std::uint32_t old_index, std::uint32_t new_index) {
-    if (old_index > new_index) {
-        std::rotate(children.rend() - old_index - 1, children.rend() - old_index, children.rend() - new_index);
-    } else {
-        std::rotate(children.begin() + old_index, children.begin() + old_index + 1, children.begin() + new_index + 1);
-    }
+    if (old_index < new_index) --new_index;
+    node_ref tmp = children[old_index];
+    auto begin = children.begin();
+    children.erase(begin + old_index);
+    children.insert(begin + new_index, tmp);
 }
 
 void node::set_enabled(bool enabled) {
