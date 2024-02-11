@@ -222,9 +222,11 @@ namespace element {
 
             void remove_data(size_type pos) {
                 size_type b = bucket(data[pos].data);
-                if (pos == index[b]) index[b] = data[pos].next;
+                size_type* pointer = &index[b];
+                while (*pointer != pos) pointer = &data[*pointer].next;
+                *pointer = data[pos].next;
                 if (pos != data.size() - 1) {
-                    size_type* pointer = &index[bucket(data.back().data)];
+                    pointer = &index[bucket(data.back().data)];
                     size_type target = data.size() - 1;
                     while (*pointer != target) pointer = &data[*pointer].next;
                     *pointer = pos;
