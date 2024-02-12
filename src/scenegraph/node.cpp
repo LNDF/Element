@@ -53,6 +53,7 @@ node_ref node::add_child(const node_ref& child, std::uint32_t index) {
             parent_children.erase(std::remove(parent_children.begin(), parent_children.end(), inserted), parent_children.end());
         }
         inserted->parent = this;
+        inserted->transf.clear_cache();
         inserted->transf.set_world_position(pos);
         inserted->transf.set_world_scale(scl);
         inserted->transf.set_world_rotation(rot);
