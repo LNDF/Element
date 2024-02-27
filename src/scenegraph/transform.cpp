@@ -185,27 +185,27 @@ void scenegraph::transform::set_world_rotation(const glm::quat& rotation) {
 }
 
 glm::vec3 scenegraph::transform::get_front() const {
-    return get_matrix() * glm::vec4(0, 0, -1, 1);
+    return get_matrix() * glm::vec4(0, 0, -1, 0);
 }
 
 glm::vec3 scenegraph::transform::get_right() const {
-    return get_matrix() * glm::vec4(1, 0, 0, 1);
+    return get_matrix() * glm::vec4(1, 0, 0, 0);
 }
 
 glm::vec3 scenegraph::transform::get_up() const {
-    return get_matrix() * glm::vec4(0, 1, 0, 1);
+    return get_matrix() * glm::vec4(0, 1, 0, 0);
 }
 
 glm::vec3 scenegraph::transform::get_world_front() const {
-    return get_world_matrix() * glm::vec4(0, 0, -1, 1);
+    return get_world_matrix() * glm::vec4(0, 0, -1, 0);
 }
 
 glm::vec3 scenegraph::transform::get_world_right() const {
-    return get_world_matrix() * glm::vec4(1, 0, 0, 1);
+    return get_world_matrix() * glm::vec4(1, 0, 0, 0);
 }
 
 glm::vec3 scenegraph::transform::get_world_up() const {
-    return get_world_matrix() * glm::vec4(0, 1, 0, 1);
+    return get_world_matrix() * glm::vec4(0, 1, 0, 0);
 }
 
 void scenegraph::transform::rotate_axis(const glm::vec3& axis, float angle) {
