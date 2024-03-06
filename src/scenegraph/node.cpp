@@ -129,7 +129,6 @@ node_ref node::add_child(std::type_index type, std::string&& name, std::uint32_t
 
 void node::move_child(std::uint32_t old_index, std::uint32_t new_index) {
     if (owner_scene == nullptr) return;
-    if (old_index < new_index) --new_index;
     node_ref tmp = children[old_index];
     events::before_node_moved before_event;
     before_event.from_parent = this;
@@ -137,6 +136,7 @@ void node::move_child(std::uint32_t old_index, std::uint32_t new_index) {
     before_event.this_node = tmp;
     before_event.dest_index = new_index;
     event_manager::send_event(before_event);
+    if (old_index < new_index) --new_index;
     auto begin = children.begin();
     children.erase(begin + old_index);
     children.insert(begin + new_index, tmp);
