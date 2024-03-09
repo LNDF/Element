@@ -16,3 +16,7 @@ scenegraph::node_type_info::node_type_info(std::string&& name, storage_factory_t
 const scenegraph::node_type_info& scenegraph::get_node_type_info(std::type_index type) {
     return __detail::__scenegraph_get_node_type_map().at(type);
 }
+
+const std::unordered_map<std::type_index, scenegraph::node_type_info>& scenegraph::get_node_type_info_map() {
+    return __detail::__scenegraph_get_node_type_map();
+}

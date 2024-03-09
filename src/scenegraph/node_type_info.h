@@ -31,6 +31,7 @@ namespace element {
         };
 
         const node_type_info& get_node_type_info(std::type_index type);
+        const std::unordered_map<std::type_index, scenegraph::node_type_info>& get_node_type_info_map();
 
     } // namespace scenegraph
 } // namespace element
