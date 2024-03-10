@@ -32,7 +32,7 @@ namespace element {
                 std::string name;
                 uuid id;
                 transform transf;
-                bool enabled;
+                bool enabled = true;
                 node_ref parent;
                 std::vector<node_ref> children;
                 scene* owner_scene = nullptr;
