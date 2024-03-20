@@ -14,12 +14,17 @@ namespace element {
         std::optional<T> load_resource(const uuid& id) {
             std::unique_ptr<std::istream> stream = fs::get_resource(id);
             if (stream->fail()) {
-                ELM_WARN("Couldn't load resource {0}", id.str());
+                ELM_WARN("Couldn't find resource {0}", id.str());
                 return std::nullopt;
             }
             T t;
-            binary_deserializer deserialize = create_binary_deserializer(*stream);
-            deserialize(t);
+            try {
+                binary_deserializer deserialize = create_binary_deserializer(*stream);
+                deserialize(t);
+            } catch (const std::exception& e) {
+                ELM_WARN("Couldn't deserialize resource {0}", id.str());
+                return std::nullopt;
+            }
             return t;
         }
 
