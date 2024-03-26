@@ -17,14 +17,7 @@
 #include <vector>
 #include <functional>
 
-#define ELM_REGISTER_VULKAN_REQUIRED_EXTENSION_HOOK(hook) ELM_PRE_EXECUTE(element::__detail::__vulkan_preregister_required_extension_hook, hook);
-
 namespace element {
-
-    namespace __detail {
-        std::vector<std::function<void(std::vector<const char*>&)>>& __vulkan_get_preregistered_required_extension_hook();
-        bool __vulkan_preregister_required_extension_hook(std::function<void(std::vector<const char*>&)> hook);
-    } // namespace __detail
 
     namespace vulkan {
         struct physical_device_info_type {
@@ -53,11 +46,9 @@ namespace element {
         extern vk::DebugUtilsMessengerEXT debug_messenger;
 #endif
 
-    } // namespace vulkan
-
-    namespace vulkan {
         physical_device_info_type get_physical_device_support(vk::PhysicalDevice& device, vk::SurfaceKHR& surface, const std::vector<const char*>& required_extensions, const std::vector<const char*>& required_layers);
         std::uint32_t pick_best_physical_device(const std::vector<vk::PhysicalDevice>& devices);
+        void add_instance_extensions(const char** extensions, std::uint32_t count);
 
         void init_instance();
         void init_device(vk::SurfaceKHR& surface);

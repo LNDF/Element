@@ -26,6 +26,8 @@ vk::Device vulkan::device = nullptr;
 vk::DebugUtilsMessengerEXT vulkan::debug_messenger = nullptr;
 #endif
 
+static std::vector<const char*> required_instance_extensions;
+
 static VKAPI_ATTR VkBool32 VKAPI_CALL vulkan_logger(VkDebugUtilsMessageSeverityFlagBitsEXT severity, VkDebugUtilsMessageTypeFlagsEXT type, const VkDebugUtilsMessengerCallbackDataEXT* data, void* user_data) {
     log::log_level level;
     const char* type_str = "Vulkan";
@@ -129,6 +131,14 @@ std::uint32_t vulkan::pick_best_physical_device(const std::vector<vk::PhysicalDe
     return index;
 }
 
+void vulkan::add_instance_extensions(const char** extensions, std::uint32_t count) {
+    ELM_DEBUG("Adding {0} instance extensions", count);
+    for (std::uint32_t i = 0; i < count; i++) {
+        required_instance_extensions.push_back(extensions[i]);
+        ELM_DEBUG("    {0}", extensions[i]);
+    }
+}
+
 void vulkan::init_instance() {
     ELM_INFO("Starting Vulkan instance..");
     version = vk::enumerateInstanceVersion();
@@ -151,8 +161,9 @@ void vulkan::init_instance() {
     vk::ApplicationInfo app_info(engine::settings.app_name.c_str(), 0, "element-engine", ELM_VERSION_ID, version);
     std::vector<const char*> extensions;
     std::vector<const char*> layers;
-    for (auto& hook : __detail::__vulkan_get_preregistered_required_extension_hook()) {
-        hook(extensions);
+    extensions.reserve(required_instance_extensions.size());
+    for (const char* ext : required_instance_extensions) {
+        extensions.push_back(ext);
     }
 #ifdef ELM_ENABLE_LOGGING
     if (supported_instance_extensions.contains("VK_EXT_debug_utils")) {
@@ -296,14 +307,4 @@ void vulkan::cleanup() {
     instance.destroyDebugUtilsMessengerEXT(debug_messenger, nullptr, dld);
 #endif
     instance.destroy();
-}
-
-std::vector<std::function<void(std::vector<const char*>&)>>& __detail::__vulkan_get_preregistered_required_extension_hook() {
-    static std::vector<std::function<void(std::vector<const char*>&)>> hooks;
-    return hooks;
-}
-
-bool __detail::__vulkan_preregister_required_extension_hook(std::function<void(std::vector<const char*>&)> hook) {
-     __vulkan_get_preregistered_required_extension_hook().push_back(hook);
-     return true;
 }
