@@ -26,7 +26,6 @@ namespace element {
 } // namespace element
 
 #ifdef ELM_ENABLE_LOGGING
-#define ELM_SETUP_LOG log::setup()
 #define ELM_LOG(level, ...) SPDLOG_LOGGER_CALL(element::log::get_logger(level), level, __VA_ARGS__)
 #define ELM_TRACE(...) SPDLOG_LOGGER_CALL(element::log::console_log, spdlog::level::trace, __VA_ARGS__)
 #define ELM_DEBUG(...) SPDLOG_LOGGER_CALL(element::log::console_log, spdlog::level::debug   , __VA_ARGS__)
@@ -43,7 +42,6 @@ namespace element {
 #define ELM_LOG_LEVEL_CRITICAL spdlog::level::critical
 #define ELM_LOG_LEVEL_DISABLE spdlog::level::off
 #else
-#define ELM_SETUP_LOG
 #define ELM_LOG(level, ...)
 #define ELM_TRACE(...)
 #define ELM_DEBUG(...)

@@ -1,8 +1,12 @@
 #include "log.h"
 
+#include <utils/pre_exec.h>
+
 using namespace element;
 
 #ifdef ELM_ENABLE_LOGGING
+
+ELM_PRE_EXECUTE(log::setup)
 
 std::shared_ptr<spdlog::logger> log::console_log;
 std::shared_ptr<spdlog::logger> log::error_log;
