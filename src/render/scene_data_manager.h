@@ -29,7 +29,7 @@ namespace element {
                 render_graph_mesh_instance_data(const render_graph_mesh_instance_data& other) = delete;
                 render_graph_mesh_instance_data& operator=(const render_graph_mesh_instance_data& other) = delete;
 
-                inline std::uint32_t get_instance_count() const {return model_matrices.size();}
+                inline std::uint32_t get_instance_count() const {return instances_watchers.size();}
                 inline vk::Buffer get_model_matrix_buffer() const {return model_matrices_gpu.get_buffer();}
 
                 void add_instance(const scenegraph::mesh_node& instance);
