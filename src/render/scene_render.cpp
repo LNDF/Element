@@ -227,6 +227,7 @@ void render::scene_renderer::select_scene(const uuid& id) {
 }
 
 void render::scene_renderer::select_camera(const scenegraph::camera_node_ref& camera) {
+    if (camera == nullptr) return;
     cam_watcher = scenegraph::transform_watcher(camera->get_transform());
     this->camera = camera;
 }
