@@ -2,6 +2,7 @@
 
 #include <unordered_map>
 #include <utility>
+#include <core/log.h>
 #include <core/fs.h>
 #include <render/scene_data_manager.h>
 #include <serialization/serializers.h>
@@ -13,6 +14,10 @@ using namespace element;
 
 scenegraph::scene* scenegraph::load_scene(const uuid& id) {
     auto input = fs::get_resource(id);
+    if (input->fail()) {
+        ELM_WARN("Failed to load scene {}", id.str());
+        return nullptr;
+    }
     scene s;
     binary_deserializer deserialize = create_binary_deserializer(*input);
     deserialize(s);
