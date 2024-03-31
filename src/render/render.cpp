@@ -57,6 +57,9 @@ static void render_present() { //Handle VK_ERROR_OUT_OF_DATE_KHR on acquireNextI
         image_index = vulkan::device.acquireNextImageKHR(current_swapchain->swapchain, UINT64_MAX, image_acquired, nullptr).value;
     } catch (vk::OutOfDateKHRError& err) {
         ELM_DEBUG("Skipping frame");
+        events::render_skip_frame event;
+        event.swapchain = current_swapchain;
+        event_manager::send_event(event);
         return;
     }
     if (vulkan::device.waitForFences(render_submitted, VK_TRUE, UINT64_MAX) == vk::Result::eTimeout) {
@@ -119,6 +122,9 @@ static void render_present() { //Handle VK_ERROR_OUT_OF_DATE_KHR on acquireNextI
     }
     if (present_result == vk::Result::eErrorOutOfDateKHR || present_result == vk::Result::eSuboptimalKHR) {
         ELM_DEBUG("Subotimal or outdated frame");
+        events::render_suboptimal_swapchain event;
+        event.swapchain = current_swapchain;
+        event_manager::send_event(event);
     }
 }
 
