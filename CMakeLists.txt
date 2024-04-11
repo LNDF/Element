@@ -60,6 +60,9 @@ if(ELEMENT_ENABLE_LOG)
     target_link_libraries(element PUBLIC spdlog::spdlog)
 endif(ELEMENT_ENABLE_LOG)
 
+# element plugin headers
+target_include_directories(element PUBLIC lib/plugin-headers/include)
+
 #end libs
 
 # CMake options

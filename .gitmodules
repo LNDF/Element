@@ -10,3 +10,6 @@
 [submodule "lib/VulkanMemoryAllocator"]
 	path = lib/VulkanMemoryAllocator
 	url = https://github.com/GPUOpen-LibrariesAndSDKs/VulkanMemoryAllocator
+[submodule "lib/plugin-headers"]
+	path = lib/plugin-headers
+	url = https://github.com/LNDF/Element-Plugin-Headers
