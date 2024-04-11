@@ -1,15 +1,20 @@
 #include "loader.h"
 
 #include <core/log.h>
+#include <element/defs.h>
+#include <element/types/module.h>
 
-#define ELM_PLUGIN_ENTRY_POINT "__elm_plugin_setup"
-#define ELM_PLUGIN_EXIT_POINT "__elm_plugin_cleanup"
+#define ELM_PLUGIN_ENTRY_SYMBOL "__elm_plugin_setup"
+#define ELM_PLUGIN_CLEANUP_SYMBOL "__elm_plugin_cleanup"
 
 #ifdef ELM_PLATFORM_WINDOWS
 #include <windows.h>
 #elif defined(ELM_PLATFORM_LINUX)
 #include <dlfcn.h>
 #endif
+
+ELM_FUNCTION(plugin_setup, void, const element_modules_t* modules);
+ELM_FUNCTION(plugin_cleanup, void);
 
 using namespace element;
 
@@ -29,7 +34,14 @@ const plugins::plugin_info* plugins::load_plugin(const std::filesystem::path& pa
     }
     plugin_info info;
     info.path = full_path;
-    //TODO: Init plugin
+    element_plugin_setup_t setup = (element_plugin_setup_t) get_plugin_symbol(plugin, ELM_PLUGIN_ENTRY_SYMBOL);
+    if (setup) {
+        info.has_element_symbols = true;
+        //TODO: build modules list
+        setup(nullptr);
+    } else {
+        info.has_element_symbols = false;
+    }
     return &loaded_plugins.emplace(plugin, std::move(info)).first->second;
 }
 
@@ -41,11 +53,13 @@ void plugins::unload_plugin(handle plugin) {
     }
     auto& info = it->second;
     ELM_INFO("Unloading plugin: {}", info.path.string());
-    if (info.element_entry_point) {
+    if (info.has_element_symbols) {
         //TODO: Use correct typedef for function pointer
-        void (*cleanup)() = (void (*)())get_plugin_symbol(plugin, ELM_PLUGIN_EXIT_POINT);
+        element_plugin_cleanup_t cleanup = (element_plugin_cleanup_t) get_plugin_symbol(plugin, ELM_PLUGIN_CLEANUP_SYMBOL);
         if (cleanup) {
             cleanup();
+        } else {
+            ELM_WARN("Failed to find plugin cleanup function in plugin: {}", info.path.string());
         }
     }
 #ifdef ELM_PLATFORM_WINDOWS

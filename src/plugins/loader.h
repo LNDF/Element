@@ -15,7 +15,7 @@ namespace element {
 
     struct plugin_info {
         std::filesystem::path path;
-        bool element_entry_point;
+        bool has_element_symbols;
     };
 
     const plugin_info* load_plugin(const std::filesystem::path& path);
