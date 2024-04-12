@@ -36,3 +36,19 @@
 #else
     #error "Unknown platform"
 #endif
+
+#if defined(ELM_PLATFORM_WINDOWS)
+    #define ELM_PLATFORM_STRING "windows"
+#elif defined(ELM_PLATFORM_APPLE)
+    #define ELM_PLATFORM_STRING "apple"
+#elif defined(ELM_PLATFORM_ANDROID)
+    #define ELM_PLATFORM_STRING "android"
+#elif defined(ELM_PLATFORM_LINUX)
+    #define ELM_PLATFORM_STRING "linux"
+#elif defined(ELM_PLATFORM_UNIX)
+    #define ELM_PLATFORM_STRING "unix"
+#elif defined(ELM_PLATFORM_POSIX)
+    #define ELM_PLATFORM_STRING "posix"
+#else
+    #define ELM_PLATFORM_STRING "generic"
+#endif
