@@ -3,6 +3,7 @@
 #include <core/log.h>
 #include <core/fs.h>
 #include <event/event.h>
+#include <plugins/loader.h>
 #include <render/vulkan.h>
 #include <render/render.h>
 #include <scenegraph/scene_manager.h>
@@ -34,6 +35,7 @@ void engine::cleanup() {
     ELM_INFO("Application will close soon. Cleanning up...");
     render::reset_renderer();
     scenegraph::destroy_all_scenes();
+    plugins::unload_all_plugins();
     render::cleanup_renderer();
     vulkan::cleanup();
     thread_pool::stop();
