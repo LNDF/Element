@@ -3,6 +3,9 @@
 #include <utils/platform.h>
 #include <filesystem>
 #include <unordered_map>
+#ifdef ELM_PLATFORM_WINDOWS
+#include <windows.h>
+#endif
 
 namespace element {
     namespace plugins {

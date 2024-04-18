@@ -88,7 +88,7 @@ void plugins::unload_all_plugins() {
 
 void* plugins::get_plugin_symbol(handle plugin, const char* symbol) {
 #ifdef ELM_PLATFORM_WINDOWS
-    return GetProcAddress(plugin, symbol);
+    return (void*) GetProcAddress(plugin, symbol);
 #elif defined(ELM_PLATFORM_LINUX)
     return dlsym(plugin, symbol);
 #endif

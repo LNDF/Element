@@ -22,6 +22,14 @@ option(ELEMENT_ENABLE_LOG "Enable logging in Element engine" ON)
 # compile options
 set_property(TARGET element PROPERTY CXX_STANDARD 20)
 target_compile_options(element PRIVATE -Wall)
+#Use bigobj on windows
+if (WIN32)
+  IF (MSVC)
+    target_compile_options(element PRIVATE /bigobj)
+  ELSE()
+    target_compile_options(element PRIVATE -Wa,-mbig-obj)
+  ENDIF()
+ENDIF(WIN32)
 
 # define options
 target_compile_definitions(element PUBLIC ELM_VERSION="${PROJECT_VERSION}")
