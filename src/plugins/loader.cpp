@@ -1,8 +1,10 @@
 #include "loader.h"
 
 #include <core/log.h>
+#include <plugins/module.h>
 #include <element/defs.h>
 #include <element/types/module.h>
+#include <vector>
 
 #define ELM_PLUGIN_ENTRY_SYMBOL "__elm_plugin_setup"
 #define ELM_PLUGIN_CLEANUP_SYMBOL "__elm_plugin_cleanup"
@@ -37,8 +39,16 @@ const plugins::plugin_info* plugins::load_plugin(const std::filesystem::path& pa
     element_plugin_setup_t setup = (element_plugin_setup_t) get_plugin_symbol(plugin, ELM_PLUGIN_ENTRY_SYMBOL);
     if (setup) {
         info.has_element_symbols = true;
-        //TODO: build modules list
-        setup(nullptr);
+        element_modules_t modules;
+        std::vector<element_module_t> module_list;
+        module_list.reserve(get_modules().size());
+        for (const auto& [name, module] : get_modules()) {
+            module_list.push_back({name.c_str(), module});
+        }
+        modules.modules = module_list.data();
+        modules.count = module_list.size();
+        modules.api_version = 0;
+        setup(&modules);
     } else {
         info.has_element_symbols = false;
     }
