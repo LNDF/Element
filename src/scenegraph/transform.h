@@ -42,6 +42,7 @@ namespace element {
                 explicit transform(const node_ref& owner);
 
                 inline const node_ref& get_owner() const {return owner;}
+                inline std::uint32_t get_cache_number() const {return cache_number;}
 
                 const glm::mat4& get_matrix() const;
                 const glm::mat4& get_world_matrix() const;
