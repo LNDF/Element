@@ -9,8 +9,16 @@
 #include <scenegraph/scene_manager.h>
 #include <utils/uuid.h>
 #include <utils/thread_pool.h>
+#include <chrono>
 
 using namespace element;
+
+static std::uint64_t epoch_tim_to_millis() {
+    using namespace std::chrono;
+    return duration_cast<milliseconds>(system_clock::now().time_since_epoch()).count();
+}
+
+static std::uint64_t last_time;
 
 bool __detail::__engine_closed = false;
 engine::settings_type engine::settings;
@@ -43,10 +51,14 @@ void engine::cleanup() {
 
 void engine::start() {
     ELM_INFO("Starting application...");
+    last_time = epoch_tim_to_millis();
 }
 
 void engine::tick() {
-    events::update u{0};
+    std::uint64_t current_time = epoch_tim_to_millis();
+    std::uint64_t delta_time = current_time - last_time;
+    last_time = current_time;
+    events::update u{delta_time / 1000.0};
     event_manager::send_event<events::update>(u);
 }
 
