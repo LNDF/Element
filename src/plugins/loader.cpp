@@ -22,6 +22,30 @@ using namespace element;
 
 static std::unordered_map<plugins::handle, plugins::plugin_info> loaded_plugins;
 
+static void do_plugin_unload(plugins::handle plugin) {
+    auto it = loaded_plugins.find(plugin);
+    if (it == loaded_plugins.end()) {
+        ELM_ERROR("Failed to unload plugin: plugin not found");
+        return;
+    }
+    auto& info = it->second;
+    ELM_INFO("Unloading plugin: {}", info.path.string());
+    if (info.has_element_symbols) {
+        //TODO: Use correct typedef for function pointer
+        element_plugin_cleanup_t cleanup = (element_plugin_cleanup_t) plugins::get_plugin_symbol(plugin, ELM_PLUGIN_CLEANUP_SYMBOL);
+        if (cleanup) {
+            cleanup();
+        } else {
+            ELM_WARN("Failed to find plugin cleanup function in plugin: {}", info.path.string());
+        }
+    }
+#ifdef ELM_PLATFORM_WINDOWS
+    FreeLibrary(plugin);
+#elif defined(ELM_PLATFORM_LINUX)
+    dlclose(plugin);
+#endif
+}
+
 const plugins::plugin_info* plugins::load_plugin(const std::filesystem::path& path) {
     std::filesystem::path full_path = std::filesystem::absolute(path);
     ELM_INFO("Loading plugin: {}", full_path.string());
@@ -56,34 +80,15 @@ const plugins::plugin_info* plugins::load_plugin(const std::filesystem::path& pa
 }
 
 void plugins::unload_plugin(handle plugin) {
-    auto it = loaded_plugins.find(plugin);
-    if (it == loaded_plugins.end()) {
-        ELM_ERROR("Failed to unload plugin: plugin not found");
-        return;
-    }
-    auto& info = it->second;
-    ELM_INFO("Unloading plugin: {}", info.path.string());
-    if (info.has_element_symbols) {
-        //TODO: Use correct typedef for function pointer
-        element_plugin_cleanup_t cleanup = (element_plugin_cleanup_t) get_plugin_symbol(plugin, ELM_PLUGIN_CLEANUP_SYMBOL);
-        if (cleanup) {
-            cleanup();
-        } else {
-            ELM_WARN("Failed to find plugin cleanup function in plugin: {}", info.path.string());
-        }
-    }
-#ifdef ELM_PLATFORM_WINDOWS
-    FreeLibrary(plugin);
-#elif defined(ELM_PLATFORM_LINUX)
-    dlclose(plugin);
-#endif
-    loaded_plugins.erase(it);
+    do_plugin_unload(plugin);
+    loaded_plugins.erase(plugin);
 }
 
 void plugins::unload_all_plugins() {
     for (auto& [plugin, info] : loaded_plugins) {
-        unload_plugin(plugin);
+        do_plugin_unload(plugin);
     }
+    loaded_plugins.clear();
 }
 
 void* plugins::get_plugin_symbol(handle plugin, const char* symbol) {
